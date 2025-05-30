@@ -175,8 +175,8 @@ const PropertyDisplayLeft = ({ player, position }) => {
   });
 
   // Reduced dimensions (70% of original) - matching TopPropertyDisplay
-  const cardWidth = 196; // 70% of 280 (swapped)
-  const cardHeight = 147; // 70% of 210 (swapped)
+  const cardWidth = 196; // 70% of 280 
+  const cardHeight = 147; // 70% of 210 
   const cardOverlap = 39; // 70% of 56
   const expandOffset = 108; // 70% of 154
 
@@ -190,8 +190,8 @@ const PropertyDisplayLeft = ({ player, position }) => {
     <div style={{
       position: 'absolute',
       right: '100%',
-      top: '50%',
-      transform: `translate(5px, calc(-50% + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px))`,
+      top: position === 'top' ? '55%' : '100%',
+      transform: `translate(5px, calc(${position === 'top' ? '-50%' : '-75%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 155px' : ''}))`,
       width: cardWidth + 'px',
       display: 'flex',
       alignItems: 'flex-start',
@@ -291,8 +291,8 @@ const PropertyDisplayRight = ({ player, position }) => {
     <div style={{
       position: 'absolute',
       left: '100%',
-      top: '50%',
-      transform: `translate(-5px, calc(-50% + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px))`,
+      top: position === 'top' ? '50%' : '100%',
+      transform: `translate(-5px, calc(${position === 'top' ? '-50%' : '-75%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 155px' : ''}))`,
       width: cardWidth + 'px',
       display: 'flex',
       alignItems: 'flex-start',
@@ -446,7 +446,7 @@ const PropertyDisplay = () => {
         return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
       case 3: // Three other players
         return [
-          { position: 'left', top: '25%' },
+          { position: 'left', top: '100%' },
           { position: 'left', top: '75%' },
           { position: 'top' }
         ];

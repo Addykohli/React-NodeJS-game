@@ -449,8 +449,8 @@ export default function GameScreen() {
       if (player.socketId === playerSocketId) {
         setPlayer({ ...player, money: newMoney });
         setError(`You received $${amount} for ${reason} Start!`);
-        // Clear bonus message after 5 seconds
-        setTimeout(() => setError(null), 5000);
+        // Clear bonus message after 7 seconds
+        setTimeout(() => setError(null), 7000);
       }
     });
 
@@ -506,7 +506,7 @@ export default function GameScreen() {
           alignItems: 'center', 
           gap: '4px', 
           justifyContent: 'center',
-          fontSize: '1.6em',  // Increased font size
+          fontSize: '1.6em',  
           padding: '15px',
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           borderRadius: '8px'
@@ -517,7 +517,7 @@ export default function GameScreen() {
           {multiplier > 1 && (
             <span style={{ 
               color: '#FFA500', 
-              fontSize: '1.5em',  // Increased multiplier size
+              fontSize: '1.5em',  
               fontWeight: 'bold',
               marginLeft: '8px'
             }}>

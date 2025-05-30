@@ -71,17 +71,17 @@ const Chat = () => {
             <div style={{ 
               color: '#4CAF50', 
               fontWeight: 'bold',
-              minWidth: '80px', // Fixed width for name container
-              textAlign: 'left' // Changed to left align
+              minWidth: '80px', 
+              textAlign: 'left' 
             }}>
               [{msg.sender}]
             </div>
             <div style={{
               flex: 1,
-              wordBreak: 'break-word', // Ensures long words are broken
-              whiteSpace: 'pre-wrap', // Preserves whitespace and wraps text
-              lineHeight: '1.4', // Improved line height for readability
-              textAlign: 'left' // Explicitly set left alignment
+              wordBreak: 'break-word', 
+              whiteSpace: 'pre-wrap', 
+              lineHeight: '1.4', 
+              textAlign: 'left' 
             }}>
               {msg.content}
             </div>

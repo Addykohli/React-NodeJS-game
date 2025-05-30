@@ -9,26 +9,26 @@ const TopPropertyDisplay = () => {
   // Get all players except the current player
   const otherPlayers = players.filter(p => p.socketId !== currentPlayer?.socketId);
   
-  // Get positions based on number of players (matching PlayerStats logic)
+  // Get positions based on number of players (matching PropertyDisplay logic)
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
-      case 3: return [{ left: '40%' }, { left: '33%' }, { left: '66%' }];
-      case 4: return [{ left: '30%' }, { left: '70%' }];
-      case 5: return [{ left: '50%' }];
-      case 6: return [{ left: '30%' }, { left: '70%' }];
-      case 7: return [{ left: '-35%' }, { left: '38%' }, { left: '99%' }];
+      case 3: return [{ left: '50%' }];  // 1 player on top
+      case 4: return [{ left: '-30%' }, { left: '70%' }];  // 2 players on top
+      case 5: return [{ left: '50%' }];  // 1 player on top
+      case 6: return [{ left: '-30%' }, { left: '70%' }];  // 2 players on top
+      case 7: return [{ left: '-33%' }, { left: '33%' }, { left: '66%' }];  // 3 players on top
       default: return [];
     }
   };
 
-  // Get only the players that should appear at the top
+  // Get only the players that should appear at the top (matching PropertyDisplay logic)
   const getTopPlayers = (players, totalPlayers) => {
     switch(totalPlayers) {
-      case 3: return players.slice(0, 3);
-      case 4: return players.slice(2, 4);
-      case 5: return players.slice(4, 5);
-      case 6: return players.slice(4, 6);
-      case 7: return players.slice(4, 7);
+      case 3: return players.slice(2, 3);  // Last 1 player
+      case 4: return players.slice(2, 4);  // Last 2 players
+      case 5: return players.slice(4, 5);  // Last 1 player
+      case 6: return players.slice(4, 6);  // Last 2 players
+      case 7: return players.slice(4, 7);  // Last 3 players
       default: return [];
     }
   };

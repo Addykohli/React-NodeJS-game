@@ -1521,7 +1521,7 @@ io.on('connection', socket => {
 
       // If players can't afford, send insufficient funds message but keep the offer
       if (!fromPlayerCanAfford || !toPlayerCanAfford) {
-        // Send error only to the player who tried to accept
+        // Send error to the player who tried to accept
         socket.emit('tradeRejected', { 
           offerId,
           reason: 'insufficientFunds',
@@ -1534,13 +1534,13 @@ io.on('connection', socket => {
 
       // If properties are no longer available, remove the trade offer
       if (!fromPlayerHasProperties || !toPlayerHasProperties) {
-        // Send error only to the player who tried to accept
+        // Send error  to the player who tried to accept
         socket.emit('tradeRejected', { 
           offerId,
           reason: 'invalidProperties',
           message: 'One or more properties in the trade are no longer available.'
         });
-        // Notify others about removal without error message
+        // Notify others about removal 
         socket.broadcast.emit('tradeRejected', { 
           offerId,
           reason: 'invalidProperties',
@@ -1551,7 +1551,6 @@ io.on('connection', socket => {
         return;
       }
 
-      // If we get here, the trade can proceed
       // Update money
       fromPlayer.money -= offer.offer.money;
       fromPlayer.money += offer.ask.money;
