@@ -3,5 +3,5 @@
 # Install dependencies
 npm install
 
-# Build the React app
-CI=false npm run build 
+# Build the React app using npx
+CI=false npx react-scripts build 
