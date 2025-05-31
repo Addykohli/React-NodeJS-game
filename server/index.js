@@ -44,12 +44,21 @@ const io     = new Server(server, {
 });
 
 // Initialize database
-initDatabase()
+sequelize
+  .authenticate()
   .then(() => {
-    console.log('✅ Database initialized');
+    console.log('✅ Database connection established successfully.');
   })
   .catch(err => {
-    console.error('❌ Database initialization error:', err);
+    console.error('❌ Unable to connect to the database:', err);
+    // Add enhanced error logging
+    console.error('Full error details:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      original: err.original
+    });
   });
 
 app.use(express.json());
@@ -699,10 +708,26 @@ io.on('connection', socket => {
         // Rollback transaction on error
         await transaction.rollback();
         console.error('Transaction error:', err);
+        // Add enhanced error logging
+        console.error('Full error details:', {
+          name: err.name,
+          message: err.message,
+          stack: err.stack,
+          code: err.code,
+          original: err.original
+        });
         socket.emit('purchaseFailed', { reason: 'dbError' });
       }
     } catch (err) {
       console.error('Error in buyProperty:', err);
+      // Add enhanced error logging
+      console.error('Full error details:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack,
+        code: err.code,
+        original: err.original
+      });
       socket.emit('purchaseFailed', { reason: 'dbError' });
     }
   });
