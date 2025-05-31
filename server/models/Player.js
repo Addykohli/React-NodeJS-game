@@ -1,19 +1,45 @@
 // server/models/Player.js
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const playerSchema = new Schema({
-  socketId:    { type: String, required: true, unique: true },
-  name:        { type: String, required: true },
-  piece:       { type: String, default: null },
-  tileId:      { type: Number, default: 1 },
-  prevTile:    { type: Number, default: null },
-  money:       { type: Number, default: 1500 },
-  loan:        { type: Number, default: 0 },
-  properties:  { type: [String], default: [] },
-  ready:       { type: Boolean, default: false }
-}, {
-  timestamps: true
+const Player = sequelize.define('Player', {
+  socketId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  piece: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  money: {
+    type: DataTypes.INTEGER,
+    defaultValue: 10000
+  },
+  properties: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER),
+    defaultValue: []
+  },
+  tileId: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1
+  },
+  prevTile: {
+    type: DataTypes.INTEGER,
+    defaultValue: 30
+  },
+  ready: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  loan: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  }
 });
 
-module.exports = mongoose.model('Player', playerSchema);
+module.exports = Player;
