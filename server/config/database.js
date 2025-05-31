@@ -1,6 +1,25 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+// Validate and sanitize the database URL
+const validateDatabaseUrl = (url) => {
+  if (!url) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    // Remove any forward slashes from the database name
+    const pathname = parsedUrl.pathname.replace(/^\//, '');
+    const cleanDbName = pathname.replace(/\//g, '_');
+    
+    // Reconstruct the URL with the cleaned database name
+    return `${parsedUrl.protocol}//${parsedUrl.username}:${parsedUrl.password}@${parsedUrl.host}/${cleanDbName}`;
+  } catch (e) {
+    throw new Error(`Invalid DATABASE_URL format: ${e.message}`);
+  }
+};
+
 // Log the DATABASE_URL (but mask sensitive information)
 const maskDatabaseUrl = (url) => {
   if (!url) return 'DATABASE_URL is not set';
@@ -12,9 +31,16 @@ const maskDatabaseUrl = (url) => {
   }
 };
 
-console.log('Attempting to connect to database with URL:', maskDatabaseUrl(process.env.DATABASE_URL));
+let dbUrl;
+try {
+  dbUrl = validateDatabaseUrl(process.env.DATABASE_URL);
+  console.log('Attempting to connect to database with URL:', maskDatabaseUrl(dbUrl));
+} catch (error) {
+  console.error('Database URL validation error:', error.message);
+  process.exit(1);
+}
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+const sequelize = new Sequelize(dbUrl, {
   dialect: 'postgres',
   dialectOptions: {
     ssl: {
@@ -44,13 +70,12 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   }
 });
 
-// Test the connection
-sequelize
-  .authenticate()
-  .then(() => {
+// Test the connection and create database if needed
+const initializeDatabase = async () => {
+  try {
+    await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('❌ Unable to connect to the database:', err);
     console.error('Full error details:', {
       name: err.name,
@@ -59,7 +84,6 @@ sequelize
       code: err.code,
       original: err.original
     });
-    // Additional helpful information
     console.error('Connection configuration:', {
       dialect: sequelize.options.dialect,
       host: sequelize.config.host,
@@ -68,6 +92,38 @@ sequelize
       username: sequelize.config.username,
       ssl: sequelize.options.dialectOptions.ssl
     });
-  });
+    
+    // If database doesn't exist, try to create it
+    if (err.original?.code === '3D000') {
+      console.log('Attempting to create database...');
+      try {
+        // Create a temporary connection to 'postgres' database to create our database
+        const tmpSequelize = new Sequelize({
+          ...sequelize.config,
+          database: 'postgres',
+          logging: false
+        });
+        await tmpSequelize.query(`CREATE DATABASE "${sequelize.config.database}";`);
+        await tmpSequelize.close();
+        console.log('✅ Database created successfully.');
+        
+        // Try connecting again
+        await sequelize.authenticate();
+        console.log('✅ Connected to newly created database.');
+      } catch (createErr) {
+        console.error('❌ Failed to create database:', createErr);
+        throw createErr;
+      }
+    } else {
+      throw err;
+    }
+  }
+};
+
+// Initialize the database
+initializeDatabase().catch(err => {
+  console.error('❌ Database initialization failed:', err);
+  process.exit(1);
+});
 
 module.exports = sequelize; 
