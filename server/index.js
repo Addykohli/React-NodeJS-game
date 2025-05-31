@@ -126,51 +126,39 @@ io.on('connection', socket => {
             { socketId: socket.id },
             { where: { socketId: oldSocketId } }
           );
-
-          // Get the current game state
-          const gameState = engine.getState();
-          
-          // Update engine and lobby states
-          engine.session.players = engine.session.players.map(p =>
-            p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
-          );
-          
-          lobbyPlayers = lobbyPlayers.map(p =>
-            p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
-          );
-
-          disconnectedPlayers.delete(name);
-
-          // Send the full game state to the reconnected player
-          socket.emit('gameStart', {
-            players: engine.session.players,
-            sessionId: currentSessionId,
-            currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
-          });
-
-          // Notify all clients about the reconnection
-          io.emit('lobbyUpdate', lobbyPlayers);
-          
-          const currentPlayer = engine.getPlayer(socket.id);
-          if (currentPlayer) {
-            socket.emit('playerMoved', {
-              playerId: socket.id,
-              tileId: currentPlayer.tileId
-            });
-            
-            if (currentPlayer.socketId === engine.session.players[engine.session.currentPlayerIndex].socketId) {
-              socket.emit('movementDone');
-            }
-          }
-
-          // Send game events history
-          socket.emit('gameEventsHistory', gameEvents);
-
-          // Broadcast reconnection event
-          broadcastGameEvent(`${name} has reconnected to the game.`);
         } catch (err) {
           console.error('Error updating reconnected player:', err);
-          socket.emit('joinError', { message: 'Error reconnecting to game. Please try again.' });
+        }
+        
+        // Update engine and lobby states
+        engine.session.players = engine.session.players.map(p =>
+          p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
+        );
+        
+        lobbyPlayers = lobbyPlayers.map(p =>
+          p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
+        );
+
+        disconnectedPlayers.delete(name);
+
+        socket.emit('gameStart', {
+          players: engine.session.players,
+          sessionId: currentSessionId,
+          currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
+        });
+
+        io.emit('lobbyUpdate', lobbyPlayers);
+        
+        const currentPlayer = engine.getPlayer(socket.id);
+        if (currentPlayer) {
+          socket.emit('playerMoved', {
+            playerId: socket.id,
+            tileId: currentPlayer.tileId
+          });
+          
+          if (currentPlayer.socketId === engine.session.players[engine.session.currentPlayerIndex].socketId) {
+            socket.emit('movementDone');
+          }
         }
         return;
       }
@@ -193,7 +181,7 @@ io.on('connection', socket => {
       await Player.create(playerData);
       lobbyPlayers.push(playerData);
       engine.addPlayer(playerData);
-      io.emit('lobbyUpdate', lobbyPlayers);
+    io.emit('lobbyUpdate', lobbyPlayers);
     } catch (err) {
       console.error('Error creating new player:', err);
       socket.emit('joinError', { message: 'Error joining game. Please try again.' });

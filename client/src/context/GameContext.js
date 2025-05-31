@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
 import socket from '../socket';
-import Cookies from 'js-cookie';
 
 export const GameContext = createContext();
 
@@ -17,44 +16,6 @@ export function GameProvider({ children }) {
 
   // buy/rent UI
   const [insufficientFunds, setInsufficientFunds] = useState(false);
-
-  // Load session from cookie on initial mount
-  useEffect(() => {
-    const savedSession = Cookies.get('gameSession');
-    if (savedSession) {
-      try {
-        const session = JSON.parse(savedSession);
-        if (session.playerName) {
-          // Attempt to reconnect with saved name
-          socket.emit('joinLobby', { name: session.playerName });
-        }
-      } catch (err) {
-        console.error('Error parsing saved session:', err);
-        Cookies.remove('gameSession');
-      }
-    }
-  }, []);
-
-  // Save session to cookie whenever relevant state changes
-  useEffect(() => {
-    if (player?.name && gameState) {
-      const sessionData = {
-        playerName: player.name,
-        gameState: gameState
-      };
-      Cookies.set('gameSession', JSON.stringify(sessionData), { expires: 1 }); // Expires in 1 day
-    }
-  }, [player?.name, gameState]);
-
-  // Clear session cookie on game leave
-  const handleGameLeave = () => {
-    Cookies.remove('gameSession');
-    setGameState('lobby');
-    setPlayer(null);
-    setPlayers([]);
-    setCurrentPlayerId(null);
-    setSessionId(null);
-  };
 
   // Update player whenever players array changes
   useEffect(() => {
@@ -268,14 +229,6 @@ export function GameProvider({ children }) {
       }
     });
 
-    // Handle player left event
-    socket.on('playerLeft', () => {
-      // If all players have left, clear the session
-      if (players.length <= 1) {
-        handleGameLeave();
-      }
-    });
-
     return () => {
       socket.off('lobbyUpdate');
       socket.off('gameStart');
@@ -292,9 +245,8 @@ export function GameProvider({ children }) {
       socket.off('roadCashResult');
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
-      socket.off('playerLeft');
     };
-  }, [socket?.id, player, players]);
+  }, [socket?.id, player]);
 
   return (
     <GameContext.Provider
@@ -316,7 +268,6 @@ export function GameProvider({ children }) {
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
-        handleGameLeave, // Expose the handleGameLeave function
       }}
     >
       {children}

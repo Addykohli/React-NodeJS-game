@@ -236,8 +236,7 @@ export default function GameScreen() {
     currentPlayerId,
     socket,
     movementDone,
-    setGameState,
-    handleGameLeave
+    setGameState
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -776,7 +775,7 @@ export default function GameScreen() {
 
   const confirmLeaveGame = () => {
     socket.emit('leaveGame');
-    handleGameLeave();
+    setGameState('lobby');
     setShowLeaveConfirm(false);
   };
 
@@ -786,8 +785,8 @@ export default function GameScreen() {
     }}>
       {/* Leave Game Confirmation Dialog */}
       {showLeaveConfirm && (
-        <div style={{
-          position: 'fixed',
+      <div style={{
+        position: 'fixed',
           top: 0,
           left: 0,
           right: 0,
@@ -848,7 +847,7 @@ export default function GameScreen() {
         style={{
           position: 'fixed',
           bottom: '20px',
-          right: '20px',
+        right: '20px',
           padding: '12px 24px',
           backgroundColor: '#f44336',
           color: 'white',
@@ -892,7 +891,7 @@ export default function GameScreen() {
           }}
         >
           <div style={{
-            display: 'flex',
+        display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
@@ -1650,9 +1649,9 @@ export default function GameScreen() {
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center 40%',
                         cursor: 'pointer',
-            display: 'flex',
+          display: 'flex',
                         alignItems: 'flex-end',
-            justifyContent: 'center',
+          justifyContent: 'center',
                         width: '100%',
                         height: '100%',
                         minHeight: '180px',
