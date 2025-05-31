@@ -1781,6 +1781,65 @@ io.on('connection', socket => {
       activeTradeOffers = activeTradeOffers.filter(o => o.id !== offerId);
     }
   });
+
+  // Add this near other socket event handlers
+  socket.on('leaveGame', async () => {
+    console.log('[leaveGame] Player leaving:', socket.id);
+    
+    const leavingPlayer = engine.getPlayer(socket.id);
+    if (!leavingPlayer) return;
+
+    try {
+      // Remove player from engine and lobby
+      engine.removePlayer(socket.id);
+      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+
+      // Remove player from database
+      await Player.destroy({
+        where: { socketId: socket.id }
+      });
+
+      // Notify other players
+      io.emit('playerLeft', {
+        playerName: leavingPlayer.name,
+        remainingPlayers: engine.session.players
+      });
+      
+      // Broadcast game event
+      broadcastGameEvent(`${leavingPlayer.name} has left the game.`);
+
+      // Check if all players have left
+      if (engine.session.players.length === 0) {
+        console.log('All players have left. Resetting game state...');
+        
+        try {
+          // Reset game state
+          hasStarted = false;
+          lobbyPlayers = [];
+          currentSessionId = null;
+          
+          // Clear database tables
+          await Player.destroy({ where: {} }); // Clear all players
+          await GameSession.destroy({ where: {} }); // Clear all game sessions
+          
+          console.log('✅ Game state and database reset successfully.');
+          io.emit('gameReset');
+        } catch (err) {
+          console.error('Error resetting game state:', err);
+        }
+      } else {
+        // Update game session if it exists and players remain
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { where: { id: currentSessionId } }
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Error processing player leave:', err);
+    }
+  });
 });
 
 function determineRPSWinner(choice1, choice2) {
