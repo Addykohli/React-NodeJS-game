@@ -15,9 +15,9 @@ const server = http.createServer(app);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
+    origin: process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL 
-    : 'http://localhost:3000',
+      : 'http://localhost:3000',
   methods: ['GET', 'POST'],
   credentials: true
 };
@@ -112,13 +112,13 @@ io.on('connection', socket => {
         );
 
         disconnectedPlayers.delete(name);
-        
+
         socket.emit('gameStart', {
           players: engine.session.players,
           sessionId: currentSessionId,
           currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
         });
-        
+
         io.emit('lobbyUpdate', lobbyPlayers);
         
         const currentPlayer = engine.getPlayer(socket.id);
@@ -153,7 +153,7 @@ io.on('connection', socket => {
       await Player.create(playerData);
       lobbyPlayers.push(playerData);
       engine.addPlayer(playerData);
-      io.emit('lobbyUpdate', lobbyPlayers);
+    io.emit('lobbyUpdate', lobbyPlayers);
     } catch (err) {
       console.error('Error creating new player:', err);
       socket.emit('joinError', { message: 'Error joining game. Please try again.' });

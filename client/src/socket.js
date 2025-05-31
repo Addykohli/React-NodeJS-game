@@ -1,7 +1,13 @@
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 
-// Use environment variable for server URL, fallback to localhost for development
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
-const socket = io(SERVER_URL);
+// Use environment variable with fallback for development
+const SOCKET_SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:5000';
+
+const socket = io(SOCKET_SERVER_URL, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 export default socket;
