@@ -488,21 +488,21 @@ export default function GameScreen() {
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p => {
           if (p.socketId === payerSocketId) {
+            // Update current player if they're the payer
+            if (player.socketId === payerSocketId) {
+              setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
+            }
             return { ...p, money: payerMoney, loan: payerLoan };
           }
           if (p.socketId === ownerSocketId) {
+            // Update current player if they're the owner
+            if (player.socketId === ownerSocketId) {
+              setPlayer(prev => ({ ...prev, money: ownerMoney }));
+            }
             return { ...p, money: ownerMoney };
           }
           return p;
         });
-
-        // Update current player if they're involved
-        if (player.socketId === payerSocketId) {
-          setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
-        } else if (player.socketId === ownerSocketId) {
-          setPlayer(prev => ({ ...prev, money: ownerMoney }));
-        }
-
         return updatedPlayers;
       });
 
@@ -776,7 +776,8 @@ export default function GameScreen() {
 
   return (
     <div style={{
-      position: 'relative'
+      position: 'relative',
+      paddingTop: '50% - 300px'
     }}>
       {/* Side Panel Buttons */}
       {Object.entries(panelConfigs).map(([panelId, config], index) => (
@@ -786,12 +787,12 @@ export default function GameScreen() {
           style={{
             position: 'fixed',
             right: activeSidePanel === panelId ? '540px' : '0',
-            top: `${25 + (index * 130)}px`,
-            width: activeSidePanel === panelId ? '60px' : '120px',
-            height: '120px',
+            top: `${20% + (index * 150)}px`,
+            width: activeSidePanel === panelId ? '90px' : '120px',
+            height: '150px',
             backgroundColor: 'rgba(0, 0, 0, 0.94)',
             borderColor: 'rgb(52, 52, 52)',
-            borderWidth: '2px',
+            borderWidth: '4px',
             borderStyle: 'solid', 
             display: activeSidePanel && activeSidePanel !== panelId ? 'none' : 'flex',
             alignItems: 'center',
