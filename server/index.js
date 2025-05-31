@@ -604,61 +604,107 @@ io.on('connection', socket => {
   // BUY PROPERTY handler
   socket.on('buyProperty', async () => {
     console.log('[buyProperty] received from', socket.id);
-    const playerObj = engine.getPlayer(socket.id);
-    console.log('PlayerObj:', playerObj);
-    const { tiles } = require('./data/tiles.cjs');
-    const tile      = tiles.find(t => t.id === playerObj.tileId);
-    console.log('Tile metadata:', tile);
-
-    if (!tile || tile.type !== 'property') {
-      console.log('purchaseFailed: notProperty');
-      return socket.emit('purchaseFailed', { reason: 'notProperty' });
-    }
-
-    // Check if ANY player owns this property
-    const isOwnedByAnyPlayer = engine.session.players.some(p => p.properties.includes(tile.id));
-    if (isOwnedByAnyPlayer) {
-      console.log('purchaseFailed: alreadyOwned');
-      return socket.emit('purchaseFailed', { reason: 'alreadyOwned' });
-    }
-
-    if (playerObj.money < tile.cost) {
-      console.log('purchaseFailed: insufficientFunds');
-      return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
-    }
-
-    // perform purchase
-    playerObj.money      -= tile.cost;
-    playerObj.properties.push(tile.id);
-    console.log('After purchase - money:', playerObj.money, 'properties:', playerObj.properties);
-
+    
     try {
-      await Player.findOneAndUpdate(
-        { socketId: socket.id },
-        { money: playerObj.money, properties: playerObj.properties }
-      );
-      console.log('Player DB updated successfully');
+      const playerObj = engine.getPlayer(socket.id);
+      if (!playerObj) {
+        console.log('purchaseFailed: playerNotFound');
+        return socket.emit('purchaseFailed', { reason: 'playerNotFound' });
+      }
+      console.log('PlayerObj:', playerObj);
 
-      // Broadcast game event for property purchase
-      broadcastGameEvent(`${playerObj.name} bought ${tile.name} for $${tile.cost}`);
+      const { tiles } = require('./data/tiles.cjs');
+      const tile = tiles.find(t => t.id === playerObj.tileId);
+      console.log('Tile metadata:', tile);
+
+      if (!tile || tile.type !== 'property') {
+        console.log('purchaseFailed: notProperty');
+        return socket.emit('purchaseFailed', { reason: 'notProperty' });
+      }
+
+      // Check if ANY player owns this property
+      const isOwnedByAnyPlayer = engine.session.players.some(p => p.properties.includes(tile.id));
+      if (isOwnedByAnyPlayer) {
+        console.log('purchaseFailed: alreadyOwned');
+        return socket.emit('purchaseFailed', { reason: 'alreadyOwned' });
+      }
+
+      if (playerObj.money < tile.cost) {
+        console.log('purchaseFailed: insufficientFunds');
+        return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
+      }
+
+      // Start a transaction
+      const transaction = await sequelize.transaction();
+
+      try {
+        // perform purchase
+        playerObj.money -= tile.cost;
+        playerObj.properties.push(tile.id);
+        console.log('After purchase - money:', playerObj.money, 'properties:', playerObj.properties);
+
+        // Update player in database within transaction
+        const updatedPlayer = await Player.update(
+          {
+            money: playerObj.money,
+            properties: playerObj.properties
+          },
+          {
+            where: { socketId: socket.id },
+            returning: true,
+            transaction
+          }
+        );
+
+        if (!updatedPlayer[0]) {
+          throw new Error('Failed to update player');
+        }
+
+        // If game session exists, update it within the same transaction
+        if (currentSessionId) {
+          console.log('Updating GameSession', currentSessionId);
+          await GameSession.update(
+            {
+              players: engine.session.players.map(p => ({
+                socketId: p.socketId,
+                name: p.name,
+                piece: p.piece,
+                money: p.money,
+                properties: p.properties,
+                tileId: p.tileId,
+                prevTile: p.prevTile,
+                ready: p.ready
+              }))
+            },
+            {
+              where: { id: currentSessionId },
+              transaction
+            }
+          );
+        }
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Broadcast game event for property purchase
+        broadcastGameEvent(`${playerObj.name} bought ${tile.name} for $${tile.cost}`);
+
+        console.log('purchaseSuccess emit');
+        io.emit('purchaseSuccess', {
+          socketId: socket.id,
+          money: playerObj.money,
+          properties: playerObj.properties
+        });
+      } catch (err) {
+        // Rollback transaction on error
+        await transaction.rollback();
+        console.error('Transaction error:', err);
+        socket.emit('purchaseFailed', { reason: 'dbError' });
+      }
     } catch (err) {
-      console.error('Error saving purchase:', err);
-      return socket.emit('purchaseFailed', { reason: 'dbError' });
+      console.error('Error in buyProperty:', err);
+      socket.emit('purchaseFailed', { reason: 'dbError' });
     }
-
-    if (currentSessionId) {
-      console.log('Updating GameSession', currentSessionId);
-      await GameSession.findByIdAndUpdate(currentSessionId, {
-        players: engine.session.players.map(p => ({ socketId: p.socketId, name: p.name, piece: p.piece, money: p.money, properties: p.properties, tileId: p.tileId, prevTile: p.prevTile, ready: p.ready }))
-      });
-    }
-
-    console.log('purchaseSuccess emit');
-    io.emit('purchaseSuccess', {
-      socketId:   socket.id,
-      money:      playerObj.money,
-      properties: playerObj.properties
-    });
   });
 
   // Handle casino roll
