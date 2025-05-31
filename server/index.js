@@ -13,11 +13,25 @@ const PORT = process.env.PORT || 5000;
 const app  = express();
 const server = http.createServer(app);
 
+// Define allowed origins
+const allowedOrigins = [
+  'https://react-nodejs-game.onrender.com',
+  'https://react-nodejs-game-client.onrender.com',
+  'http://localhost:3000'
+];
+
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-    ? ['https://react-nodejs-game.onrender.com', 'https://react-nodejs-game-client.onrender.com']
-    : 'http://localhost:3000',
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST'],
   credentials: true
 };
@@ -26,13 +40,7 @@ app.use(cors(corsOptions));
 
 // Socket.io configuration
 const io     = new Server(server, {
-  cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://react-nodejs-game.onrender.com', 'https://react-nodejs-game-client.onrender.com']
-      : 'http://localhost:3000',
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
+  cors: corsOptions
 });
 
 // Initialize database
