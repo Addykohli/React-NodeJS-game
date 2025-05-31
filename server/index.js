@@ -861,90 +861,49 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('leaveGame', async () => {
-    console.log('[leaveGame] Player leaving:', socket.id);
-    
-    // Find the leaving player
-    const leavingPlayer = engine.getPlayer(socket.id);
-    if (!leavingPlayer) return;
-
-    // Remove player from game engine and lobby
-    engine.removePlayer(socket.id);
-    lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
-
-    // Remove from database
-    try {
-      await Player.destroy({ where: { socketId: socket.id } });
-    } catch (err) {
-      console.error('Error removing player from database:', err);
-    }
-
-    // Check if this was the last player
-    if (engine.session.players.length === 0) {
-      console.log('Last player left, resetting game state');
-      hasStarted = false;
-      currentSessionId = null;
-      
-      // Reset database
-      try {
-        await sequelize.sync({ force: true });
-        console.log('Database reset successful');
-      } catch (err) {
-        console.error('Error resetting database:', err);
-      }
-    }
-
-    // Notify other players
-    io.emit('playerLeft', {
-      playerName: leavingPlayer.name,
-      remainingPlayers: engine.session.players.length
-    });
-
-    // Update lobby for remaining players
-    io.emit('lobbyUpdate', lobbyPlayers);
-  });
-
-  // Modify the existing disconnect handler
-  socket.on('disconnect', async () => {
+  socket.on('disconnect', () => {
     console.log('[disconnect]', socket.id);
     
     // Find the disconnecting player
     const disconnectingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
     
-    if (disconnectingPlayer) {
-      // Remove player from game engine and lobby
-      engine.removePlayer(socket.id);
-      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
-
-      // Remove from database
-      try {
-        await Player.destroy({ where: { socketId: socket.id } });
-      } catch (err) {
-        console.error('Error removing player from database:', err);
-      }
-
-      // Check if this was the last player
-      if (engine.session.players.length === 0) {
-        console.log('Last player disconnected, resetting game state');
-        hasStarted = false;
-        currentSessionId = null;
+    if (disconnectingPlayer && hasStarted) {
+      // Check if it was their turn and they had moved but not ended turn
+      const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+      if (isCurrentPlayer) {
+        console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
         
-        // Reset database
-        try {
-          await sequelize.sync({ force: true });
-          console.log('Database reset successful');
-        } catch (err) {
-          console.error('Error resetting database:', err);
+        // End their turn if they had already moved (movementDone was emitted)
+        const currentPlayer = engine.getPlayer(socket.id);
+        if (currentPlayer && currentPlayer.hasMoved) {
+          console.log(`Auto-ending turn for disconnected player ${disconnectingPlayer.name}`);
+          const nextPlayerId = engine.endTurn();
+          io.emit('turnEnded', { nextPlayerId });
+          
+          // Update game session if exists
+          if (currentSessionId) {
+            GameSession.findByIdAndUpdate(currentSessionId, { 
+              currentPlayerIndex: engine.session.currentPlayerIndex 
+            }).catch(err => {
+              console.error('Error updating game session after auto-end turn:', err);
+            });
+          }
         }
       }
 
-      // Notify other players
-      io.emit('playerLeft', {
+      // Store the disconnected player's info
+      console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
+      disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
+      
+      // Don't remove from engine or lobby if game has started
+      io.emit('playerDisconnected', {
         playerName: disconnectingPlayer.name,
-        remainingPlayers: engine.session.players.length
+        temporary: true
       });
-
-      // Update lobby for remaining players
+    } else if (!hasStarted) {
+      // Only remove from lobby and engine if game hasn't started
+      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+      engine.removePlayer(socket.id);
       io.emit('lobbyUpdate', lobbyPlayers);
     }
   });

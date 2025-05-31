@@ -235,8 +235,7 @@ export default function GameScreen() {
     setPlayers,
     currentPlayerId,
     socket,
-    movementDone,
-    setGameState
+    movementDone
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -254,7 +253,6 @@ export default function GameScreen() {
   const [borrowAmount, setBorrowAmount] = useState(1000);
   const [payoffAmount, setPayoffAmount] = useState(1000);
   const [gameEvents, setGameEvents] = useState([]);
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // Add socket event listener for borrow response
   useEffect(() => {
@@ -769,104 +767,10 @@ export default function GameScreen() {
     socket.emit('buyProperty');
   };
 
-  const handleLeaveGame = () => {
-    setShowLeaveConfirm(true);
-  };
-
-  const confirmLeaveGame = () => {
-    socket.emit('leaveGame');
-    setGameState('lobby');
-    setShowLeaveConfirm(false);
-  };
-
   return (
     <div style={{
       position: 'relative'
     }}>
-      {/* Leave Game Confirmation Dialog */}
-      {showLeaveConfirm && (
-      <div style={{
-        position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1003
-        }}>
-          <div style={{
-            backgroundColor: '#fff',
-            padding: '24px',
-            borderRadius: '12px',
-            maxWidth: '400px',
-            width: '90%',
-            textAlign: 'center'
-          }}>
-            <h2 style={{ marginTop: 0, color: '#333' }}>Leave Game?</h2>
-            <p style={{ color: '#666', margin: '16px 0' }}>
-              Are you sure you want to leave the game? Your progress will not be saved.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setShowLeaveConfirm(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#9e9e9e',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmLeaveGame}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Leave Game
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Leave Game Button */}
-      <button
-        onClick={handleLeaveGame}
-        style={{
-          position: 'fixed',
-          bottom: '20px',
-        right: '20px',
-          padding: '12px 24px',
-          backgroundColor: '#f44336',
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          fontSize: '1.2em',
-          cursor: 'pointer',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          zIndex: 1002,
-          transition: 'all 0.3s ease',
-          ':hover': {
-            backgroundColor: '#d32f2f',
-            transform: 'scale(1.05)'
-          }
-        }}
-      >
-        Leave Game
-      </button>
-
       {/* Side Panel Buttons */}
       {Object.entries(panelConfigs).map(([panelId, config], index) => (
         <div 
@@ -891,7 +795,7 @@ export default function GameScreen() {
           }}
         >
           <div style={{
-        display: 'flex',
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
@@ -1649,9 +1553,9 @@ export default function GameScreen() {
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center 40%',
                         cursor: 'pointer',
-          display: 'flex',
+            display: 'flex',
                         alignItems: 'flex-end',
-          justifyContent: 'center',
+            justifyContent: 'center',
                         width: '100%',
                         height: '100%',
                         minHeight: '180px',
