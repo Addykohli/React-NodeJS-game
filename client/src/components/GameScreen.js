@@ -484,20 +484,27 @@ export default function GameScreen() {
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney, amount, baseRent, multiplier, propertyName }) => {
       console.log('[GameScreen] rentPaid', { payerSocketId, ownerSocketId, amount });
       
-      // Update players' money and loan
-      const updated = players.map(p => {
-        if (p.socketId === payerSocketId) return { ...p, money: payerMoney, loan: payerLoan };
-        if (p.socketId === ownerSocketId) return { ...p, money: ownerMoney };
-        return p;
-      });
-      setPlayers(updated);
+      // Update players' money and loan synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p => {
+          if (p.socketId === payerSocketId) {
+            return { ...p, money: payerMoney, loan: payerLoan };
+          }
+          if (p.socketId === ownerSocketId) {
+            return { ...p, money: ownerMoney };
+          }
+          return p;
+        });
 
-      // Update current player if they're involved
-      if (player.socketId === payerSocketId) {
-        setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
-      } else if (player.socketId === ownerSocketId) {
-        setPlayer(prev => ({ ...prev, money: ownerMoney }));
-      }
+        // Update current player if they're involved
+        if (player.socketId === payerSocketId) {
+          setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
+        } else if (player.socketId === ownerSocketId) {
+          setPlayer(prev => ({ ...prev, money: ownerMoney }));
+        }
+
+        return updatedPlayers;
+      });
 
       // Show rent payment notification with stylized multiplier
       setError(

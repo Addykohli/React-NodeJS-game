@@ -1,16 +1,21 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useCallback } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 export default function Dashboard() {
   const { player } = useContext(GameContext);
   
-  useEffect(() => {
+  const updateDisplay = useCallback(() => {
     console.log('[Dashboard] Player money updated:', {
       playerName: player?.name,
-      money: player?.money
+      money: player?.money,
+      loan: player?.loan
     });
-  }, [player?.money]);
+  }, [player?.money, player?.loan, player?.name]);
+
+  useEffect(() => {
+    updateDisplay();
+  }, [updateDisplay]);
 
   if (!player) return null;
 
@@ -39,7 +44,7 @@ export default function Dashboard() {
           fontSize: '2rem',
           fontWeight: 'bold'
         }}>
-          Money: ${player?.money || 0}
+          Money: ${player?.money?.toLocaleString() || 0}
         </div>
         <div style={{ 
           color: '#f44336', 
@@ -47,7 +52,7 @@ export default function Dashboard() {
           fontSize: '2rem',
           fontWeight: 'bold'
         }}>
-          Loan: ${player?.loan || 0}
+          Loan: ${player?.loan?.toLocaleString() || 0}
         </div>
         <div style={{ 
           color: '#2196F3', 

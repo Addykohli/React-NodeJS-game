@@ -84,7 +84,7 @@ export function GameProvider({ children }) {
     });
 
     // RENT PAID
-    socket.on('rentPaid', ({ payerSocketId, payerMoney, ownerSocketId, ownerMoney }) => {
+    socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney }) => {
       console.log('[GameContext] Updating money after rent payment:', {
         payerSocketId,
         payerMoney,
@@ -93,12 +93,27 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update all players' money
-      setPlayers(prev => prev.map(p => {
-        if (p.socketId === payerSocketId) return { ...p, money: payerMoney };
-        if (p.socketId === ownerSocketId) return { ...p, money: ownerMoney };
-        return p;
-      }));
+      // Update all players' money synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p => {
+          if (p.socketId === payerSocketId) {
+            // If this is the current player, also update player state
+            if (socket.id === payerSocketId) {
+              setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
+            }
+            return { ...p, money: payerMoney, loan: payerLoan };
+          }
+          if (p.socketId === ownerSocketId) {
+            // If this is the current player, also update player state
+            if (socket.id === ownerSocketId) {
+              setPlayer(prev => ({ ...prev, money: ownerMoney }));
+            }
+            return { ...p, money: ownerMoney };
+          }
+          return p;
+        });
+        return updatedPlayers;
+      });
     });
 
     // RENT BONUS
