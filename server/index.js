@@ -7,6 +7,7 @@ const Player        = require('./models/Player');
 const GameSession   = require('./models/GameSession');
 const GameEngine    = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
+const sequelize     = require('./config/database');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
@@ -44,13 +45,17 @@ const io     = new Server(server, {
 });
 
 // Initialize database
-sequelize
-  .authenticate()
+initDatabase()
+  .then(() => {
+    console.log('✅ Database initialized');
+    // Test the connection after initialization
+    return sequelize.authenticate();
+  })
   .then(() => {
     console.log('✅ Database connection established successfully.');
   })
   .catch(err => {
-    console.error('❌ Unable to connect to the database:', err);
+    console.error('❌ Database initialization/connection error:', err);
     // Add enhanced error logging
     console.error('Full error details:', {
       name: err.name,
