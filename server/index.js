@@ -1,16 +1,13 @@
 const express       = require('express');
 const http          = require('http');
-const mongoose      = require('mongoose');
 const cors          = require('cors');
 const { Server }    = require('socket.io');
-require('dotenv').config();
-
-const playerRoutes   = require('./routes/playerRoutes');
-const sessionRoutes  = require('./routes/sessionRoutes');
-const GameEngine     = require('./game/GameEngine');
-const GameSession    = require('./models/GameSession');
-const Player         = require('./models/Player');
+const initDatabase  = require('./models/init');
+const Player        = require('./models/Player');
+const GameSession   = require('./models/GameSession');
+const GameEngine    = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
+require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
 const app  = express();
@@ -32,16 +29,16 @@ const io     = new Server(server, {
   cors: corsOptions
 });
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/monopoly', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('MongoDB error:', err));
+// Initialize database
+initDatabase()
+  .then(() => {
+    console.log('✅ Database initialized');
+  })
+  .catch(err => {
+    console.error('❌ Database initialization error:', err);
+  });
 
 app.use(express.json());
-app.use('/api/players', playerRoutes);
-app.use('/api/sessions', sessionRoutes);
 
 const engine          = new GameEngine();
 let lobbyPlayers      = [];
@@ -78,33 +75,34 @@ io.on('connection', socket => {
     const isNameTaken = lobbyPlayers.some(p => 
       p.name.toLowerCase() === name.toLowerCase() && 
       p.socketId !== socket.id &&
-      !disconnectedPlayers.has(name)  // Only consider it taken if player hasn't disconnected
+      !disconnectedPlayers.has(name)
     );
     
     if (isNameTaken) {
-      console.log(`Name "${name}" is already taken by an active player`);
       socket.emit('joinError', { 
         message: 'This name is already taken. Please choose another name.' 
       });
       return;
     }
     
-    // Check if this is a reconnecting player
     if (hasStarted) {
       const disconnectedPlayer = disconnectedPlayers.get(name);
       if (disconnectedPlayer) {
-        // Player is reconnecting to an active game
-        console.log(`Player ${name} is reconnecting...`, {
-          oldSocketId: disconnectedPlayer.socketId,
-          newSocketId: socket.id,
-          playerState: disconnectedPlayer
-        });
-        
-        // Update the socket ID for the reconnecting player
+        // Player is reconnecting
         const oldSocketId = disconnectedPlayer.socketId;
         disconnectedPlayer.socketId = socket.id;
         
-        // Update the player in the engine and lobby
+        // Update the player in database
+        try {
+          await Player.update(
+            { socketId: socket.id },
+            { where: { socketId: oldSocketId } }
+          );
+        } catch (err) {
+          console.error('Error updating reconnected player:', err);
+        }
+        
+        // Update engine and lobby states
         engine.session.players = engine.session.players.map(p =>
           p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
         );
@@ -113,44 +111,53 @@ io.on('connection', socket => {
           p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
         );
 
-        // Remove from disconnected players list
         disconnectedPlayers.delete(name);
-
-        // Send the current game state to the reconnected player
+        
         socket.emit('gameStart', {
           players: engine.session.players,
           sessionId: currentSessionId,
           currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
         });
-
-        // Notify other players about the reconnection
+        
         io.emit('lobbyUpdate', lobbyPlayers);
-
-        // Send additional state updates to ensure UI is in sync
+        
         const currentPlayer = engine.getPlayer(socket.id);
         if (currentPlayer) {
-          // Update player position
           socket.emit('playerMoved', {
             playerId: socket.id,
             tileId: currentPlayer.tileId
           });
-
-          // If it's their turn and they've already moved, mark movement as done
+          
           if (currentPlayer.socketId === engine.session.players[engine.session.currentPlayerIndex].socketId) {
             socket.emit('movementDone');
           }
         }
-
         return;
       }
-      return; // Game has started and player wasn't previously in it
+      return;
     }
 
-    // Normal join lobby flow for new game
-    const p = { socketId: socket.id, name, ready: false, money: 10000, properties: [], tileId: 1, prevTile: 30, piece: null };
-    lobbyPlayers.push(p);
-    engine.addPlayer(p);
-    io.emit('lobbyUpdate', lobbyPlayers);
+    // Create new player
+    try {
+      const playerData = {
+        socketId: socket.id,
+        name,
+        ready: false,
+        money: 10000,
+        properties: [],
+        tileId: 1,
+        prevTile: 30,
+        piece: null
+      };
+
+      await Player.create(playerData);
+      lobbyPlayers.push(playerData);
+      engine.addPlayer(playerData);
+      io.emit('lobbyUpdate', lobbyPlayers);
+    } catch (err) {
+      console.error('Error creating new player:', err);
+      socket.emit('joinError', { message: 'Error joining game. Please try again.' });
+    }
   });
 
   socket.on('selectPiece', ({ piece }) => {

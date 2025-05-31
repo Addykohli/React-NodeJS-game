@@ -5,8 +5,8 @@ const sequelize = require('../config/database');
 const Player = sequelize.define('Player', {
   socketId: {
     type: DataTypes.STRING,
-    allowNull: false,
-    unique: true
+    primaryKey: true,
+    allowNull: false
   },
   name: {
     type: DataTypes.STRING,
@@ -21,7 +21,7 @@ const Player = sequelize.define('Player', {
     defaultValue: 10000
   },
   properties: {
-    type: DataTypes.ARRAY(DataTypes.INTEGER),
+    type: DataTypes.JSONB,
     defaultValue: []
   },
   tileId: {
@@ -40,6 +40,8 @@ const Player = sequelize.define('Player', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   }
+}, {
+  timestamps: true
 });
 
 module.exports = Player;

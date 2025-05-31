@@ -2,17 +2,20 @@ const sequelize = require('../config/database');
 const Player = require('./Player');
 const GameSession = require('./GameSession');
 
-const initDatabase = async () => {
+async function initDatabase() {
   try {
+    // Test the connection
     await sequelize.authenticate();
-    console.log('✅ PostgreSQL connected');
-    
+    console.log('Database connection has been established successfully.');
+
     // Sync all models
     await sequelize.sync();
-    console.log('✅ Database synchronized');
+    console.log('All models were synchronized successfully.');
+
   } catch (error) {
-    console.error('❌ Database connection error:', error);
+    console.error('Unable to connect to the database:', error);
+    throw error;
   }
-};
+}
 
 module.exports = initDatabase; 

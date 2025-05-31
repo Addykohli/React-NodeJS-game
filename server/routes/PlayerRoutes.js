@@ -21,10 +21,43 @@ router.post('/', async (req, res) => {
 // Get all players
 router.get('/', async (req, res) => {
   try {
-    const players = await Player.find().sort({ createdAt: 1 });
+    const players = await Player.findAll();
     res.json(players);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get one player
+router.get('/:id', async (req, res) => {
+  try {
+    const player = await Player.findOne({
+      where: { socketId: req.params.id }
+    });
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    res.json(player);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Update player
+router.patch('/:id', async (req, res) => {
+  try {
+    const [updated] = await Player.update(req.body, {
+      where: { socketId: req.params.id }
+    });
+    if (updated) {
+      const updatedPlayer = await Player.findOne({
+        where: { socketId: req.params.id }
+      });
+      return res.json(updatedPlayer);
+    }
+    throw new Error('Player not found');
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 
