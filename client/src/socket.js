@@ -6,8 +6,11 @@ const SOCKET_SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:
 const socket = io(SOCKET_SERVER_URL, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
-    }
+        methods: ["GET", "POST"],
+        credentials: true
+    },
+    withCredentials: true,
+    transports: ['websocket', 'polling']
 });
 
 export default socket;

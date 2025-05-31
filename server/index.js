@@ -16,8 +16,8 @@ const server = http.createServer(app);
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL 
-      : 'http://localhost:3000',
+    ? ['https://react-nodejs-game.onrender.com', 'https://react-nodejs-game-client.onrender.com']
+    : 'http://localhost:3000',
   methods: ['GET', 'POST'],
   credentials: true
 };
@@ -26,7 +26,13 @@ app.use(cors(corsOptions));
 
 // Socket.io configuration
 const io     = new Server(server, {
-  cors: corsOptions
+  cors: {
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://react-nodejs-game.onrender.com', 'https://react-nodejs-game-client.onrender.com']
+      : 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
 });
 
 // Initialize database
