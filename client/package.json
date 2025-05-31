@@ -15,10 +15,10 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "npx react-scripts start",
-    "build": "npx react-scripts build",
-    "test": "npx react-scripts test",
-    "eject": "npx react-scripts eject"
+    "dev": "node ./node_modules/react-scripts/scripts/start.js",
+    "build": "CI=false node ./node_modules/react-scripts/scripts/build.js",
+    "test": "node ./node_modules/react-scripts/scripts/test.js",
+    "eject": "node ./node_modules/react-scripts/scripts/eject.js"
   },
   "eslintConfig": {
     "extends": [
