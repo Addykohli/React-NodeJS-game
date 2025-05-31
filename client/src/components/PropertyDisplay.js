@@ -191,7 +191,7 @@ const PropertyDisplayLeft = ({ player, position }) => {
       position: 'absolute',
       right: '100%',
       top: position === 'top' ? '55%' : '100%',
-      transform: `translate(5px, calc(${position === 'top' ? '-50%' : '-95%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 155px' : ''}))`,
+      transform: `translate(5px, calc(${position === 'top' ? '-50%' : '-135%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 155px' : ''}))`,
       width: cardWidth + 'px',
       display: 'flex',
       alignItems: 'flex-start',
