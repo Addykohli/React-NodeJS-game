@@ -159,42 +159,68 @@ export function GameProvider({ children }) {
     });
 
     // START BONUS
-    socket.on('startBonus', ({ playerSocketId, newMoney }) => {
+    socket.on('startBonus', ({ playerSocketId, newMoney, amount }) => {
+      console.log('[GameContext] Updating money after start bonus:', {
+        playerSocketId,
+        newMoney,
+        amount,
+        currentPlayerSocketId: socket.id
+      });
+      
       // Update current player first if they got the bonus
-      if (player?.socketId === playerSocketId) {
+      if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
 
       // Then update all players
-      setPlayers(prev => prev.map(p =>
-        p.socketId === playerSocketId ? { ...p, money: newMoney } : p
-      ));
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerSocketId ? { ...p, money: newMoney } : p
+        )
+      );
     });
 
     // CASINO RESULT
     socket.on('casinoResult', ({ playerId, playerMoney }) => {
+      console.log('[GameContext] Updating money after casino result:', {
+        playerId,
+        playerMoney,
+        currentPlayerSocketId: socket.id
+      });
+      
       // Update current player first if they're involved
-      if (player?.socketId === playerId) {
+      if (socket.id === playerId) {
         setPlayer(prev => ({ ...prev, money: playerMoney }));
       }
 
       // Then update all players
-      setPlayers(prev => prev.map(p =>
-        p.socketId === playerId ? { ...p, money: playerMoney } : p
-      ));
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerId ? { ...p, money: playerMoney } : p
+        )
+      );
     });
 
-    // ROAD CASH RESULT
-    socket.on('roadCashResult', ({ playerSocketId, newMoney }) => {
+    // ROAD CASH
+    socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
+      console.log('[GameContext] Updating money after road cash:', {
+        playerSocketId,
+        newMoney,
+        amount,
+        currentPlayerSocketId: socket.id
+      });
+      
       // Update current player first if they got the money
-      if (player?.socketId === playerSocketId) {
+      if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
 
       // Then update all players
-      setPlayers(prev => prev.map(p =>
-        p.socketId === playerSocketId ? { ...p, money: newMoney } : p
-      ));
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerSocketId ? { ...p, money: newMoney } : p
+        )
+      );
     });
 
     // Add loan handling
@@ -223,23 +249,49 @@ export function GameProvider({ children }) {
       }));
     });
 
+    // TRADE ACCEPTED
     socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
-      setPlayers(prev => prev.map(p => {
-        if (p.socketId === fromPlayer.socketId) {
-          return { ...p, money: fromPlayer.money, properties: fromPlayer.properties };
-        }
-        if (p.socketId === toPlayer.socketId) {
-          return { ...p, money: toPlayer.money, properties: toPlayer.properties };
-        }
-        return p;
-      }));
+      console.log('[GameContext] Updating after trade accepted:', {
+        fromPlayer,
+        toPlayer,
+        currentPlayerSocketId: socket.id
+      });
 
-      // Update current player if they were involved in the trade
-      if (player?.socketId === fromPlayer.socketId) {
-        setPlayer(prev => ({ ...prev, money: fromPlayer.money, properties: fromPlayer.properties }));
-      } else if (player?.socketId === toPlayer.socketId) {
-        setPlayer(prev => ({ ...prev, money: toPlayer.money, properties: toPlayer.properties }));
+      // Update current player first if they were involved
+      if (socket.id === fromPlayer.socketId) {
+        setPlayer(prev => ({ 
+          ...prev, 
+          money: fromPlayer.money, 
+          properties: fromPlayer.properties 
+        }));
+      } else if (socket.id === toPlayer.socketId) {
+        setPlayer(prev => ({ 
+          ...prev, 
+          money: toPlayer.money, 
+          properties: toPlayer.properties 
+        }));
       }
+
+      // Then update all players
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => {
+          if (p.socketId === fromPlayer.socketId) {
+            return { 
+              ...p, 
+              money: fromPlayer.money, 
+              properties: fromPlayer.properties 
+            };
+          }
+          if (p.socketId === toPlayer.socketId) {
+            return { 
+              ...p, 
+              money: toPlayer.money, 
+              properties: toPlayer.properties 
+            };
+          }
+          return p;
+        })
+      );
     });
 
     return () => {

@@ -435,51 +435,6 @@ export default function GameScreen() {
       }
     });
 
-    // Add start bonus handler
-    socket.on('startBonus', ({ playerSocketId, newMoney, amount, reason }) => {
-      console.log('[GameScreen] startBonus', { playerSocketId, newMoney, amount, reason });
-      
-      // Update players' money
-      const updated = players.map(p =>
-        p.socketId === playerSocketId ? { ...p, money: newMoney } : p
-      );
-      setPlayers(updated);
-
-      // Update current player's money if they got the bonus
-      if (player.socketId === playerSocketId) {
-        setPlayer({ ...player, money: newMoney });
-        setError(`You received $${amount} for ${reason} Start!`);
-        // Clear bonus message after 7 seconds
-        setTimeout(() => setError(null), 7000);
-      }
-    });
-
-    // Add playerMoved event handler
-    socket.on('playerMoved', ({ playerId, tileId }) => {
-      console.log('[GameScreen] playerMoved', { playerId, tileId });
-      if (playerId === player?.socketId) {
-        setPlayer(prev => ({ ...prev, tileId }));
-      }
-      setPlayers(prev => 
-        prev.map(p => p.socketId === playerId ? { ...p, tileId } : p)
-      );
-      // Clear any previous messages when a player moves
-      setError(null);
-    });
-
-    socket.on('purchaseFailed', ({ reason }) => {
-      console.log('[GameScreen] purchaseFailed', reason);
-      if (reason === 'insufficientFunds') {
-        setError("You don't have enough money.");
-      } else if (reason === 'alreadyOwned') {
-        setError('You already own this property.');
-      } else {
-        setError('Cannot buy this property.');
-      }
-      // Clear error message after 5 seconds
-      setTimeout(() => setError(null), 5000);
-    });
-
     // Add rent payment handler
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney, amount, baseRent, multiplier, propertyName }) => {
       console.log('[GameScreen] rentPaid', { payerSocketId, ownerSocketId, amount });
@@ -536,6 +491,123 @@ export default function GameScreen() {
       setTimeout(() => setError(null), 5000);
     });
 
+    // Add start bonus handler
+    socket.on('startBonus', ({ playerSocketId, newMoney, amount, reason }) => {
+      console.log('[GameScreen] startBonus', { playerSocketId, newMoney, amount, reason });
+      
+      // Update players' money synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p =>
+          p.socketId === playerSocketId ? { ...p, money: newMoney } : p
+        );
+
+        // Update current player if they got the bonus
+        if (player.socketId === playerSocketId) {
+          setPlayer(prev => ({ ...prev, money: newMoney }));
+          setError(`You received $${amount} for ${reason} Start!`);
+          setTimeout(() => setError(null), 7000);
+        }
+
+        return updatedPlayers;
+      });
+    });
+
+    // Add road cash handler
+    socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
+      console.log('[GameScreen] roadCashResult', { playerSocketId, newMoney, amount });
+      
+      // Update players' money synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p =>
+          p.socketId === playerSocketId ? { ...p, money: newMoney } : p
+        );
+
+        // Update current player if they got the money
+        if (player.socketId === playerSocketId) {
+          setPlayer(prev => ({ ...prev, money: newMoney }));
+          setError(`You won $${amount} on the road!`);
+          setTimeout(() => setError(null), 5000);
+        }
+
+        return updatedPlayers;
+      });
+    });
+
+    // Add casino result handler
+    socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
+      console.log('[GameScreen] casinoResult', { playerId, dice, amount, won, playerName, playerMoney });
+      
+      // Update players' money synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p =>
+          p.socketId === playerId ? { ...p, money: playerMoney } : p
+        );
+
+        // Update current player if they're involved
+        if (player.socketId === playerId) {
+          setPlayer(prev => ({ ...prev, money: playerMoney }));
+        } else {
+          setError(`${playerName} ${won ? 'won' : 'lost'} $${amount} at the casino!`);
+          setTimeout(() => setError(null), 5000);
+        }
+
+        return updatedPlayers;
+      });
+    });
+
+    // Add trade accepted handler
+    socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
+      console.log('[GameScreen] tradeAccepted', { fromPlayer, toPlayer });
+      
+      // Update players' money and properties synchronously
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(p => {
+          if (p.socketId === fromPlayer.socketId) {
+            return { ...p, money: fromPlayer.money, properties: fromPlayer.properties };
+          }
+          if (p.socketId === toPlayer.socketId) {
+            return { ...p, money: toPlayer.money, properties: toPlayer.properties };
+          }
+          return p;
+        });
+
+        // Update current player if they were involved
+        if (player.socketId === fromPlayer.socketId) {
+          setPlayer(prev => ({ ...prev, money: fromPlayer.money, properties: fromPlayer.properties }));
+        } else if (player.socketId === toPlayer.socketId) {
+          setPlayer(prev => ({ ...prev, money: toPlayer.money, properties: toPlayer.properties }));
+        }
+
+        return updatedPlayers;
+      });
+    });
+
+    // Add playerMoved event handler
+    socket.on('playerMoved', ({ playerId, tileId }) => {
+      console.log('[GameScreen] playerMoved', { playerId, tileId });
+      if (playerId === player?.socketId) {
+        setPlayer(prev => ({ ...prev, tileId }));
+      }
+      setPlayers(prev => 
+        prev.map(p => p.socketId === playerId ? { ...p, tileId } : p)
+      );
+      // Clear any previous messages when a player moves
+      setError(null);
+    });
+
+    socket.on('purchaseFailed', ({ reason }) => {
+      console.log('[GameScreen] purchaseFailed', reason);
+      if (reason === 'insufficientFunds') {
+        setError("You don't have enough money.");
+      } else if (reason === 'alreadyOwned') {
+        setError('You already own this property.');
+      } else {
+        setError('Cannot buy this property.');
+      }
+      // Clear error message after 5 seconds
+      setTimeout(() => setError(null), 5000);
+    });
+
     // Add rent bonus handler
     socket.on('rentBonus', ({ playerSocketId, newMoney, amount, propertyName }) => {
       console.log('[GameScreen] rentBonus', { playerSocketId, amount });
@@ -548,46 +620,9 @@ export default function GameScreen() {
 
       // Update current player if they got the bonus
       if (player.socketId === playerSocketId) {
-        setPlayer({ ...player, money: newMoney });
+        setPlayer(prev => ({ ...player, money: newMoney }));
         setError(`You received $${amount} bonus for landing on your property ${propertyName}!`);
         // Clear bonus message after 5 seconds
-        setTimeout(() => setError(null), 5000);
-      }
-    });
-
-    // Add casino result handler for other players
-    socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
-      console.log('[GameScreen] casinoResult', { playerId, dice, amount, won, playerName, playerMoney });
-      
-      // Update player money in the game state
-      const updated = players.map(p =>
-        p.socketId === playerId ? { ...p, money: playerMoney } : p
-      );
-      setPlayers(updated);
-      
-      if (player.socketId === playerId) {
-        setPlayer(prev => ({ ...prev, money: playerMoney }));
-      } else {
-        setError(`${playerName} ${won ? 'won' : 'lost'} $${amount} at the casino!`);
-        setTimeout(() => setError(null), 5000);
-      }
-    });
-
-    // Add roadCash handler
-    socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
-      console.log('[GameScreen] roadCashResult', { playerSocketId, newMoney, amount });
-      
-      // Update player's money
-      const updated = players.map(p =>
-        p.socketId === playerSocketId ? { ...p, money: newMoney } : p
-      );
-      setPlayers(updated);
-
-      // Update current player if they got the money
-      if (player.socketId === playerSocketId) {
-        setPlayer({ ...player, money: newMoney });
-        setError(`You received $${amount} from the road!`);
-        // Clear message after 5 seconds
         setTimeout(() => setError(null), 5000);
       }
     });
@@ -748,6 +783,7 @@ export default function GameScreen() {
       socket.off('stonePaperScissorsResult');
       socket.off('stonePaperScissorsTie');
       socket.off('stonePaperScissorsTieResolved');
+      socket.off('tradeAccepted');
     };
   }, [socket, player, players, setPlayer, setPlayers]);
 

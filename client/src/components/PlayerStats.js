@@ -25,6 +25,7 @@ const PlayerStats = () => {
     socket.on('loanUpdated', handleStateUpdate);
     socket.on('tradeAccepted', handleStateUpdate);
     socket.on('playerMoved', handleStateUpdate);
+    socket.on('rentBonus', handleStateUpdate);
 
     return () => {
       // Cleanup all event listeners
@@ -36,6 +37,7 @@ const PlayerStats = () => {
       socket.off('loanUpdated', handleStateUpdate);
       socket.off('tradeAccepted', handleStateUpdate);
       socket.off('playerMoved', handleStateUpdate);
+      socket.off('rentBonus', handleStateUpdate);
     };
   }, [socket]);
 
@@ -61,16 +63,16 @@ const PlayerStats = () => {
         return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
       case 3: // Three other players
         return [
-          { position: 'left', top: '100%' },
+          { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
-          { position: 'top' }
+          { position: 'top' , left: '50%'}
         ];
       case 4: // Four other players
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
-          { position: 'top' },
-          { position: 'top' }
+          { position: 'top' , left: '33%'},
+          { position: 'top' , left: '66%'}
         ];
       case 5: // Five other players
         return [
@@ -78,7 +80,7 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top' }
+          { position: 'top' , left: '50%'}
         ];
       case 6: // Six other players
         return [
@@ -86,8 +88,8 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top' },
-          { position: 'top' }
+          { position: 'top' , left: '33%'},
+          { position: 'top' , left: '66%'}
         ];
       case 7: // Seven other players
         return [
@@ -95,9 +97,9 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top' },
-          { position: 'top' },
-          { position: 'top' }
+          { position: 'top' , left: '25%'},
+          { position: 'top' , left: '50%'},
+          { position: 'top' , left: '75%'}
         ];
       default:
         return [];
