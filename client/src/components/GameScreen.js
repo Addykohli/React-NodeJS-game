@@ -777,7 +777,6 @@ export default function GameScreen() {
   return (
     <div style={{
       position: 'relative',
-      paddingTop: '20%'
     }}>
       {/* Side Panel Buttons */}
       {Object.entries(panelConfigs).map(([panelId, config], index) => (
