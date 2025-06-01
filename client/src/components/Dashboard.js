@@ -3,7 +3,7 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 export default function Dashboard() {
-  const { player } = useContext(GameContext);
+  const { player, socket } = useContext(GameContext);
   
   const updateDisplay = useCallback(() => {
     console.log('[Dashboard] Player money updated:', {
@@ -12,6 +12,35 @@ export default function Dashboard() {
       loan: player?.loan
     });
   }, [player?.money, player?.loan, player?.name]);
+
+  // Listen for all money-changing events
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMoneyUpdate = () => {
+      updateDisplay();
+    };
+
+    // Subscribe to all money-changing events
+    socket.on('rentPaid', handleMoneyUpdate);
+    socket.on('startBonus', handleMoneyUpdate);
+    socket.on('propertyUpdated', handleMoneyUpdate);
+    socket.on('casinoResult', handleMoneyUpdate);
+    socket.on('roadCashResult', handleMoneyUpdate);
+    socket.on('loanUpdated', handleMoneyUpdate);
+    socket.on('tradeAccepted', handleMoneyUpdate);
+
+    return () => {
+      // Cleanup all event listeners
+      socket.off('rentPaid', handleMoneyUpdate);
+      socket.off('startBonus', handleMoneyUpdate);
+      socket.off('propertyUpdated', handleMoneyUpdate);
+      socket.off('casinoResult', handleMoneyUpdate);
+      socket.off('roadCashResult', handleMoneyUpdate);
+      socket.off('loanUpdated', handleMoneyUpdate);
+      socket.off('tradeAccepted', handleMoneyUpdate);
+    };
+  }, [socket, updateDisplay]);
 
   useEffect(() => {
     updateDisplay();

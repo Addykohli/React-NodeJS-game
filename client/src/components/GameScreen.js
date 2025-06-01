@@ -786,7 +786,7 @@ export default function GameScreen() {
           style={{
             position: 'fixed',
             right: activeSidePanel === panelId ? '540px' : '0',
-            top: `${ 50%+ (index * 150)}px`,
+            top: `${ 30+ (index * 150)}px`,
             width: activeSidePanel === panelId ? '90px' : '120px',
             height: '150px',
             backgroundColor: 'rgba(0, 0, 0, 0.94)',

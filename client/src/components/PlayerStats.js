@@ -1,45 +1,58 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { GameContext } from '../context/GameContext';
 import Dicebox from '../assets/diceBoard.png';
 import { tiles } from '../data/tiles';
 
 const PlayerStats = () => {
-  const { players = [], player, currentPlayerId, socket } = useContext(GameContext);
+  const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);
   const [diceRolls, setDiceRolls] = useState({});
 
+  // Listen for all money and property changing events
   useEffect(() => {
     if (!socket) return;
 
-    const handleDiceRoll = ({ playerId, dice }) => {
-      setDiceRolls(prev => ({
-        ...prev,
-        [playerId]: dice
-      }));
+    const handleStateUpdate = () => {
+      // Force a re-render by updating dice rolls state
+      setDiceRolls(prev => ({ ...prev }));
     };
 
-    const handleTurnChange = () => {
-      setDiceRolls({});
-    };
-
-    socket.on('diceRolled', handleDiceRoll);
-    socket.on('turnChanged', handleTurnChange);
+    // Subscribe to all money and property changing events
+    socket.on('rentPaid', handleStateUpdate);
+    socket.on('startBonus', handleStateUpdate);
+    socket.on('propertyUpdated', handleStateUpdate);
+    socket.on('casinoResult', handleStateUpdate);
+    socket.on('roadCashResult', handleStateUpdate);
+    socket.on('loanUpdated', handleStateUpdate);
+    socket.on('tradeAccepted', handleStateUpdate);
+    socket.on('playerMoved', handleStateUpdate);
 
     return () => {
-      socket.off('diceRolled', handleDiceRoll);
-      socket.off('turnChanged', handleTurnChange);
+      // Cleanup all event listeners
+      socket.off('rentPaid', handleStateUpdate);
+      socket.off('startBonus', handleStateUpdate);
+      socket.off('propertyUpdated', handleStateUpdate);
+      socket.off('casinoResult', handleStateUpdate);
+      socket.off('roadCashResult', handleStateUpdate);
+      socket.off('loanUpdated', handleStateUpdate);
+      socket.off('tradeAccepted', handleStateUpdate);
+      socket.off('playerMoved', handleStateUpdate);
     };
   }, [socket]);
 
-  if (!Array.isArray(players) || players.length === 0 || !player || !player.socketId) return null;
+  // Update dice rolls when a new roll happens
+  useEffect(() => {
+    if (diceRoll) {
+      setDiceRolls(prev => ({
+        ...prev,
+        [diceRoll.playerId]: diceRoll
+      }));
+    }
+  }, [diceRoll]);
 
-  // Show all other players except the local player
-  const others = players.filter(p => p && p.socketId !== player.socketId);
+  // Filter out current player and get others
+  const others = players.filter(p => p && p.socketId !== player?.socketId);
 
-  if (others.length === 0) {
-    return null;
-  }
-
-  // Calculate positions based on number of players
+  // Get positions based on number of players
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
       case 1: // Just one other player
@@ -48,16 +61,16 @@ const PlayerStats = () => {
         return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
       case 3: // Three other players
         return [
-          { position: 'left', top: '25%' },
+          { position: 'left', top: '100%' },
           { position: 'left', top: '75%' },
-          { position: 'top', left: '50%' }
+          { position: 'top' }
         ];
       case 4: // Four other players
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
-          { position: 'top', left: '33%' },
-          { position: 'top', left: '66%' }
+          { position: 'top' },
+          { position: 'top' }
         ];
       case 5: // Five other players
         return [
@@ -65,7 +78,7 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top', left: '50%' }
+          { position: 'top' }
         ];
       case 6: // Six other players
         return [
@@ -73,8 +86,8 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top', left: '33%' },
-          { position: 'top', left: '66%' }
+          { position: 'top' },
+          { position: 'top' }
         ];
       case 7: // Seven other players
         return [
@@ -82,9 +95,9 @@ const PlayerStats = () => {
           { position: 'left', top: '75%' },
           { position: 'right', top: '25%' },
           { position: 'right', top: '75%' },
-          { position: 'top', left: '25%' },
-          { position: 'top', left: '50%' },
-          { position: 'top', left: '75%' }
+          { position: 'top' },
+          { position: 'top' },
+          { position: 'top' }
         ];
       default:
         return [];
@@ -101,12 +114,13 @@ const PlayerStats = () => {
 
         const isCurrentPlayer = p.socketId === currentPlayerId;
         const playerDice = diceRolls[p.socketId];
+        const currentTile = tiles.find(t => t.id === p.tileId)?.name || 'Unknown';
 
         const style = {
           position: 'absolute',
           border: '1px solid black',
           padding: '16px',
-          background: 'rgba(80, 80, 80, 0.61)',
+          background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.61)' : 'rgba(80, 80, 80, 0.61)',
           fontSize: '1.5rem',
           color: 'white',
           width: '260px',
@@ -130,74 +144,39 @@ const PlayerStats = () => {
           style.transform = 'translate(-50%, 0)';
         }
 
-        // Calculate dice board container style - only position and size
-        const diceContainerStyle = {
-          position: 'absolute',
-          width: '288px',
-          zIndex: 0,
-          ...(pos.position === 'top' ? {
-            bottom: 'calc(100% + 350px )', // 82px is the height of stats box + 2px gap
-            left: pos.left || '50%',
-            transform: 'translate(-50%, 0)'
-          } : {
-            ...(pos.position === 'left' ? { right: 'calc(100% + 260px)' } : { left: 'calc(100% + 235px)' }),
-            top: pos.top || '50%',
-            transform: 'translate(0, calc(-50% + 175px))' // Move down by stats box height + 2px
-          })
-        };
-
         return (
-          <div key={p.socketId || idx}>
-            <div style={style}>
-              <strong style={{ fontSize: '1.6rem' }}>{p.name}</strong>'s Stats<br />
-              <div style={{ marginTop: '8px' }}>
-                Money: ${typeof p.money === 'number' ? p.money.toLocaleString() : 0}
-              </div>
-              <div style={{ marginBottom: '5px' }}>
-                Loan: ${p.loan || 0}
-              </div>
-              <div style={{ 
-                fontSize: '1.4rem',
-                borderTop: '1px solid rgba(255, 255, 255, 0.2)',
-                paddingTop: '5px',
-                marginTop: '5px'
-              }}>
-                At: {tiles.find(t => t.id === p.tileId)?.name || 'Unknown'}
-              </div>
+          <div key={p.socketId} style={style}>
+            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{p.name}</div>
+            <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+              Money: ${p.money?.toLocaleString() || 0}
             </div>
-            {(isCurrentPlayer || playerDice) && (
-              <div style={diceContainerStyle}>
-                <img
-                  src={Dicebox}
-                  alt="Dice Board"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'fill'
-                  }}
+            {p.loan > 0 && (
+              <div style={{ fontSize: '1.2rem', marginBottom: '4px', color: '#ff6b6b' }}>
+                Loan: ${p.loan?.toLocaleString()}
+              </div>
+            )}
+            <div style={{ fontSize: '1.2rem' }}>
+              At: {currentTile}
+            </div>
+            {playerDice && (
+              <div style={{ 
+                marginTop: '8px',
+                display: 'flex',
+                gap: '8px',
+                justifyContent: 'center'
+              }}>
+                <img 
+                  src={`/dice/dice${playerDice.die1}.png`}
+                  alt={`Die ${playerDice.die1}`}
+                  width={40}
+                  height={40}
                 />
-                {playerDice && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    display: 'flex',
-                    gap: '16px'
-                  }}>
-                    {playerDice.map((value, i) => (
-                      <img
-                        key={i}
-                        src={`/dice${value}.png`}
-                        alt={`Dice ${value}`}
-                        style={{
-                          width: '64px',
-                          height: '64px'
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                <img 
+                  src={`/dice/dice${playerDice.die2}.png`}
+                  alt={`Die ${playerDice.die2}`}
+                  width={40}
+                  height={40}
+                />
               </div>
             )}
           </div>
