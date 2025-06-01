@@ -289,15 +289,35 @@ io.on('connection', socket => {
             bonusAmount,
             currentLoan: player.loan
           });
-          player.money += bonusAmount;
-          passedStart = true; // Set flag to prevent double bonus
           
-          // Update player in database
+          // Start a transaction
+          const transaction = await sequelize.transaction();
+
           try {
-            await Player.findOneAndUpdate(
-              { socketId: socket.id },
-              { money: player.money }
+            player.money += bonusAmount;
+            passedStart = true; // Set flag to prevent double bonus
+            
+            // Update player in database within transaction
+            await Player.update(
+              { money: player.money },
+              { where: { socketId: socket.id }, transaction }
             );
+
+            // Update the engine's player data
+            engine.session.players = engine.session.players.map(p =>
+              p.socketId === socket.id ? { ...p, money: player.money } : p
+            );
+
+            // Update game session if exists
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { where: { id: currentSessionId }, transaction }
+              );
+            }
+
+            // Commit transaction
+            await transaction.commit();
 
             // Notify clients about the bonus
             io.emit('startBonus', {
@@ -306,7 +326,14 @@ io.on('connection', socket => {
               amount: bonusAmount,
               reason: 'landing on'
             });
+
+            // Broadcast game event
+            const playerName = engine.getPlayer(socket.id).name;
+            broadcastGameEvent(`${playerName} received $${bonusAmount} for landing on Start!`);
+
           } catch (err) {
+            // Rollback transaction on error
+            await transaction.rollback();
             console.error('Error processing start bonus:', err);
           }
         }
@@ -443,55 +470,33 @@ io.on('connection', socket => {
         const baseRent = finalTile.rent;
         const finalRent = baseRent * rentMultiplier;
 
-        console.log('[DEBUG] Rent calculation:', {
-          baseRent,
-          rentMultiplier,
-          finalRent,
-          currentPlayerMoneyBefore: currentPlayer.money,
-          ownerMoneyBefore: propertyOwner.money
-        });
+        // Start a transaction
+        const transaction = await sequelize.transaction();
 
-        // Player landed on someone else's property - pay rent
-        currentPlayer.money -= finalRent;
-        propertyOwner.money += finalRent;
-
-        // If player has negative money, convert it to loan and set money to 0
-        if (currentPlayer.money < 0) {
-          const loanIncrease = Math.abs(currentPlayer.money);
-          currentPlayer.loan = (currentPlayer.loan || 0) + loanIncrease;
-          currentPlayer.money = 0;
-          console.log('[DEBUG] Converted negative money to loan:', {
-            loanIncrease,
-            newLoan: currentPlayer.loan,
-            newMoney: currentPlayer.money
-          });
-        }
-
-        console.log('[DEBUG] After rent payment:', {
-          currentPlayerMoneyAfter: currentPlayer.money,
-          currentPlayerLoanAfter: currentPlayer.loan,
-          ownerMoneyAfter: propertyOwner.money,
-          moneyChange: finalRent
-        });
-
-        // Update both players in the database
         try {
-          console.log('[DEBUG] Updating database with new money values');
-          
-          await Player.findOneAndUpdate(
-            { socketId: currentPlayer.socketId },
-            { money: currentPlayer.money, loan: currentPlayer.loan }
+          // Player landed on someone else's property - pay rent
+          currentPlayer.money -= finalRent;
+          propertyOwner.money += finalRent;
+
+          // If player has negative money, convert it to loan and set money to 0
+          if (currentPlayer.money < 0) {
+            const loanIncrease = Math.abs(currentPlayer.money);
+            currentPlayer.loan = (currentPlayer.loan || 0) + loanIncrease;
+            currentPlayer.money = 0;
+          }
+
+          // Update both players in database within transaction
+          await Player.update(
+            { money: currentPlayer.money, loan: currentPlayer.loan },
+            { where: { socketId: currentPlayer.socketId }, transaction }
           );
-          console.log('[DEBUG] Updated current player money and loan in DB');
-          
-          await Player.findOneAndUpdate(
-            { socketId: propertyOwner.socketId },
-            { money: propertyOwner.money }
+
+          await Player.update(
+            { money: propertyOwner.money },
+            { where: { socketId: propertyOwner.socketId }, transaction }
           );
-          console.log('[DEBUG] Updated owner money in DB');
 
           // Update the engine's player data
-          const oldEnginePlayers = [...engine.session.players];
           engine.session.players = engine.session.players.map(p => {
             if (p.socketId === currentPlayer.socketId) {
               return { ...p, money: currentPlayer.money, loan: currentPlayer.loan };
@@ -502,22 +507,18 @@ io.on('connection', socket => {
             return p;
           });
 
-          console.log('[DEBUG] Engine players update:', {
-            before: oldEnginePlayers.map(p => ({ socketId: p.socketId, money: p.money, loan: p.loan })),
-            after: engine.session.players.map(p => ({ socketId: p.socketId, money: p.money, loan: p.loan }))
-          });
-
           // Update game session if exists
           if (currentSessionId) {
-            await GameSession.findByIdAndUpdate(
-              currentSessionId,
-              { players: engine.session.players }
+            await GameSession.update(
+              { players: engine.session.players },
+              { where: { id: currentSessionId }, transaction }
             );
-            console.log('[DEBUG] Updated game session');
           }
 
+          // Commit transaction
+          await transaction.commit();
+
           // Notify clients about the rent payment
-          console.log('[DEBUG] Emitting rentPaid event');
           io.emit('rentPaid', {
             payerSocketId: currentPlayer.socketId,
             payerMoney: currentPlayer.money,
@@ -536,9 +537,10 @@ io.on('connection', socket => {
           const message = `${payer.name} paid $${finalRent} rent to ${owner.name} for ${finalTile.name}. ${payer.name} now has $${payer.money}${payer.loan ? ` and $${payer.loan} loan` : ''}.`;
           broadcastGameEvent(message);
 
-          console.log('[DEBUG] Rent payment complete');
         } catch (err) {
-          console.error('[DEBUG] Error processing rent payment:', err);
+          // Rollback transaction on error
+          await transaction.rollback();
+          console.error('Error processing rent payment:', err);
         }
       } else if (isOwnedByCurrentPlayer) {
         // Player landed on their own property - get bonus rent with multiplier
@@ -823,14 +825,17 @@ io.on('connection', socket => {
     const player = engine.getPlayer(socket.id);
     if (!player) return;
 
-    // Add the amount to player's money
-    player.money += amount;
+    // Start a transaction
+    const transaction = await sequelize.transaction();
 
-    // Update player in database and engine
     try {
-      await Player.findOneAndUpdate(
-        { socketId: socket.id },
-        { money: player.money }
+      // Add the amount to player's money
+      player.money += amount;
+
+      // Update player in database within transaction
+      await Player.update(
+        { money: player.money },
+        { where: { socketId: socket.id }, transaction }
       );
 
       // Update the engine's player data
@@ -840,11 +845,14 @@ io.on('connection', socket => {
 
       // Update game session if exists
       if (currentSessionId) {
-        await GameSession.findByIdAndUpdate(
-          currentSessionId,
-          { players: engine.session.players }
+        await GameSession.update(
+          { players: engine.session.players },
+          { where: { id: currentSessionId }, transaction }
         );
       }
+
+      // Commit transaction
+      await transaction.commit();
 
       // Notify all clients about the result
       io.emit('roadCashResult', {
@@ -857,6 +865,8 @@ io.on('connection', socket => {
       broadcastGameEvent(`${player.name} won $${amount} on the road!`);
 
     } catch (err) {
+      // Rollback transaction on error
+      await transaction.rollback();
       console.error('Error processing road cash:', err);
     }
   });
