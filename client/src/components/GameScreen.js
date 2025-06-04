@@ -918,7 +918,8 @@ export default function GameScreen() {
                   background: 'linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 10%, rgba(255, 255, 255, 0.3) 90%, transparent 100%)',
                   pointerEvents: 'none',
                   position: 'relative',
-                  zIndex: 2
+                  zIndex: 3000,
+                  transform: 'translateY(-1px)'
                 }} />
               )}
             </React.Fragment>

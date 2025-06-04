@@ -962,41 +962,63 @@ io.on('connection', socket => {
     }
 
     try {
-      // Update player in database
-      await Player.findOneAndUpdate(
-        { socketId: playerId },
-        { 
-          properties: player.properties,
-          money: player.money
-        }
-      );
+      // Start a transaction
+      const transaction = await sequelize.transaction();
 
-      // Update game session if exists
-      if (currentSessionId) {
-        await GameSession.findByIdAndUpdate(
-          currentSessionId,
-          { players: engine.session.players }
+      try {
+        // Update player in database within transaction
+        const [updatedRows] = await Player.update(
+          { 
+            properties: player.properties,
+            money: player.money
+          },
+          { 
+            where: { socketId: playerId },
+            transaction
+          }
         );
-      }
 
-      // Notify all clients about the property update and money change
-      io.emit('propertyUpdated', {
-        playerId,
-        propertyId,
-        action,
-        newMoney: player.money
-      });
-
-      // Broadcast game event for property sale
-      if (action === 'remove') {
-        const { tiles } = require('./data/tiles.cjs');
-        const property = tiles.find(t => t.id === propertyId);
-        if (property) {
-          broadcastGameEvent(`${player.name} sold ${property.name} for $${refundAmount}`);
+        if (updatedRows === 0) {
+          throw new Error('Failed to update player');
         }
+
+        // Update game session if exists
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { 
+              where: { id: currentSessionId },
+              transaction
+            }
+          );
+        }
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Notify all clients about the property update and money change
+        io.emit('propertyUpdated', {
+          playerId,
+          propertyId,
+          action,
+          newMoney: player.money
+        });
+
+        // Broadcast game event for property sale
+        if (action === 'remove') {
+          const { tiles } = require('./data/tiles.cjs');
+          const property = tiles.find(t => t.id === propertyId);
+          if (property) {
+            broadcastGameEvent(`${player.name} sold ${property.name} for $${refundAmount}`);
+          }
+        }
+      } catch (err) {
+        // Rollback transaction on error
+        await transaction.rollback();
+        console.error('Error updating property ownership:', err);
       }
     } catch (err) {
-      console.error('Error updating property ownership:', err);
+      console.error('Error starting transaction:', err);
     }
   });
 

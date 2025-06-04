@@ -401,12 +401,23 @@ const PropertyDisplay = () => {
               properties: action === 'add' 
                 ? [...(p.properties || []), propertyId]
                 : (p.properties || []).filter(id => id !== propertyId),
-              money: p.money + newMoney
+              money: newMoney
             };
           }
           return p;
         });
       });
+
+      // Also update current player if they're involved
+      if (player?.socketId === playerId) {
+        setPlayer(prev => ({
+          ...prev,
+          properties: action === 'add'
+            ? [...(prev.properties || []), propertyId]
+            : (prev.properties || []).filter(id => id !== propertyId),
+          money: newMoney
+        }));
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
