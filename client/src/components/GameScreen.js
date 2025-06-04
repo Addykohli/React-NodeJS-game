@@ -893,7 +893,8 @@ export default function GameScreen() {
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   borderLeft: activeSidePanel === panelId ? `4px solid ${config.color}` : 'none',
-                  position: 'relative'
+                  position: 'relative',
+                  zIndex: 1
                 }}
               >
                 <div style={{
@@ -915,7 +916,9 @@ export default function GameScreen() {
                   height: '1px',
                   margin: '0 20px',
                   background: 'linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 10%, rgba(255, 255, 255, 0.3) 90%, transparent 100%)',
-                  pointerEvents: 'none'
+                  pointerEvents: 'none',
+                  position: 'relative',
+                  zIndex: 2
                 }} />
               )}
             </React.Fragment>
