@@ -1,7 +1,7 @@
 // server/routes/playerRoutes.js
 const express = require('express');
 const router = express.Router();
-const Player = require('../models/Player');
+const { Player } = require('../models');
 
 // Create or update a player (upsert by socketId)
 router.post('/', async (req, res) => {
@@ -79,6 +79,50 @@ router.delete('/clear', async (req, res) => {
     res.json({ message: 'All players cleared' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Join game route
+router.post('/join', async (req, res) => {
+  const { name } = req.body;
+  
+  try {
+    // Check if player with same name exists and is disconnected
+    const existingPlayer = await Player.findOne({
+      where: { name, isConnected: false }
+    });
+
+    if (existingPlayer) {
+      // Update existing player
+      const [updatedRows] = await Player.update(
+        { isConnected: true },
+        { where: { id: existingPlayer.id } }
+      );
+
+      if (updatedRows === 0) {
+        return res.status(500).json({ error: 'Failed to update player' });
+      }
+
+      return res.json({
+        ...existingPlayer.toJSON(),
+        isConnected: true
+      });
+    }
+
+    // Create new player if no disconnected player with same name exists
+    const newPlayer = await Player.create({
+      name,
+      isConnected: true,
+      money: 15000,
+      properties: [],
+      tileId: 1,
+      hasMoved: false
+    });
+
+    res.json(newPlayer);
+  } catch (error) {
+    console.error('Error in /join:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

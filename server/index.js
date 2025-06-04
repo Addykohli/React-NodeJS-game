@@ -1252,7 +1252,7 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('borrowMoney', ({ amount }) => {
+  socket.on('borrowMoney', async ({ amount }) => {
     console.log('[borrowMoney] Request received:', {
       playerId: socket.id,
       requestedAmount: amount
@@ -1326,7 +1326,7 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('payoffLoan', ({ amount }) => {
+  socket.on('payoffLoan', async ({ amount }) => {
     console.log('[payoffLoan] Request received:', {
       playerId: socket.id,
       requestedAmount: amount
