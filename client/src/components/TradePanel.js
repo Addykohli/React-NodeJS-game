@@ -138,7 +138,10 @@ const TradePanel = () => {
       <div style={{
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         borderRadius: '10px',
-        padding: '15px'
+        padding: '15px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}>
         <button 
           onClick={() => setIsOfferExpanded(!isOfferExpanded)}
@@ -150,19 +153,28 @@ const TradePanel = () => {
             borderRadius: '5px',
             color: 'white',
             marginBottom: '10px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            fontSize: '1.2em'
           }}
         >
           Offer
         </button>
         
         {isOfferExpanded && (
-          <div style={{ marginBottom: '10px' }}>
+          <div style={{ 
+            marginBottom: '10px',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '15px'
+          }}>
             {/* Money Input */}
             <div style={{ 
               display: 'flex', 
-              alignItems: 'center', 
-              marginBottom: '15px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               padding: '10px',
               borderRadius: '5px'
@@ -175,10 +187,11 @@ const TradePanel = () => {
                   border: 'none',
                   borderRadius: '5px',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '1.2em'
                 }}
               >-</button>
-              <span style={{ margin: '0 15px', fontSize: '16px' }}>${offerMoney}</span>
+              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${offerMoney}</span>
               <button 
                 onClick={() => handleMoneyChange('offer', 500)}
                 style={{
@@ -187,7 +200,8 @@ const TradePanel = () => {
                   border: 'none',
                   borderRadius: '5px',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '1.2em'
                 }}
               >+</button>
             </div>
@@ -202,13 +216,17 @@ const TradePanel = () => {
                 border: 'none',
                 borderRadius: '5px',
                 color: 'white',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontSize: '1.1em'
               }}
             >
               Properties
             </button>
             {isOfferPropertiesExpanded && (
-              <div style={{ marginTop: '10px' }}>
+              <div style={{ 
+                marginTop: '10px',
+                width: '100%'
+              }}>
                 {player.properties.map(propId => {
                   const property = tiles.find(t => t.id === propId);
                   return (
@@ -222,7 +240,7 @@ const TradePanel = () => {
                       borderRadius: '5px',
                       minHeight: '40px'
                     }}>
-                      <span style={{ fontSize: '16px' }}>{property.name}</span>
+                      <span style={{ fontSize: '1.1em' }}>{property.name}</span>
                       <input
                         type="checkbox"
                         checked={selectedOfferProperties.includes(propId)}
@@ -246,7 +264,10 @@ const TradePanel = () => {
       <div style={{
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         borderRadius: '10px',
-        padding: '15px'
+        padding: '15px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}>
         <button 
           onClick={() => setIsAskExpanded(!isAskExpanded)}
@@ -258,19 +279,28 @@ const TradePanel = () => {
             borderRadius: '5px',
             color: 'white',
             marginBottom: '10px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            fontSize: '1.2em'
           }}
         >
           Ask
         </button>
         
         {isAskExpanded && (
-          <div style={{ marginBottom: '10px' }}>
+          <div style={{ 
+            marginBottom: '10px',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '15px'
+          }}>
             {/* Money Input */}
             <div style={{ 
               display: 'flex', 
-              alignItems: 'center', 
-              marginBottom: '15px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               padding: '10px',
               borderRadius: '5px'
@@ -283,10 +313,11 @@ const TradePanel = () => {
                   border: 'none',
                   borderRadius: '5px',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '1.2em'
                 }}
               >-</button>
-              <span style={{ margin: '0 15px', fontSize: '16px' }}>${askMoney}</span>
+              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${askMoney}</span>
               <button 
                 onClick={() => handleMoneyChange('ask', 500)}
                 style={{
@@ -295,17 +326,20 @@ const TradePanel = () => {
                   border: 'none',
                   borderRadius: '5px',
                   color: 'white',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontSize: '1.2em'
                 }}
               >+</button>
             </div>
 
             {/* Player Selection */}
             <div style={{ 
-              marginBottom: '15px',
+              width: '100%',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               padding: '10px',
-              borderRadius: '5px'
+              borderRadius: '5px',
+              display: 'flex',
+              justifyContent: 'center'
             }}>
               <select 
                 value={selectedPlayer || ''} 
@@ -316,7 +350,8 @@ const TradePanel = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   border: 'none',
                   borderRadius: '5px',
-                  fontSize: '14px'
+                  fontSize: '1.1em',
+                  textAlign: 'center'
                 }}
               >
                 <option value="">Select Player</option>
@@ -333,7 +368,12 @@ const TradePanel = () => {
 
             {/* Properties Selection */}
             {selectedPlayer && (
-              <div>
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
                 <button 
                   onClick={() => setIsAskPropertiesExpanded(!isAskPropertiesExpanded)}
                   style={{
@@ -343,13 +383,17 @@ const TradePanel = () => {
                     border: 'none',
                     borderRadius: '5px',
                     color: 'white',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    fontSize: '1.1em'
                   }}
                 >
                   Properties
                 </button>
                 {isAskPropertiesExpanded && (
-                  <div style={{ marginTop: '10px' }}>
+                  <div style={{ 
+                    marginTop: '10px',
+                    width: '100%'
+                  }}>
                     {players
                       .find(p => p.socketId === selectedPlayer)
                       ?.properties.map(propId => {
@@ -365,7 +409,7 @@ const TradePanel = () => {
                             borderRadius: '5px',
                             minHeight: '40px'
                           }}>
-                            <span style={{ fontSize: '16px' }}>{property.name}</span>
+                            <span style={{ fontSize: '1.1em' }}>{property.name}</span>
                             <input
                               type="checkbox"
                               checked={selectedAskProperties.includes(propId)}
@@ -391,7 +435,11 @@ const TradePanel = () => {
       <div style={{
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         borderRadius: '10px',
-        padding: '15px'
+        padding: '15px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        width: '100%'
       }}>
         <button
           onClick={handleTradeRequest}
@@ -403,7 +451,7 @@ const TradePanel = () => {
             border: 'none',
             borderRadius: '5px',
             color: 'white',
-            fontSize: '16px',
+            fontSize: '1.2em',
             cursor: offerReady && askReady && selectedPlayer ? 'pointer' : 'not-allowed'
           }}
         >

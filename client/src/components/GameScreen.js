@@ -62,7 +62,8 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           alignItems: 'center',
           justifyContent: 'center',
           height: '100%',
-          gap: '20px'
+          gap: '15px',
+          padding: '20px'
         }}>
           <div style={{
             display: 'flex',
@@ -72,21 +73,21 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
             <img 
               src={`/dice/dice${diceResult[0]}.png`} 
               alt={`Die ${diceResult[0]}`} 
-              width={125}
-              height={125}
+              width={60}
+              height={60}
             />
             <img 
               src={`/dice/dice${diceResult[1]}.png`} 
               alt={`Die ${diceResult[1]}`} 
-              width={125}
-              height={125}
+              width={60}
+              height={60}
             />
           </div>
           <div style={{
             color: showResult.won ? '#4CAF50' : '#f44336',
             fontWeight: 'bold',
             fontSize: '1.2em',
-            padding: '15px 25px',
+            padding: '10px 15px',
             backgroundColor: 'rgba(0, 0, 0, 0.6)',
             borderRadius: '8px',
             textAlign: 'center'
@@ -104,45 +105,55 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       height: '100%',
-      gap: '25px'
+      padding: '15px',
+      gap: '10px'
     }}>
+      {/* Title */}
+      <div style={{
+        fontSize: '1.2em',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: '5px'
+      }}>
+        Casino Betting
+      </div>
+
       {/* Bet amount control */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '15px',
+        gap: '8px',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: '15px 20px',
-        borderRadius: '12px',
+        padding: '8px 12px',
+        borderRadius: '8px',
         border: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
         <button
           onClick={() => handleAmountChange(-500)}
           disabled={!isMyTurn || betAmount <= 1000}
           style={{
-            padding: '12px 20px',
-            fontSize: '1.8em',
+            padding: '6px 12px',
+            fontSize: '1.2em',
             cursor: isMyTurn ? 'pointer' : 'not-allowed',
             backgroundColor: isMyTurn && betAmount > 1000 ? '#ff4444' : 'rgba(255, 68, 68, 0.5)',
             color: 'white',
             border: 'none',
-            borderRadius: '8px',
-            width: '60px',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+            borderRadius: '4px',
+            width: '36px',
+            transition: 'all 0.2s ease'
           }}
         >
           -
         </button>
         <div style={{
-          padding: '12px 20px',
-          border: '2px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '8px',
-          minWidth: '150px',
+          padding: '6px 12px',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '4px',
+          minWidth: '100px',
           textAlign: 'center',
-          fontSize: '1.6em',
+          fontSize: '1.1em',
           color: 'white',
           backgroundColor: 'rgba(0, 0, 0, 0.2)'
         }}>
@@ -152,16 +163,15 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           onClick={() => handleAmountChange(500)}
           disabled={!isMyTurn || betAmount >= currentMoney}
           style={{
-            padding: '12px 20px',
-            fontSize: '1.8em',
+            padding: '6px 12px',
+            fontSize: '1.2em',
             cursor: isMyTurn ? 'pointer' : 'not-allowed',
             backgroundColor: isMyTurn && betAmount < currentMoney ? '#4CAF50' : 'rgba(76, 175, 80, 0.5)',
             color: 'white',
             border: 'none',
-            borderRadius: '8px',
-            width: '60px',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+            borderRadius: '4px',
+            width: '36px',
+            transition: 'all 0.2s ease'
           }}
         >
           +
@@ -171,33 +181,43 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
       {/* Bet type buttons */}
       <div style={{
         display: 'flex',
-        gap: '15px',
+        gap: '8px',
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: '15px 20px',
-        borderRadius: '12px',
+        padding: '8px',
+        borderRadius: '8px',
         border: '1px solid rgba(255, 255, 255, 0.1)'
       }}>
-        {['above', '7', 'below'].map(bet => (
+        {[
+          { type: 'below', label: '2-6', odds: '2x' },
+          { type: '7', label: '7', odds: '3x' },
+          { type: 'above', label: '8-12', odds: '2x' }
+        ].map(bet => (
           <button
-            key={bet}
-            onClick={() => handleBetSelect(bet)}
+            key={bet.type}
+            onClick={() => handleBetSelect(bet.type)}
             disabled={!isMyTurn}
             style={{
-              padding: '15px 25px',
-              backgroundColor: selectedBet === bet ? '#2196F3' : 'rgba(33, 150, 243, 0.3)',
+              padding: '8px 12px',
+              backgroundColor: selectedBet === bet.type ? '#2196F3' : 'rgba(33, 150, 243, 0.3)',
               color: '#fff',
-              border: selectedBet === bet ? '2px solid #90CAF9' : '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '8px',
+              border: selectedBet === bet.type ? '2px solid #90CAF9' : '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '6px',
               cursor: isMyTurn ? 'pointer' : 'not-allowed',
-              fontSize: '1.4em',
+              fontSize: '0.9em',
               fontWeight: 'bold',
-              textTransform: 'uppercase',
-              minWidth: '120px',
-              transition: 'all 0.2s ease',
-              boxShadow: selectedBet === bet ? '0 0 10px rgba(33, 150, 243, 0.5)' : 'none'
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '4px',
+              minWidth: '70px',
+              transition: 'all 0.2s ease'
             }}
           >
-            {bet}
+            <span>{bet.label}</span>
+            <span style={{ 
+              fontSize: '0.8em',
+              opacity: 0.8 
+            }}>{bet.odds}</span>
           </button>
         ))}
       </div>
@@ -207,26 +227,34 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
         onClick={handleRoll}
         disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney}
         style={{
-          padding: '15px 40px',
+          padding: '10px 30px',
           backgroundColor: isMyTurn && selectedBet && betAmount >= 1000 && betAmount <= currentMoney 
             ? '#FFA000' 
             : 'rgba(255, 160, 0, 0.3)',
           color: '#fff',
           border: 'none',
-          borderRadius: '12px',
-          marginTop: '10px',
+          borderRadius: '8px',
           cursor: isMyTurn && selectedBet ? 'pointer' : 'not-allowed',
-          fontSize: '1.8em',
+          fontSize: '1.2em',
           fontWeight: 'bold',
-          letterSpacing: '2px',
+          letterSpacing: '1px',
           textTransform: 'uppercase',
           transition: 'all 0.3s ease',
-          boxShadow: isMyTurn && selectedBet ? '0 4px 15px rgba(255, 160, 0, 0.4)' : 'none',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)'
+          boxShadow: isMyTurn && selectedBet ? '0 2px 8px rgba(255, 160, 0, 0.4)' : 'none',
+          width: '100%'
         }}
       >
-        Roll
+        Roll Dice
       </button>
+
+      {/* Current money display */}
+      <div style={{
+        fontSize: '0.9em',
+        color: '#aaa',
+        textAlign: 'center'
+      }}>
+        Your Money: ${currentMoney.toLocaleString()}
+      </div>
     </div>
   );
 };
@@ -840,44 +868,55 @@ export default function GameScreen() {
       }}>
         {/* Panel Buttons Column */}
         <div style={{
-          width: '180px',
+          width: '200px',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px',
-          padding: '90px 0 30px 0', // Added top padding
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          borderLeft: '4px solid rgb(52, 52, 52)'
+          gap: '0px',
+          padding: '90px 0 30px 0',
+          backgroundColor: 'rgba(0, 0, 0, 1)',
+          borderLeft: '4px solid rgb(52, 52, 52)',
+          position: 'relative'
         }}>
           {Object.entries(panelConfigs).map(([panelId, config], index) => (
-            <div 
-              key={panelId}
-              onClick={() => setActiveSidePanel(activeSidePanel === panelId ? null : panelId)}
-              style={{
-                width: '100%',
-                height: '150px',
-                backgroundColor: activeSidePanel === panelId ? config.color + '44' : 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                borderLeft: activeSidePanel === panelId ? `4px solid ${config.color}` : 'none'
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '1.4em',
-                width: '100%',
-                padding: '0 15px',
-                textAlign: 'center'
-              }}>
-                {config.title}
+            <React.Fragment key={panelId}>
+              <div 
+                onClick={() => setActiveSidePanel(activeSidePanel === panelId ? null : panelId)}
+                style={{
+                  width: '100%',
+                  height: '150px',
+                  backgroundColor: activeSidePanel === panelId ? config.color + '44' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  borderLeft: activeSidePanel === panelId ? `4px solid ${config.color}` : 'none',
+                  position: 'relative'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '1.4em',
+                  width: '100%',
+                  padding: '0 15px',
+                  textAlign: 'center'
+                }}>
+                  {config.title}
+                </div>
               </div>
-            </div>
+              {/* Add separator line after each button except the last one */}
+              {index < Object.entries(panelConfigs).length - 1 && (
+                <div style={{
+                  height: '1px',
+                  margin: '0 40px',
+                  background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.2) 80%, transparent 100%)'
+                }} />
+              )}
+            </React.Fragment>
           ))}
         </div>
 
