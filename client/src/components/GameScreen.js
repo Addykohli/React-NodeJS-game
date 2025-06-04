@@ -913,7 +913,7 @@ export default function GameScreen() {
               {/* Add separator line after each button except the last one */}
               {index < Object.entries(panelConfigs).length - 1 && (
                 <div style={{
-                  height: '1px',
+                  height: '2px',
                   margin: '0 20px',
                   background: 'linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 10%, rgba(255, 255, 255, 0.3) 90%, transparent 100%)',
                   pointerEvents: 'none',
@@ -1266,24 +1266,25 @@ export default function GameScreen() {
         bottom: 0,
         left: 0,
         right: 0,
-        minHeight: '300px', // Changed to minHeight
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        minHeight: '300px',
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
         borderTop: '2px solid #666',
         transition: 'all 0.3s ease',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '20px 100px', // Added vertical padding
+        padding: '20px 100px',
         zIndex: 99
       }}>
         {/* Footer Components Container */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: '20px',
+          gap: '0px',
           width: '100%',
-          maxWidth: '1400px', 
-          margin: '0 auto'
+          maxWidth: '1400px',
+          margin: '0 auto',
+          position: 'relative'
         }}>
           {/* Dice Roller Section */}
           <div style={{
@@ -1296,7 +1297,8 @@ export default function GameScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(60, 60, 60, 0.3)',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            borderRadius: '15px'
           }}>
             {isMyTurn && (
               <>
@@ -1324,6 +1326,15 @@ export default function GameScreen() {
             />
           </div>
 
+          {/* Vertical Gradient Separator 1 */}
+          <div style={{
+            width: '1px',
+            height: '200px',
+            margin: '25px 0',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+            alignSelf: 'center'
+          }} />
+
           {/* Dashboard Section */}
           <div style={{
             width: '400px',
@@ -1334,7 +1345,8 @@ export default function GameScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(60, 60, 60, 0.3)',
-            gap: '15px'
+            gap: '15px',
+            borderRadius: '15px'
           }}>
             <div style={{
               fontSize: '1.8em',
@@ -1369,6 +1381,15 @@ export default function GameScreen() {
             </div>
           </div>
 
+          {/* Vertical Gradient Separator 2 */}
+          <div style={{
+            width: '1px',
+            height: '200px',
+            margin: '25px 0',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+            alignSelf: 'center'
+          }} />
+
           {/* Events Section */}
           <div style={{
             width: '400px',
@@ -1378,7 +1399,8 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)'
+            background: 'rgba(60, 60, 60, 0.3)',
+            borderRadius: '15px'
           }}>
             {(() => {
               // Show RPS game if active

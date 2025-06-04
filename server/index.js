@@ -1692,7 +1692,7 @@ io.on('connection', socket => {
 
       // If properties are no longer available, remove the trade offer
       if (!fromPlayerHasProperties || !toPlayerHasProperties) {
-        // Send error  to the player who tried to accept
+        // Send error to the player who tried to accept
         socket.emit('tradeRejected', { 
           offerId,
           reason: 'invalidProperties',
@@ -1709,114 +1709,146 @@ io.on('connection', socket => {
         return;
       }
 
-      // Update money
-      fromPlayer.money -= offer.offer.money;
-      fromPlayer.money += offer.ask.money;
-      toPlayer.money += offer.offer.money;
-      toPlayer.money -= offer.ask.money;
-
-      // Update properties
-      fromPlayer.properties = fromPlayer.properties.filter(p => !offer.offer.properties.includes(p));
-      fromPlayer.properties.push(...offer.ask.properties);
-      toPlayer.properties = toPlayer.properties.filter(p => !offer.ask.properties.includes(p));
-      toPlayer.properties.push(...offer.offer.properties);
-
       try {
-        // Update both players in database
-        await Player.findOneAndUpdate(
-          { socketId: fromPlayer.socketId },
-          { money: fromPlayer.money, properties: fromPlayer.properties }
-        );
-        await Player.findOneAndUpdate(
-          { socketId: toPlayer.socketId },
-          { money: toPlayer.money, properties: toPlayer.properties }
-        );
+        // Start a transaction
+        const transaction = await sequelize.transaction();
 
-        // Update game session if exists
-        if (currentSessionId) {
-          await GameSession.findByIdAndUpdate(
-            currentSessionId,
-            { players: engine.session.players }
+        try {
+          // Update money and properties for both players
+          fromPlayer.money -= offer.offer.money;
+          fromPlayer.money += offer.ask.money;
+          toPlayer.money += offer.offer.money;
+          toPlayer.money -= offer.ask.money;
+
+          fromPlayer.properties = fromPlayer.properties.filter(p => !offer.offer.properties.includes(p));
+          fromPlayer.properties.push(...offer.ask.properties);
+          toPlayer.properties = toPlayer.properties.filter(p => !offer.ask.properties.includes(p));
+          toPlayer.properties.push(...offer.offer.properties);
+
+          // Update both players in database within transaction
+          const [fromPlayerUpdated] = await Player.update(
+            { 
+              money: fromPlayer.money, 
+              properties: fromPlayer.properties 
+            },
+            { 
+              where: { socketId: fromPlayer.socketId },
+              transaction
+            }
           );
-        }
 
-        // After successful trade, check and remove any invalid trades
-        const invalidOffers = activeTradeOffers.filter(o => {
-          const offeringPlayer = engine.getPlayer(o.from);
-          // Check if offering player still owns all properties they're offering
-          return o.offer.properties.some(propId => !offeringPlayer.properties.includes(propId));
-        });
+          const [toPlayerUpdated] = await Player.update(
+            { 
+              money: toPlayer.money, 
+              properties: toPlayer.properties 
+            },
+            { 
+              where: { socketId: toPlayer.socketId },
+              transaction
+            }
+          );
 
-        // Remove invalid offers and notify clients
-        if (invalidOffers.length > 0) {
-          invalidOffers.forEach(invalidOffer => {
-            // Notify players involved in invalid trades
-            io.to(invalidOffer.to).emit('tradeRejected', {
-              offerId: invalidOffer.id,
-              reason: 'invalidProperties',
-              keepOffer: false
-            });
-            io.to(invalidOffer.from).emit('tradeRejected', {
-              offerId: invalidOffer.id,
-              reason: 'invalidProperties',
-              keepOffer: false
-            });
+          if (!fromPlayerUpdated || !toPlayerUpdated) {
+            throw new Error('Failed to update one or both players');
+          }
+
+          // Update game session if exists
+          if (currentSessionId) {
+            await GameSession.update(
+              { players: engine.session.players },
+              { 
+                where: { id: currentSessionId },
+                transaction
+              }
+            );
+          }
+
+          // Commit transaction
+          await transaction.commit();
+
+          // After successful trade, check and remove any invalid trades
+          const invalidOffers = activeTradeOffers.filter(o => {
+            const offeringPlayer = engine.getPlayer(o.from);
+            // Check if offering player still owns all properties they're offering
+            return o.offer.properties.some(propId => !offeringPlayer.properties.includes(propId));
           });
 
-          // Remove invalid offers from active trades
-          activeTradeOffers = activeTradeOffers.filter(o => 
-            !invalidOffers.some(invalid => invalid.id === o.id)
-          );
-        }
+          // Remove invalid offers and notify clients
+          if (invalidOffers.length > 0) {
+            invalidOffers.forEach(invalidOffer => {
+              // Notify players involved in invalid trades
+              io.to(invalidOffer.to).emit('tradeRejected', {
+                offerId: invalidOffer.id,
+                reason: 'invalidProperties',
+                keepOffer: false
+              });
+              io.to(invalidOffer.from).emit('tradeRejected', {
+                offerId: invalidOffer.id,
+                reason: 'invalidProperties',
+                keepOffer: false
+              });
+            });
 
-        // Notify all clients about the successful trade
-        io.emit('tradeAccepted', {
-          offerId,
-          fromPlayer: {
-            socketId: fromPlayer.socketId,
-            money: fromPlayer.money,
-            properties: fromPlayer.properties
-          },
-          toPlayer: {
-            socketId: toPlayer.socketId,
-            money: toPlayer.money,
-            properties: toPlayer.properties
+            // Remove invalid offers from active trades
+            activeTradeOffers = activeTradeOffers.filter(o => 
+              !invalidOffers.some(invalid => invalid.id === o.id)
+            );
           }
-        });
 
-        // Create detailed game event message
-        const offeredProps = offer.offer.properties.map(propId => {
-          const { tiles } = require('./data/tiles.cjs');
-          const property = tiles.find(t => t.id === propId);
-          return property ? property.name : 'Unknown';
-        }).join(', ');
-        
-        const askedProps = offer.ask.properties.map(propId => {
-          const { tiles } = require('./data/tiles.cjs');
-          const property = tiles.find(t => t.id === propId);
-          return property ? property.name : 'Unknown';
-        }).join(', ');
+          // Notify all clients about the successful trade
+          io.emit('tradeAccepted', {
+            offerId,
+            fromPlayer: {
+              socketId: fromPlayer.socketId,
+              money: fromPlayer.money,
+              properties: fromPlayer.properties
+            },
+            toPlayer: {
+              socketId: toPlayer.socketId,
+              money: toPlayer.money,
+              properties: toPlayer.properties
+            }
+          });
 
-        let message = `Trade completed: ${fromPlayer.name} gave ${toPlayer.name} `;
-        
-        const offeredParts = [];
-        if (offer.offer.money > 0) offeredParts.push(`$${offer.offer.money}`);
-        if (offeredProps) offeredParts.push(offeredProps);
-        message += offeredParts.join(' and ');
-        
-        message += ' in exchange for ';
-        
-        const askedParts = [];
-        if (offer.ask.money > 0) askedParts.push(`$${offer.ask.money}`);
-        if (askedProps) askedParts.push(askedProps);
-        message += askedParts.join(' and ');
+          // Create detailed game event message
+          const offeredProps = offer.offer.properties.map(propId => {
+            const { tiles } = require('./data/tiles.cjs');
+            const property = tiles.find(t => t.id === propId);
+            return property ? property.name : 'Unknown';
+          }).join(', ');
+          
+          const askedProps = offer.ask.properties.map(propId => {
+            const { tiles } = require('./data/tiles.cjs');
+            const property = tiles.find(t => t.id === propId);
+            return property ? property.name : 'Unknown';
+          }).join(', ');
 
-        broadcastGameEvent(message);
+          let message = `Trade completed: ${fromPlayer.name} gave ${toPlayer.name} `;
+          
+          const offeredParts = [];
+          if (offer.offer.money > 0) offeredParts.push(`$${offer.offer.money}`);
+          if (offeredProps) offeredParts.push(offeredProps);
+          message += offeredParts.join(' and ');
+          
+          message += ' in exchange for ';
+          
+          const askedParts = [];
+          if (offer.ask.money > 0) askedParts.push(`$${offer.ask.money}`);
+          if (askedProps) askedParts.push(askedProps);
+          message += askedParts.join(' and ');
 
-        // Remove the completed trade offer
-        activeTradeOffers = activeTradeOffers.filter(o => o.id !== offerId);
+          broadcastGameEvent(message);
+
+          // Remove the completed trade offer
+          activeTradeOffers = activeTradeOffers.filter(o => o.id !== offerId);
+        } catch (err) {
+          // Rollback transaction on error
+          await transaction.rollback();
+          console.error('Error processing trade:', err);
+          broadcastGameEvent(`Trade between ${fromPlayer.name} and ${toPlayer.name} failed due to an error.`);
+        }
       } catch (err) {
-        console.error('Error processing trade:', err);
+        console.error('Error starting transaction:', err);
         broadcastGameEvent(`Trade between ${fromPlayer.name} and ${toPlayer.name} failed due to an error.`);
       }
     } else {
