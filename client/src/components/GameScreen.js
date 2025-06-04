@@ -1179,7 +1179,7 @@ export default function GameScreen() {
         <div style={{ 
           position: 'relative',
           display: 'flex',
-          alignItems: 'flex-start', // Changed to flex-start
+          alignItems: 'flex-start',
           justifyContent: 'center',
           width: '100%',
           height: '100%',
@@ -1191,6 +1191,26 @@ export default function GameScreen() {
           }}>
             <Board />
             <PlayerStats />
+            {/* Add Road Cash UI here */}
+            {isMyTurn && tileMeta?.id === 22 && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gridTemplateRows: '1fr 1fr',
+                gap: '20px',
+                padding: '20px',
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                zIndex: 1000
+              }}>
+                <RoadCash isMyTurn={isMyTurn} socket={socket} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1481,11 +1501,6 @@ export default function GameScreen() {
                     )}
                   </div>
                 );
-              }
-
-              // Road Cash Game
-              if (isMyTurn && tileMeta?.id === 22) {
-                return <RoadCash isMyTurn={isMyTurn} socket={socket} />;
               }
 
               // Casino

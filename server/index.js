@@ -752,58 +752,66 @@ io.on('connection', socket => {
     console.log('[casinoRoll]', { betAmount, betType });
     
     const player = engine.getPlayer(socket.id);
-    if (!player || betAmount < 1000) {
-      return;
-    }
+    if (!player) return;
 
-    // Roll the dice
-    const die1 = Math.floor(Math.random() * 6) + 1;
-    const die2 = Math.floor(Math.random() * 6) + 1;
-    const total = die1 + die2;
-    
-    console.log('Casino roll:', { die1, die2, total });
+    // Start a transaction
+    const transaction = await sequelize.transaction();
 
-    let won = false;
-    let multiplier = 0;
-
-    // Determine if player won based on bet type
-    if (betType === 'above' && total > 7) {
-      won = true;
-      multiplier = 2;
-    } else if (betType === '7' && total === 7) {
-      won = true;
-      multiplier = 3;
-    } else if (betType === 'below' && total < 7) {
-      won = true;
-      multiplier = 2;
-    }
-
-    // Calculate money change
-    const amount = betAmount;
-    const moneyChange = won ? amount * (multiplier - 1) : -amount;
-    
-    // Update player's money
-    player.money += moneyChange;
-
-    // Update player in database and engine
     try {
-      await Player.findOneAndUpdate(
-        { socketId: socket.id },
-        { money: player.money }
+      // Roll the dice
+      const die1 = Math.floor(Math.random() * 6) + 1;
+      const die2 = Math.floor(Math.random() * 6) + 1;
+      const total = die1 + die2;
+      console.log('Casino roll:', { die1, die2, total });
+
+      // Determine if player won based on bet type
+      let won = false;
+      if (betType === 'above' && total > 7) won = true;
+      else if (betType === 'below' && total < 7) won = true;
+      else if (betType === '7' && total === 7) won = true;
+
+      // Calculate money change (3x for '7' bet, 2x for others)
+      const multiplier = betType === '7' ? 3 : 2;
+      const moneyChange = won ? betAmount * multiplier : -betAmount;
+      player.money += moneyChange;
+
+      // If player has negative money, convert it to loan
+      if (player.money < 0) {
+        const loanIncrease = Math.abs(player.money);
+        player.loan = (player.loan || 0) + loanIncrease;
+        player.money = 0;
+      }
+
+      // Update player in database within transaction
+      await Player.update(
+        { 
+          money: player.money,
+          loan: player.loan
+        },
+        { 
+          where: { socketId: socket.id },
+          transaction
+        }
       );
 
       // Update the engine's player data
       engine.session.players = engine.session.players.map(p =>
-        p.socketId === socket.id ? { ...p, money: player.money } : p
+        p.socketId === socket.id ? { ...p, money: player.money, loan: player.loan } : p
       );
 
       // Update game session if exists
       if (currentSessionId) {
-        await GameSession.findByIdAndUpdate(
-          currentSessionId,
-          { players: engine.session.players }
+        await GameSession.update(
+          { players: engine.session.players },
+          { 
+            where: { id: currentSessionId },
+            transaction
+          }
         );
       }
+
+      // Commit transaction
+      await transaction.commit();
 
       // Notify all clients about the result
       io.emit('casinoResult', {
@@ -812,16 +820,23 @@ io.on('connection', socket => {
         amount: Math.abs(moneyChange),
         won,
         playerMoney: player.money,
+        playerLoan: player.loan,
         playerName: player.name
       });
 
-      // Broadcast game event for casino result with more descriptive message
+      // Broadcast game event for casino result
       const resultMessage = won 
-        ? `${player.name} won $${Math.abs(moneyChange)} on casino!`
-        : `${player.name} lost $${Math.abs(moneyChange)} on casino!`;
+        ? `${player.name} won $${Math.abs(moneyChange)} at the casino!`
+        : `${player.name} lost $${Math.abs(moneyChange)} at the casino!`;
       broadcastGameEvent(resultMessage);
 
+      // Mark casino event as complete
+      player.hasMoved = true;
+      io.emit('movementDone', { playerId: socket.id });
+
     } catch (err) {
+      // Rollback transaction on error
+      await transaction.rollback();
       console.error('Error processing casino bet:', err);
     }
   });
