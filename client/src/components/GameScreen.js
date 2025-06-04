@@ -825,7 +825,7 @@ export default function GameScreen() {
           onClick={() => setActiveSidePanel(activeSidePanel === panelId ? null : panelId)}
           style={{
             position: 'fixed',
-            right: activeSidePanel === panelId ? '540px' : '0',
+            right: activeSidePanel ? '540px' : '0',
             top: `${ 30+ (index * 150)}px`,
             width: activeSidePanel === panelId ? '90px' : '120px',
             height: '150px',
@@ -856,7 +856,7 @@ export default function GameScreen() {
             padding: '0 10px',
             textAlign: 'center'
           }}>
-            {activeSidePanel === panelId ? '←' : config.title}
+            {activeSidePanel === panelId ? '→' : config.title}
           </div>
         </div>
       ))}
