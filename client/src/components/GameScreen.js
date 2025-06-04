@@ -767,9 +767,9 @@ export default function GameScreen() {
         setRpsTieAmount(null);
       } else {
         // Clear all RPS state if no more ties to resolve
-      setRpsGame(null);
-      setRpsResult(null);
-      setRpsChoice(null);
+        setRpsGame(null);
+        setRpsResult(null);
+        setRpsChoice(null);
         setRpsTieAmount(null);
       }
     });
@@ -817,363 +817,354 @@ export default function GameScreen() {
   return (
     <div style={{
       position: 'relative',
+      minHeight: '100vh',
+      overflow: 'hidden'
     }}>
-      {/* Side Panel Buttons */}
-      {Object.entries(panelConfigs).map(([panelId, config], index) => (
-        <div 
-          key={panelId}
-          onClick={() => setActiveSidePanel(activeSidePanel === panelId ? null : panelId)}
-          style={{
-            position: 'fixed',
-            right: activeSidePanel ? '540px' : '0',
-            top: `${ 30+ (index * 150)}px`,
-            width: activeSidePanel === panelId ? '90px' : '120px',
-            height: '150px',
-            backgroundColor: 'rgba(0, 0, 0, 0.94)',
-            borderColor: 'rgb(52, 52, 52)',
-            borderWidth: '4px',
-            borderStyle: 'solid', 
-            display: activeSidePanel && activeSidePanel !== panelId ? 'none' : 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            clipPath: activeSidePanel === panelId
-              ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
-              : 'polygon(0% 0, 100% 0, 100% 100%, 0% 100%)',
-            transition: 'all 0.3s ease',
-            zIndex: 1001
-          }}
-        >
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '1.2em',
-            transform: activeSidePanel === panelId ? 'rotate(180deg)' : 'none',
-            transition: 'transform 0.3s ease',
-            width: '100%',
-            padding: '0 10px',
-            textAlign: 'center'
-          }}>
-            {activeSidePanel === panelId ? '→' : config.title}
-          </div>
-        </div>
-      ))}
-
-      {/* Side Panels */}
-      {Object.entries(panelConfigs).map(([panelId, config]) => (
-        <div
-          key={panelId}
-          style={{
-            position: 'fixed',
-            right: activeSidePanel === panelId ? '0' : '-550px',
-            top: '0',
-            width: '500px',
-            height: '100vh',
-            backgroundColor: `${config.color}dd`,
-            boxShadow: '-2px 0 5px rgba(0, 0, 0, 0.48)',
-            transition: 'right 0.3s ease',
+      {/* Side Panel Buttons and Panels - Fixed to right side */}
+      <div style={{
+        position: 'fixed',
+        right: 0,
+        top: 0,
+        height: '100vh',
+        width: activeSidePanel ? '600px' : '120px',
         zIndex: 1000,
-            padding: '20px',
-            color: 'white',
-            overflowY: 'auto',
-            fontSize: '1.5em',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            marginLeft: '10px'
-          }}
-        >
-          <h2 style={{ marginBottom: '20px' }}>{config.title}</h2>
-          {/* Panel specific content */}
-          {panelId === 'info' && (
-            <div style={{
-              height: 'calc(100vh - 250px)',
-              overflowY: 'auto',
-              padding: '15px',
-              display: 'flex',
-              flexDirection: 'column-reverse',
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        borderRadius: '8px',
-              gap: '15px'
-            }}>
-              {gameEvents.map((event, index) => {
-                // Process the message to color-code money amounts
-                const message = event.message.replace(
-                  /\$(\d+,?\d*)/g,
-                  (match, amount) => {
-                    // Determine if this is a gain or loss
-                    const isGain = event.message.includes('received') || 
-                                 event.message.includes('won') ||
-                                 event.message.includes('bonus');
-                    const isLoss = event.message.includes('paid') || 
-                                 event.message.includes('lost');
-                    
-                    return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
-                  }
-                );
-
-                return (
-                  <div
-                    key={index}
-                    style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                      padding: '12px 15px',
-                      borderRadius: '8px',
-                      fontSize: '1.2em',
-                      lineHeight: '1.4'
-                    }}
-                    dangerouslySetInnerHTML={{ __html: message }}
-                  />
-                );
-              })}
-            </div>
-          )}
-          {panelId === 'bank' && (
-            <div>
-              {/* Borrow Section */}
-              <div style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                padding: '20px',
-                borderRadius: '8px',
-                marginTop: '70px'
-              }}>
-                <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  fontSize: '1em',
-                  marginBottom: '20px',
-                  justifyContent: 'center',
-                  alignItems: 'center'
+        transition: 'width 0.3s ease',
+        display: 'flex'
       }}>
-        <button
-                    onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
-          style={{
-            padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            border: 'none',
-                      color: 'white',
-            borderRadius: '4px',
-          }}
-        >
-                    -
-        </button>
-                  <div style={{
-                    padding: '8px 16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '4px',
-                    minWidth: '100px',
-                    textAlign: 'center',
-                    fontSize: '1.7em'
-                  }}>
-                    ${borrowAmount}
-                  </div>
-        <button
-                    onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
-      style={{
-            padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      border: 'none',
-            color: 'white',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
-                <button
-                  onClick={() => {
-                    if (socket) {
-                      socket.emit('borrowMoney', { amount: borrowAmount });
-                      setBorrowAmount(500); // Reset to default
-                    }
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            border: 'none',
-                    color: 'white',
-            borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '1.1em',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  Borrow
-                </button>
-              </div>
-
-              {/* Pay Off Section */}
+        {/* Panel Buttons Column */}
+        <div style={{
+          width: '120px',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          padding: '30px 0',
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          borderLeft: '4px solid rgb(52, 52, 52)'
+        }}>
+          {Object.entries(panelConfigs).map(([panelId, config], index) => (
+            <div 
+              key={panelId}
+              onClick={() => setActiveSidePanel(activeSidePanel === panelId ? null : panelId)}
+              style={{
+                width: '100%',
+                height: '150px',
+                backgroundColor: activeSidePanel === panelId ? config.color + '44' : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                borderLeft: activeSidePanel === panelId ? `4px solid ${config.color}` : 'none'
+              }}
+            >
               <div style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                padding: '20px',
-                borderRadius: '8px',
-                marginTop: '20px',
-                
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.2em',
+                width: '100%',
+                padding: '0 10px',
+                textAlign: 'center'
               }}>
-                <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
+                {config.title}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Active Panel Content */}
+        {Object.entries(panelConfigs).map(([panelId, config]) => (
+          <div
+            key={panelId}
+            style={{
+              position: 'absolute',
+              left: '120px',
+              top: '0',
+              width: '480px',
+              height: '100vh',
+              backgroundColor: `${config.color}dd`,
+              transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.3s ease',
+              padding: '20px',
+              color: 'white',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <h2 style={{ marginBottom: '20px' }}>{config.title}</h2>
+            {/* Panel specific content */}
+            {panelId === 'info' && (
+              <div style={{
+                height: 'calc(100vh - 250px)',
+                overflowY: 'auto',
+                padding: '15px',
+                display: 'flex',
+                flexDirection: 'column-reverse',
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                borderRadius: '8px',
+                gap: '15px'
+              }}>
+                {gameEvents.map((event, index) => {
+                  // Process the message to color-code money amounts
+                  const message = event.message.replace(
+                    /\$(\d+,?\d*)/g,
+                    (match, amount) => {
+                      // Determine if this is a gain or loss
+                      const isGain = event.message.includes('received') || 
+                                   event.message.includes('won') ||
+                                   event.message.includes('bonus');
+                      const isLoss = event.message.includes('paid') || 
+                                   event.message.includes('lost');
+                      
+                      return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
+                    }
+                  );
+
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        padding: '12px 15px',
+                        borderRadius: '8px',
+                        fontSize: '1.2em',
+                        lineHeight: '1.4'
+                      }}
+                      dangerouslySetInnerHTML={{ __html: message }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+            {panelId === 'bank' && (
+              <div>
+                {/* Borrow Section */}
                 <div style={{
-            display: 'flex',
-                  gap: '10px',
-                  marginBottom: '20px',
-            alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1em'
+                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  marginTop: '70px'
                 }}>
+                  <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '1em',
+                    marginBottom: '20px',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}>
+                    <button
+                      onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '1.7em',
+                        cursor: 'pointer',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      -
+                    </button>
+                    <div style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '4px',
+                      minWidth: '100px',
+                      textAlign: 'center',
+                      fontSize: '1.7em'
+                    }}>
+                      ${borrowAmount}
+                    </div>
+                    <button
+                      onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '1.7em',
+                        cursor: 'pointer',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
                   <button
-                    onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
-                    disabled={!player?.loan}
+                    onClick={() => {
+                      if (socket) {
+                        socket.emit('borrowMoney', { amount: borrowAmount });
+                        setBorrowAmount(500); // Reset to default
+                      }
+                    }}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '1.2em',
-                      cursor: player?.loan ? 'pointer' : 'not-allowed',
-                      backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                      width: '100%',
+                      padding: '12px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
                       border: 'none',
                       color: 'white',
                       borderRadius: '4px',
-                      fontSize: '1.7em'
-          }}
-        >
-          -
-        </button>
-        <div style={{
-                    padding: '8px 16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '4px',
-                    minWidth: '100px',
-                    textAlign: 'center',
-                    fontSize: '1.7em'
-                  }}>
-                    ${Math.min(payoffAmount, player?.loan || 0)}
-                  </div>
-                  <button
-                    onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
-                    disabled={!player?.loan}
-                    style={{
-          padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: player?.loan ? 'pointer' : 'not-allowed',
-                      backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                      border: 'none',
-                      color: 'white',
-                      borderRadius: '4px'
+                      cursor: 'pointer',
+                      fontSize: '1.1em',
+                      transition: 'background-color 0.2s'
                     }}
                   >
-                    +
+                    Borrow
                   </button>
                 </div>
-                <button
-                  onClick={() => {
-                    if (socket && player?.loan && player?.money >= payoffAmount) {
-                      socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
-                      setPayoffAmount(1000); // Reset to default
-                    }
-                  }}
-                  disabled={!player?.loan || player?.money < payoffAmount}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    backgroundColor: player?.loan && player?.money >= payoffAmount 
-                      ? 'rgba(255, 255, 255, 0.3)' 
-                      : 'rgba(255, 255, 255, 0.1)',
-                    border: 'none',
-                    color: 'white',
-          borderRadius: '4px',
-                    cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
-                    fontSize: '1.1em',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  Pay Off
-                </button>
-                {player?.money < payoffAmount && (
+
+                {/* Pay Off Section */}
+                <div style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                  padding: '20px',
+                  borderRadius: '8px',
+                  marginTop: '20px',
+                }}>
+                  <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    marginBottom: '20px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1em'
+                  }}>
+                    <button
+                      onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
+                      disabled={!player?.loan}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '1.2em',
+                        cursor: player?.loan ? 'pointer' : 'not-allowed',
+                        backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '1.7em'
+                      }}
+                    >
+                      -
+                    </button>
+                    <div style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '4px',
+                      minWidth: '100px',
+                      textAlign: 'center',
+                      fontSize: '1.7em'
+                    }}>
+                      ${Math.min(payoffAmount, player?.loan || 0)}
+                    </div>
+                    <button
+                      onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
+                      disabled={!player?.loan}
+                      style={{
+                        padding: '8px 12px',
+                        fontSize: '1.7em',
+                        cursor: player?.loan ? 'pointer' : 'not-allowed',
+                        backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (socket && player?.loan && player?.money >= payoffAmount) {
+                        socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
+                        setPayoffAmount(1000); // Reset to default
+                      }
+                    }}
+                    disabled={!player?.loan || player?.money < payoffAmount}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      backgroundColor: player?.loan && player?.money >= payoffAmount 
+                        ? 'rgba(255, 255, 255, 0.3)' 
+                        : 'rgba(255, 255, 255, 0.1)',
+                      border: 'none',
+                      color: 'white',
+                      borderRadius: '4px',
+                      cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
+                      fontSize: '1.1em',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    Pay Off
+                  </button>
+                  {player?.money < payoffAmount && (
+                    <div style={{
+                      color: '#ff6b6b',
+                      marginTop: '10px',
+                      textAlign: 'center',
+                      fontSize: '0.9em'
+                    }}>
+                      Insufficient funds
+                    </div>
+                  )}
+                </div>
+
+                {/* Status Section */}
+                <div style={{
+                  marginTop: '20px',
+                  padding: '20px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                  borderRadius: '8px',
+                }}>
+                  <h4>Current Status</h4>
+                  <div style={{ 
+                    marginTop: '10px',
+                    fontSize: '1.2em'
+                  }}>
+                    <div style={{ marginBottom: '5px' }}>Money: ${player?.money || 0}</div>
+                    <div> Loan: ${player?.loan || 0}</div>
+                  </div>
+                </div>
+                {error && (
                   <div style={{
                     color: '#ff6b6b',
                     marginTop: '10px',
-          textAlign: 'center',
-                    fontSize: '0.9em'
-        }}>
-                    Insufficient funds
-        </div>
+                    textAlign: 'center'
+                  }}>
+                    {error}
+                  </div>
                 )}
+              </div>
+            )}
+            {panelId === 'chat' && (
+              <div style={{
+                height: '100%',
+                padding: '20px'
+              }}>
+                <Chat />
+              </div>
+            )}
+            {panelId === 'trade' && (
+              <TradePanel />
+            )}
+          </div>
+        ))}
       </div>
 
-              {/* Status Section */}
-              <div style={{
-                marginTop: '20px',
-                padding: '20px',
-                backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                borderRadius: '8px',
-              }}>
-                <h4>Current Status</h4>
-                <div style={{ 
-                  marginTop: '10px',
-                  fontSize: '1.2em'
-                }}>
-                  <div style={{ marginBottom: '5px' }}>Money: ${player?.money || 0}</div>
-                  <div> Loan: ${player?.loan || 0}</div>
-                </div>
-              </div>
-              {error && (
-                <div style={{
-                  color: '#ff6b6b',
-                  marginTop: '10px',
-                  textAlign: 'center'
-                }}>
-                  {error}
-                </div>
-              )}
-            </div>
-          )}
-          {panelId === 'chat' && (
-            <div style={{
-              height: '100%',
-              padding: '20px'
-            }}>
-              <Chat />
-            </div>
-          )}
-          {panelId === 'trade' && (
-            <TradePanel />
-          )}
-        </div>
-      ))}
-
-      {/* Main content */}
+      {/* Main Game Area */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        minWidth: '1200px',
-        position: 'relative',
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        overflow: 'auto'
+        paddingRight: activeSidePanel ? '600px' : '120px',
+        transition: 'padding-right 0.3s ease'
       }}>
-        {/* RPS Tie Resolver - Positioned absolutely over the board */}
-        {rpsTieAmount && (
-          <RPSTieResolver
-            maxAmount={rpsTieAmount.maxAmount}
-            gameId={rpsTieAmount.gameId}
-            tiedPlayerId={rpsTieAmount.tiedPlayerId}
-            tiedPlayerName={rpsTieAmount.tiedPlayerName}
-            socket={socket}
-            onResolved={() => {
-              setRpsTieAmount(null);
-            }}
-          />
-        )}
-        {/* Main content (board & player stats) */}
+        {/* Board and Player Stats */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -1181,24 +1172,21 @@ export default function GameScreen() {
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          minWidth: '1080px',
           padding: '20px',
-          marginTop: '220px',
-          marginBottom: '20px'
+          paddingBottom: '300px' // Space for footer
         }}>
-          {/* Board with centered positioning */}
           <div style={{ 
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-          width: '100%',
+            width: '100%',
             height: '100%',
-            minHeight: '600px' // Ensure minimum height for the board container
+            minHeight: '600px'
           }}>
             <div style={{ 
               position: 'relative',
-              margin: '200px' // Add margin around the board to make space for player stats
+              margin: '200px'
             }}>
               <Board />
               <PlayerStats />
@@ -1206,51 +1194,48 @@ export default function GameScreen() {
           </div>
         </div>
 
-        {/* Bottom sections (not fixed anymore) */}
+        {/* Fixed Footer */}
         <div style={{
-          width: '60%',
-          minWidth: '800px',
-          height: '240px',
-          minHeight: '400px',
-          background: 'rgba(80, 80, 80, 0.9)',
-          borderTop: '2px solid #bbb',
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.2)',
-          zIndex: 100,
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: activeSidePanel ? '600px' : '120px',
+          height: '300px',
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          borderTop: '2px solid #666',
+          transition: 'right 0.3s ease',
           display: 'flex',
-          border: '2px solid #666',
-          borderRadius: '30px 30px 0 0',
-          margin: '80px auto 0 auto'
+          zIndex: 100
         }}>
           {/* Dice Roller Section */}
           <div style={{
             flex: 1,
             position: 'relative',
             borderRight: '2px solid #666',
-            padding: '10px',
+            padding: '20px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             background: 'rgba(60, 60, 60, 0.3)',
-            borderRadius: '30px 30px 30px 30px',
             overflow: 'hidden'
           }}>
-          {isMyTurn && (
+            {isMyTurn && (
               <>
-            <img
-              src={Dicebox}
-              alt="Dice Board"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'fill',
+                <img
+                  src={Dicebox}
+                  alt="Dice Board"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'fill',
                     objectPosition: 'center',
-                pointerEvents: 'none'
-              }}
-            />
+                    pointerEvents: 'none'
+                  }}
+                />
                 {testRollMode && (
                   <div style={{
                     position: 'absolute',
@@ -1279,26 +1264,25 @@ export default function GameScreen() {
           <div style={{
             flex: 1,
             borderRight: '2px solid #666',
-            padding: '10px',
+            padding: '20px',
             display: 'flex',
             flexDirection: 'column',
             background: 'rgba(60, 60, 60, 0.3)'
           }}>
             <Dashboard />
-        </div>
+          </div>
 
           {/* Events Section */}
           <div style={{
             flex: 1,
-            padding: '10px',
+            padding: '20px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            borderRadius: '0 10px 0 0'
+            background: 'rgba(60, 60, 60, 0.3)'
           }}>
-          {(() => {
+            {(() => {
               // Show RPS game if active
               if (rpsGame) {
                 return (
@@ -1435,34 +1419,34 @@ export default function GameScreen() {
                     alignItems: 'center',
                     gap: '10px'
                   }}>
-                <button
-                  onClick={handleBuy}
-                  disabled={player.money < tileMeta.cost || (player.loan || 0) > 10000}
+                    <button
+                      onClick={handleBuy}
+                      disabled={player.money < tileMeta.cost || (player.loan || 0) > 10000}
                       style={{
-                    padding: '15px 30px',  // Increased padding
-                    fontSize: '1.4em',     // Increased font size
-                    backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? '#4CAF50' : '#ccc',
-                    color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'white' : '#ff0000',
+                        padding: '15px 30px',  // Increased padding
+                        fontSize: '1.4em',     // Increased font size
+                        backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? '#4CAF50' : '#ccc',
+                        color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'white' : '#ff0000',
                         border: 'none',
-                    borderRadius: '12px',  // Increased border radius
-                    cursor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'pointer' : 'not-allowed',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  // Added shadow
-                    transition: 'transform 0.2s',
-                    ':hover': {
-                      transform: 'scale(1.05)'
-                    }
+                        borderRadius: '12px',  // Increased border radius
+                        cursor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'pointer' : 'not-allowed',
+                        fontWeight: 'bold',
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  // Added shadow
+                        transition: 'transform 0.2s',
+                        ':hover': {
+                          transform: 'scale(1.05)'
+                        }
                       }}
-                >
-                  Buy (${tileMeta.cost})
-                </button>
-                {error && (
+                    >
+                      Buy (${tileMeta.cost})
+                    </button>
+                    {error && (
                       <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
-                )}
-                {(player.loan || 0) > 10000 && (
-                  <p style={{ color: 'tomato', margin: 0 }}>Cannot buy property when loan exceeds $10,000</p>
-                )}
-        </div>
+                    )}
+                    {(player.loan || 0) > 10000 && (
+                      <p style={{ color: 'tomato', margin: 0 }}>Cannot buy property when loan exceeds $10,000</p>
+                    )}
+                  </div>
                 );
               }
 
@@ -1593,7 +1577,7 @@ export default function GameScreen() {
                         setError(null);
                         setHasChosenCorner(true);
                       }}
-        style={{
+                      style={{
                         margin: 0,
                         padding: 0,
                         border: '3px solid #666',
@@ -1603,9 +1587,9 @@ export default function GameScreen() {
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center 40%',
                         cursor: 'pointer',
-            display: 'flex',
+                        display: 'flex',
                         alignItems: 'flex-end',
-            justifyContent: 'center',
+                        justifyContent: 'center',
                         width: '100%',
                         height: '100%',
                         minHeight: '180px',
@@ -1638,7 +1622,7 @@ export default function GameScreen() {
                         setError(null);
                         setHasChosenCorner(true);
                       }}
-          style={{
+                      style={{
                         margin: 0,
                         padding: 0,
                         border: '3px solid #666',
@@ -1648,7 +1632,7 @@ export default function GameScreen() {
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'center 40%',
                         cursor: 'pointer',
-            display: 'flex',
+                        display: 'flex',
                         alignItems: 'flex-end',
                         justifyContent: 'center',
                         width: '100%',
@@ -1677,7 +1661,7 @@ export default function GameScreen() {
                         textAlign: 'center'
                       }}>Casino</span>
                     </button>
-        </div>
+                  </div>
                 );
               }
 
@@ -1718,14 +1702,14 @@ export default function GameScreen() {
                           {rpsResult.winners.map(winner => (
                             <div key={winner.socketId} style={{ color: '#f44336' }}>
                               Lost against {winner.name} ({winner.choice})
-                          </div>
+                            </div>
                           ))}
                           {rpsResult.losers.map(loser => (
                             <div key={loser.socketId} style={{ color: '#4CAF50' }}>
                               Won against {loser.name} ({loser.choice})
-        </div>
+                            </div>
                           ))}
-      </div>
+                        </div>
                       ) : rpsTieAmount ? (
                         <RPSTieResolver
                           maxAmount={rpsTieAmount.maxAmount}
@@ -1776,7 +1760,7 @@ export default function GameScreen() {
                                         gameId: rpsGame.gameId
                                       });
                                     }}
-        style={{
+                                    style={{
                                       padding: '12px 24px',
                                       fontSize: '1.1em',
                                       backgroundColor: '#2196F3',
