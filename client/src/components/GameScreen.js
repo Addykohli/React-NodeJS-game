@@ -1162,7 +1162,11 @@ export default function GameScreen() {
         flexDirection: 'column',
         minHeight: '100vh',
         paddingRight: activeSidePanel ? '600px' : '120px',
-        transition: 'padding-right 0.3s ease'
+        transition: 'padding-right 0.3s ease',
+        backgroundImage: `url(${bgImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
       }}>
         {/* Board and Player Stats */}
         <div style={{
@@ -1205,13 +1209,15 @@ export default function GameScreen() {
           borderTop: '2px solid #666',
           transition: 'right 0.3s ease',
           display: 'flex',
+          justifyContent: 'center',
+          gap: '20px',
+          padding: '0 100px',
           zIndex: 100
         }}>
           {/* Dice Roller Section */}
           <div style={{
-            flex: 1,
+            width: '400px',
             position: 'relative',
-            borderRight: '2px solid #666',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
@@ -1222,20 +1228,6 @@ export default function GameScreen() {
           }}>
             {isMyTurn && (
               <>
-                <img
-                  src={Dicebox}
-                  alt="Dice Board"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'fill',
-                    objectPosition: 'center',
-                    pointerEvents: 'none'
-                  }}
-                />
                 {testRollMode && (
                   <div style={{
                     position: 'absolute',
@@ -1262,19 +1254,51 @@ export default function GameScreen() {
 
           {/* Dashboard Section */}
           <div style={{
-            flex: 1,
-            borderRight: '2px solid #666',
+            width: '400px',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
-            background: 'rgba(60, 60, 60, 0.3)'
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(60, 60, 60, 0.3)',
+            gap: '15px'
           }}>
-            <Dashboard />
+            <div style={{
+              fontSize: '1.8em',
+              color: 'white',
+              textAlign: 'center'
+            }}>
+              {player?.name}
+            </div>
+            <div style={{
+              fontSize: '1.6em',
+              color: '#4CAF50',
+              textAlign: 'center'
+            }}>
+              ${player?.money?.toLocaleString()}
+            </div>
+            {player?.loan > 0 && (
+              <div style={{
+                fontSize: '1.4em',
+                color: '#ff4444',
+                textAlign: 'center'
+              }}>
+                Loan: ${player?.loan?.toLocaleString()}
+              </div>
+            )}
+            <div style={{
+              fontSize: '1.4em',
+              color: 'white',
+              textAlign: 'center',
+              marginTop: '10px'
+            }}>
+              {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
+            </div>
           </div>
 
           {/* Events Section */}
           <div style={{
-            flex: 1,
+            width: '400px',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
