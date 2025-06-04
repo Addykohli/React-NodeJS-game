@@ -889,13 +889,12 @@ export default function GameScreen() {
               position: 'absolute',
               left: '180px',
               top: 0,
-              width: '680px',
-              paddingRight: '40px',
+              width: '470px',
               height: '100vh',
               backgroundColor: `${config.color}dd`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.3s ease',
-              padding: '90px 40px 20px 20px', // Added top padding
+              padding: '60px 40px 20px 20px', // Added top padding
               color: 'white',
               overflowY: 'auto',
               display: 'flex',
@@ -1509,11 +1508,12 @@ export default function GameScreen() {
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
                     gridTemplateRows: '1fr 1fr',
-                    gap: '20px',
+                    gap: '10px',
                     width: '100%',
-                    maxWidth: '600px',
-                    padding: '20px',
-                    margin: '0 auto'
+                    height: '100%',
+                    maxWidth: '300px',
+                    maxHeight: '250px',
+                    padding: '10px'
                   }}>
                     <button
                       onClick={() => {
@@ -1524,36 +1524,31 @@ export default function GameScreen() {
                       style={{
                         margin: 0,
                         padding: 0,
-                        border: '3px solid #666',
-                        borderRadius: '12px',
+                        border: '2px solid #666',
+                        borderRadius: '8px',
                         backgroundImage: `url(${startIcon})`,
-                        backgroundSize: '80%',
+                        backgroundSize: '60%',
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 40%',
+                        backgroundPosition: 'center 30%',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'flex-end',
                         justifyContent: 'center',
                         width: '100%',
                         height: '100%',
-                        minHeight: '180px',
                         position: 'relative',
                         backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.02)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                        }
+                        transition: 'transform 0.2s, background-color 0.2s'
                       }}
                     >
                       <span style={{
-                        padding: '8px 16px',
+                        padding: '4px 8px',
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 9px 9px',
+                        borderRadius: '0 0 6px 6px',
                         color: '#fff',
                         fontWeight: 'bold',
-                        fontSize: '1.4em',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+                        fontSize: '1em',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
                         position: 'absolute',
                         bottom: 0,
                         width: '100%',
@@ -1569,36 +1564,31 @@ export default function GameScreen() {
                       style={{
                         margin: 0,
                         padding: 0,
-                        border: '3px solid #666',
-                        borderRadius: '12px',
+                        border: '2px solid #666',
+                        borderRadius: '8px',
                         backgroundImage: `url(${roadIcon})`,
-                        backgroundSize: '80%',
+                        backgroundSize: '60%',
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 40%',
+                        backgroundPosition: 'center 30%',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'flex-end',
                         justifyContent: 'center',
                         width: '100%',
                         height: '100%',
-                        minHeight: '180px',
                         position: 'relative',
                         backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.02)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                        }
+                        transition: 'transform 0.2s, background-color 0.2s'
                       }}
                     >
                       <span style={{
-                        padding: '8px 16px',
+                        padding: '4px 8px',
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 9px 9px',
+                        borderRadius: '0 0 6px 6px',
                         color: '#fff',
                         fontWeight: 'bold',
-                        fontSize: '1.4em',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+                        fontSize: '1em',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
                         position: 'absolute',
                         bottom: 0,
                         width: '100%',
@@ -1614,36 +1604,31 @@ export default function GameScreen() {
                       style={{
                         margin: 0,
                         padding: 0,
-                        border: '3px solid #666',
-                        borderRadius: '12px',
+                        border: '2px solid #666',
+                        borderRadius: '8px',
                         backgroundImage: `url(${hotelIcon})`,
-                        backgroundSize: '80%',
+                        backgroundSize: '60%',
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 40%',
+                        backgroundPosition: 'center 30%',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'flex-end',
                         justifyContent: 'center',
                         width: '100%',
                         height: '100%',
-                        minHeight: '180px',
                         position: 'relative',
                         backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.02)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                        }
+                        transition: 'transform 0.2s, background-color 0.2s'
                       }}
                     >
                       <span style={{
-                        padding: '8px 16px',
+                        padding: '4px 8px',
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 9px 9px',
+                        borderRadius: '0 0 6px 6px',
                         color: '#fff',
                         fontWeight: 'bold',
-                        fontSize: '1.4em',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+                        fontSize: '1em',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
                         position: 'absolute',
                         bottom: 0,
                         width: '100%',
@@ -1659,36 +1644,31 @@ export default function GameScreen() {
                       style={{
                         margin: 0,
                         padding: 0,
-                        border: '3px solid #666',
-                        borderRadius: '12px',
+                        border: '2px solid #666',
+                        borderRadius: '8px',
                         backgroundImage: `url(${casinoIcon})`,
-                        backgroundSize: '80%',
+                        backgroundSize: '60%',
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 40%',
+                        backgroundPosition: 'center 30%',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'flex-end',
                         justifyContent: 'center',
                         width: '100%',
                         height: '100%',
-                        minHeight: '180px',
                         position: 'relative',
                         backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.02)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)'
-                        }
+                        transition: 'transform 0.2s, background-color 0.2s'
                       }}
                     >
                       <span style={{
-                        padding: '8px 16px',
+                        padding: '4px 8px',
                         backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 9px 9px',
+                        borderRadius: '0 0 6px 6px',
                         color: '#fff',
                         fontWeight: 'bold',
-                        fontSize: '1.4em',
-                        textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
+                        fontSize: '1em',
+                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
                         position: 'absolute',
                         bottom: 0,
                         width: '100%',
