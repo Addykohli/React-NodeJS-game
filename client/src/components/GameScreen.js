@@ -831,7 +831,7 @@ export default function GameScreen() {
       {/* Side Panel Buttons and Panels - Fixed to right side */}
       <div style={{
         position: 'fixed',
-        right: '40px', // Added right margin
+        right: '30px', // Added right margin
         top: 0,
         height: '100vh',
         width: activeSidePanel ? '620px' : '180px',
@@ -1172,7 +1172,7 @@ export default function GameScreen() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         position: 'relative',
-        top: '100px',
+        top: '120px',
         padding: '60px 20px 20px 20px', // Adjusted top padding
         minHeight: 'calc(100vh - 300px)' // Ensure content fills space above footer
       }}>
