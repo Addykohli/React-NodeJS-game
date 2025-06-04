@@ -833,7 +833,7 @@ export default function GameScreen() {
         position: 'fixed',
         right: '0px', 
         height: '100vh',
-        width: activeSidePanel ? '710px' : '180px',
+        width: activeSidePanel ? '680px' : '180px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
         display: 'flex'
@@ -889,7 +889,8 @@ export default function GameScreen() {
               position: 'absolute',
               left: '180px',
               top: 0,
-              width: '420px',
+              width: '680px',
+              paddingRight: '40px',
               height: '100vh',
               backgroundColor: `${config.color}dd`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
