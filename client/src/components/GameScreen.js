@@ -831,10 +831,10 @@ export default function GameScreen() {
       {/* Side Panel Buttons and Panels - Fixed to right side */}
       <div style={{
         position: 'fixed',
-        right: '20px', // Added right margin
+        right: '40px', // Added right margin
         top: 0,
         height: '100vh',
-        width: activeSidePanel ? '600px' : '180px',
+        width: activeSidePanel ? '620px' : '180px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
         display: 'flex'
@@ -1172,6 +1172,7 @@ export default function GameScreen() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         position: 'relative',
+        top: '100px',
         padding: '60px 20px 20px 20px', // Adjusted top padding
         minHeight: 'calc(100vh - 300px)' // Ensure content fills space above footer
       }}>
@@ -1821,18 +1822,7 @@ export default function GameScreen() {
           </div>
         </div>
       </div>
-
-      {/* Black background extension for footer */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        zIndex: 98,
-        transform: 'translateY(calc(100% - 300px))'
-      }} />
     </div>
+    
   );
 }
