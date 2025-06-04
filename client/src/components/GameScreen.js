@@ -816,9 +816,15 @@ export default function GameScreen() {
 
   return (
     <div style={{
-      position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
       minHeight: '100vh',
-      overflow: 'hidden'
+      transition: 'all 0.3s ease',
+      backgroundImage: `url(${bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      paddingBottom: '320px' // Add padding to prevent footer overlap
     }}>
       {/* Side Panel Buttons and Panels - Fixed to right side */}
       <div style={{
@@ -826,14 +832,14 @@ export default function GameScreen() {
         right: 0,
         top: 0,
         height: '100vh',
-        width: activeSidePanel ? '600px' : '120px',
+        width: activeSidePanel ? '600px' : '180px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
         display: 'flex'
       }}>
         {/* Panel Buttons Column */}
         <div style={{
-          width: '120px',
+          width: '180px',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -863,9 +869,9 @@ export default function GameScreen() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                fontSize: '1.2em',
+                fontSize: '1.4em',
                 width: '100%',
-                padding: '0 10px',
+                padding: '0 15px',
                 textAlign: 'center'
               }}>
                 {config.title}
@@ -880,9 +886,9 @@ export default function GameScreen() {
             key={panelId}
             style={{
               position: 'absolute',
-              left: '120px',
+              left: '180px',
               top: '0',
-              width: '480px',
+              width: '420px',
               height: '100vh',
               backgroundColor: `${config.color}dd`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
@@ -1161,7 +1167,7 @@ export default function GameScreen() {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        paddingRight: activeSidePanel ? '600px' : '120px',
+        paddingRight: activeSidePanel ? '600px' : '180px',
         transition: 'padding-right 0.3s ease',
         backgroundImage: `url(${bgImage})`,
         backgroundSize: 'cover',
@@ -1173,11 +1179,11 @@ export default function GameScreen() {
           flex: 1,
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'center',
+          alignItems: 'flex-start', // Changed from center to flex-start
           justifyContent: 'center',
           position: 'relative',
           padding: '20px',
-          paddingBottom: '300px' // Space for footer
+          paddingTop: '40px' // Added top padding
         }}>
           <div style={{ 
             position: 'relative',
@@ -1203,16 +1209,16 @@ export default function GameScreen() {
           position: 'fixed',
           bottom: 0,
           left: 0,
-          right: activeSidePanel ? '600px' : '120px',
+          right: 0,
           height: '300px',
           backgroundColor: 'rgba(0, 0, 0, 0.9)',
           borderTop: '2px solid #666',
-          transition: 'right 0.3s ease',
+          transition: 'all 0.3s ease',
           display: 'flex',
           justifyContent: 'center',
           gap: '20px',
           padding: '0 100px',
-          zIndex: 100
+          zIndex: 99
         }}>
           {/* Dice Roller Section */}
           <div style={{
