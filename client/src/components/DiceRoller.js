@@ -12,10 +12,16 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
+  const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
   // Get current tile to check if we're on casino
   const tileMeta = tiles.find(t => t.id === player?.tileId);
   const isOnCasino = tileMeta?.id === 16;
+
+  // Update casinoPlayed when prop changes
+  useEffect(() => {
+    setCasinoPlayed(hasCasinoPlayed);
+  }, [hasCasinoPlayed]);
 
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
@@ -28,9 +34,18 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     const onBranchChoices = ({ options }) => setBranchOptions(options);
     const onMovementDone = () => setDone(true);
 
+    // Add casino result handler
+    const onCasinoResult = ({ playerId }) => {
+      if (playerId === player?.socketId) {
+        setCasinoPlayed(true);
+        setDone(true);
+      }
+    };
+
     socket.on('diceResult', onDiceResult);
     socket.on('branchChoices', onBranchChoices);
     socket.on('movementDone', onMovementDone);
+    socket.on('casinoResult', onCasinoResult);
 
     socket.on('stonePaperScissorsStart', (game) => {
       setRpsGame(game);
@@ -49,6 +64,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       socket.off('diceResult', onDiceResult);
       socket.off('branchChoices', onBranchChoices);
       socket.off('movementDone', onMovementDone);
+      socket.off('casinoResult', onCasinoResult);
       socket.off('stonePaperScissorsStart');
       socket.off('stonePaperScissorsResult');
       socket.off('stonePaperScissorsTieResolved');
@@ -190,7 +206,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       )}
 
       {/* Done button - Only show if not on casino or if casino has been played */}
-      {done && (!isOnCasino || hasCasinoPlayed) && !rpsGame && (
+      {done && (!isOnCasino || casinoPlayed) && !rpsGame && (
         <button
           onClick={handleDone}
           style={{ 

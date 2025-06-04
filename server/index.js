@@ -744,7 +744,7 @@ io.on('connection', socket => {
     console.log('[casinoRoll]', { betAmount, betType });
     
     const player = engine.getPlayer(socket.id);
-    if (!player || player.money < betAmount || betAmount < 1000) {
+    if (!player || betAmount < 1000) {
       return;
     }
 

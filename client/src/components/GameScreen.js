@@ -52,7 +52,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
     return () => socket.off('casinoResult', handleCasinoResult);
   }, [socket, player.socketId, onCasinoPlayed]);
 
-  // If not active (after result), show nothing
+  // If not active (after result), show result screen
   if (!isActive) {
     if (showResult && diceResult) {
       return (
@@ -85,7 +85,11 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           <div style={{
             color: showResult.won ? '#4CAF50' : '#f44336',
             fontWeight: 'bold',
-            fontSize: '1.2em'
+            fontSize: '1.2em',
+            padding: '15px 25px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            borderRadius: '8px',
+            textAlign: 'center'
           }}>
             {showResult.won ? `You won $${showResult.amount}!` : `You lost $${showResult.amount}`}
           </div>
@@ -835,7 +839,7 @@ export default function GameScreen() {
             cursor: 'pointer',
             clipPath: activeSidePanel === panelId
               ? 'polygon(0 0, 100% 0, 100% 100%, 0 100%)'
-              : 'polygon(20% 0, 100% 0, 100% 100%, 20% 100%, 0 70%, 0 30%)',
+              : 'polygon(0% 0, 100% 0, 100% 100%, 0% 100%)',
             transition: 'all 0.3s ease',
             zIndex: 1001
           }}
