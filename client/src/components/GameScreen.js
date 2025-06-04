@@ -110,150 +110,151 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
       padding: '15px',
       gap: '10px'
     }}>
-      {/* Title */}
-      <div style={{
-        fontSize: '1.2em',
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: '5px'
-      }}>
-        Casino Betting
-      </div>
-
-      {/* Bet amount control */}
+      {/* Money Input */}
       <div style={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        gap: '8px',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: '8px 12px',
-        borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '15px',
+        gap: '10px'
       }}>
-        <button
-          onClick={() => handleAmountChange(-500)}
-          disabled={!isMyTurn || betAmount <= 1000}
-          style={{
-            padding: '6px 12px',
-            fontSize: '1.2em',
-            cursor: isMyTurn ? 'pointer' : 'not-allowed',
-            backgroundColor: isMyTurn && betAmount > 1000 ? '#ff4444' : 'rgba(255, 68, 68, 0.5)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            width: '36px',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          -
-        </button>
-        <div style={{
-          padding: '6px 12px',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '4px',
-          minWidth: '100px',
-          textAlign: 'center',
-          fontSize: '1.1em',
-          color: 'white',
-          backgroundColor: 'rgba(0, 0, 0, 0.2)'
+        {/* Remove the Casino Betting title and start directly with money input */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          gap: '8px',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          border: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
-          ${betAmount}
-        </div>
-        <button
-          onClick={() => handleAmountChange(500)}
-          disabled={!isMyTurn || betAmount >= currentMoney}
-          style={{
-            padding: '6px 12px',
-            fontSize: '1.2em',
-            cursor: isMyTurn ? 'pointer' : 'not-allowed',
-            backgroundColor: isMyTurn && betAmount < currentMoney ? '#4CAF50' : 'rgba(76, 175, 80, 0.5)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            width: '36px',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          +
-        </button>
-      </div>
-
-      {/* Bet type buttons */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        padding: '8px',
-        borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
-      }}>
-        {[
-          { type: 'below', label: '2-6', odds: '2x' },
-          { type: '7', label: '7', odds: '3x' },
-          { type: 'above', label: '8-12', odds: '2x' }
-        ].map(bet => (
           <button
-            key={bet.type}
-            onClick={() => handleBetSelect(bet.type)}
-            disabled={!isMyTurn}
+            onClick={() => handleAmountChange(-500)}
+            disabled={!isMyTurn || betAmount <= 1000}
             style={{
-              padding: '8px 12px',
-              backgroundColor: selectedBet === bet.type ? '#2196F3' : 'rgba(33, 150, 243, 0.3)',
-              color: '#fff',
-              border: selectedBet === bet.type ? '2px solid #90CAF9' : '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '1.2em',
               cursor: isMyTurn ? 'pointer' : 'not-allowed',
-              fontSize: '0.9em',
-              fontWeight: 'bold',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '4px',
-              minWidth: '70px',
+              backgroundColor: isMyTurn && betAmount > 1000 ? '#ff4444' : 'rgba(255, 68, 68, 0.5)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              width: '36px',
               transition: 'all 0.2s ease'
             }}
           >
-            <span>{bet.label}</span>
-            <span style={{ 
-              fontSize: '0.8em',
-              opacity: 0.8 
-            }}>{bet.odds}</span>
+            -
           </button>
-        ))}
-      </div>
+          <div style={{
+            padding: '6px 12px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '4px',
+            minWidth: '100px',
+            textAlign: 'center',
+            fontSize: '1.1em',
+            color: 'white',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)'
+          }}>
+            ${betAmount}
+          </div>
+          <button
+            onClick={() => handleAmountChange(500)}
+            disabled={!isMyTurn || betAmount >= currentMoney}
+            style={{
+              padding: '6px 12px',
+              fontSize: '1.2em',
+              cursor: isMyTurn ? 'pointer' : 'not-allowed',
+              backgroundColor: isMyTurn && betAmount < currentMoney ? '#4CAF50' : 'rgba(76, 175, 80, 0.5)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              width: '36px',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            +
+          </button>
+        </div>
 
-      {/* Roll button */}
-      <button
-        onClick={handleRoll}
-        disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney}
-        style={{
-          padding: '10px 30px',
-          backgroundColor: isMyTurn && selectedBet && betAmount >= 1000 && betAmount <= currentMoney 
-            ? '#FFA000' 
-            : 'rgba(255, 160, 0, 0.3)',
-          color: '#fff',
-          border: 'none',
+        {/* Bet type buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          padding: '8px',
           borderRadius: '8px',
-          cursor: isMyTurn && selectedBet ? 'pointer' : 'not-allowed',
-          fontSize: '1.2em',
-          fontWeight: 'bold',
-          letterSpacing: '1px',
-          textTransform: 'uppercase',
-          transition: 'all 0.3s ease',
-          boxShadow: isMyTurn && selectedBet ? '0 2px 8px rgba(255, 160, 0, 0.4)' : 'none',
-          width: '100%'
-        }}
-      >
-        Roll Dice
-      </button>
+          border: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          {[
+            { type: 'below', label: '2-6', odds: '2x' },
+            { type: '7', label: '7', odds: '3x' },
+            { type: 'above', label: '8-12', odds: '2x' }
+          ].map(bet => (
+            <button
+              key={bet.type}
+              onClick={() => handleBetSelect(bet.type)}
+              disabled={!isMyTurn}
+              style={{
+                padding: '8px 12px',
+                backgroundColor: selectedBet === bet.type ? '#2196F3' : 'rgba(33, 150, 243, 0.3)',
+                color: '#fff',
+                border: selectedBet === bet.type ? '2px solid #90CAF9' : '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '6px',
+                cursor: isMyTurn ? 'pointer' : 'not-allowed',
+                fontSize: '0.9em',
+                fontWeight: 'bold',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                minWidth: '70px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <span>{bet.label}</span>
+              <span style={{ 
+                fontSize: '0.8em',
+                opacity: 0.8 
+              }}>{bet.odds}</span>
+            </button>
+          ))}
+        </div>
 
-      {/* Current money display */}
-      <div style={{
-        fontSize: '0.9em',
-        color: '#aaa',
-        textAlign: 'center'
-      }}>
-        Your Money: ${currentMoney.toLocaleString()}
+        {/* Roll button */}
+        <button
+          onClick={handleRoll}
+          disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney}
+          style={{
+            padding: '10px 30px',
+            backgroundColor: isMyTurn && selectedBet && betAmount >= 1000 && betAmount <= currentMoney 
+              ? '#FFA000' 
+              : 'rgba(255, 160, 0, 0.3)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: isMyTurn && selectedBet ? 'pointer' : 'not-allowed',
+            fontSize: '1.2em',
+            fontWeight: 'bold',
+            letterSpacing: '1px',
+            textTransform: 'uppercase',
+            transition: 'all 0.3s ease',
+            boxShadow: isMyTurn && selectedBet ? '0 2px 8px rgba(255, 160, 0, 0.4)' : 'none',
+            width: '100%'
+          }}
+        >
+          Roll Dice
+        </button>
+
+        {/* Current money display */}
+        <div style={{
+          fontSize: '0.9em',
+          color: '#aaa',
+          textAlign: 'center'
+        }}>
+          Your Money: ${currentMoney.toLocaleString()}
+        </div>
       </div>
     </div>
   );
@@ -912,8 +913,9 @@ export default function GameScreen() {
               {index < Object.entries(panelConfigs).length - 1 && (
                 <div style={{
                   height: '1px',
-                  margin: '0 40px',
-                  background: 'linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0.2) 80%, transparent 100%)'
+                  margin: '0 20px',
+                  background: 'linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 10%, rgba(255, 255, 255, 0.3) 90%, transparent 100%)',
+                  pointerEvents: 'none'
                 }} />
               )}
             </React.Fragment>
@@ -930,7 +932,7 @@ export default function GameScreen() {
               top: 0,
               width: '470px',
               height: '100vh',
-              backgroundColor: `${config.color}dd`,
+              backgroundColor: `${config.color}`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.3s ease',
               padding: '60px 40px 20px 20px', // Added top padding
