@@ -831,10 +831,9 @@ export default function GameScreen() {
       {/* Side Panel Buttons and Panels - Fixed to right side */}
       <div style={{
         position: 'fixed',
-        right: '0px', // Added right margin
-        top: 0,
+        right: '0px', 
         height: '100vh',
-        width: activeSidePanel ? '620px' : '180px',
+        width: activeSidePanel ? '680px' : '180px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
         display: 'flex'
@@ -844,6 +843,7 @@ export default function GameScreen() {
           width: '180px',
           height: '100%',
           display: 'flex',
+          marginRight: '20px',
           flexDirection: 'column',
           gap: '10px',
           padding: '90px 0 30px 0', // Added top padding
@@ -892,11 +892,11 @@ export default function GameScreen() {
               top: 0,
               width: '420px',
               height: '100vh',
-              marginRight: '20px',
+              marginRight: '40px',
               backgroundColor: `${config.color}dd`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.3s ease',
-              padding: '90px 20px 20px 20px', // Added top padding
+              padding: '90px 40px 20px 20px', // Added top padding
               color: 'white',
               overflowY: 'auto',
               display: 'flex',
@@ -1219,7 +1219,7 @@ export default function GameScreen() {
           justifyContent: 'center',
           gap: '20px',
           width: '100%',
-          maxWidth: '1400px', // Limit maximum width
+          maxWidth: '1400px', 
           margin: '0 auto'
         }}>
           {/* Dice Roller Section */}
@@ -1227,6 +1227,7 @@ export default function GameScreen() {
             width: '400px',
             position: 'relative',
             padding: '20px',
+            height: '300px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -1263,6 +1264,7 @@ export default function GameScreen() {
           {/* Dashboard Section */}
           <div style={{
             width: '400px',
+            height: '300px',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
@@ -1307,6 +1309,7 @@ export default function GameScreen() {
           {/* Events Section */}
           <div style={{
             width: '400px',
+            height: '300px',
             padding: '20px',
             display: 'flex',
             flexDirection: 'column',
