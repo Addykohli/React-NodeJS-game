@@ -17,20 +17,6 @@ export function GameProvider({ children }) {
   // buy/rent UI
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
-  const quitGame = () => {
-    if (socket) {
-      socket.emit('quitGame');
-      setPlayer(null);
-      setPlayers([]);
-      setGameState('lobby');
-      setCurrentPlayerId(null);
-      setSessionId(null);
-      setDiceRoll(null);
-      setMovementDone(false);
-      setInsufficientFunds(false);
-    }
-  };
-
   // Update player whenever players array changes
   useEffect(() => {
     if (socket?.id && players.length > 0) {
@@ -347,7 +333,6 @@ export function GameProvider({ children }) {
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
-        quitGame
       }}
     >
       {children}
