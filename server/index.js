@@ -1868,55 +1868,57 @@ io.on('connection', socket => {
       activeTradeOffers = activeTradeOffers.filter(o => o.id !== offerId);
     }
   });
-});
 
-socket.on('quitGame', () => {
-  console.log('[Player quit game]', socket.id);
-  
-  // Find the quitting player
-  const quittingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
-  
-  if (quittingPlayer && hasStarted) {
-    // Check if it was their turn and they had moved but not ended turn
-    const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
-    if (isCurrentPlayer) {
-      console.log(`Current player ${quittingPlayer.name} disconnected during their turn`);
-      
-      // End their turn if they had already moved (movementDone was emitted)
-      const currentPlayer = engine.getPlayer(socket.id);
-      if (currentPlayer && currentPlayer.hasMoved) {
-        console.log(`Auto-ending turn for disconnected player ${quittingPlayer.name}`);
-        const nextPlayerId = engine.endTurn();
-        io.emit('turnEnded', { nextPlayerId });
+  socket.on('quitGame', () => {
+    console.log('[Player quit game]', socket.id);
+    
+    // Find the quitting player
+    const quittingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
+    
+    if (quittingPlayer && hasStarted) {
+      // Check if it was their turn and they had moved but not ended turn
+      const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+      if (isCurrentPlayer) {
+        console.log(`Current player ${quittingPlayer.name} disconnected during their turn`);
         
-        // Update game session if exists
-        if (currentSessionId) {
-          GameSession.findByIdAndUpdate(currentSessionId, { 
-            currentPlayerIndex: engine.session.currentPlayerIndex 
-          }).catch(err => {
-            console.error('Error updating game session after auto-end turn:', err);
-          });
+        // End their turn if they had already moved (movementDone was emitted)
+        const currentPlayer = engine.getPlayer(socket.id);
+        if (currentPlayer && currentPlayer.hasMoved) {
+          console.log(`Auto-ending turn for disconnected player ${quittingPlayer.name}`);
+          const nextPlayerId = engine.endTurn();
+          io.emit('turnEnded', { nextPlayerId });
+          
+          // Update game session if exists
+          if (currentSessionId) {
+            GameSession.findByIdAndUpdate(currentSessionId, { 
+              currentPlayerIndex: engine.session.currentPlayerIndex 
+            }).catch(err => {
+              console.error('Error updating game session after auto-end turn:', err);
+            });
+          }
         }
       }
+  
+      // Not storing the quitting player's info
+      console.log(`Not storing quitting player: ${quittingPlayer.name}`);
+  
+      // remove from engine if game has started
+      engine.removePlayer(socket.id);
+      
+      io.emit('playerQuit', {
+        playerName: quittingPlayer.name,
+        temporary: false
+      });
+    } else if (!hasStarted) {
+      // remove from lobby and engine if game hasn't started
+      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+      engine.removePlayer(socket.id);
+      io.emit('lobbyUpdate', lobbyPlayers);
     }
+  });
 
-    // Not storing the quitting player's info
-    console.log(`Not storing quitting player: ${quittingPlayer.name}`);
-
-    // remove from engine if game has started
-    engine.removePlayer(socket.id);
-    
-    io.emit('playerQuit', {
-      playerName: quittingPlayer.name,
-      temporary: false
-    });
-  } else if (!hasStarted) {
-    // remove from lobby and engine if game hasn't started
-    lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
-    engine.removePlayer(socket.id);
-    io.emit('lobbyUpdate', lobbyPlayers);
-  }
 });
+
 
 function determineRPSWinner(choice1, choice2) {
   if (choice1 === choice2) return 'tie';
