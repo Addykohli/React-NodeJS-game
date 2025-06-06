@@ -322,6 +322,8 @@ export function GameProvider({ children }) {
       socket.off('roadCashResult');
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
+      socket.off('playerQuit');
+      socket.off('playerDisconnected');
     };
   }, [socket?.id, player]);
 

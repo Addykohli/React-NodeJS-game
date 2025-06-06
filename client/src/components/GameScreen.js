@@ -268,7 +268,9 @@ export default function GameScreen() {
     setPlayers,
     currentPlayerId,
     socket,
-    movementDone
+    movementDone,
+    gameState,
+    setGameState
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
