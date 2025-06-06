@@ -9,7 +9,7 @@ async function initDatabase() {
     console.log('Database connection has been established successfully.');
 
     // Sync all models
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     console.log('All models were synchronized successfully.');
 
   } catch (error) {
