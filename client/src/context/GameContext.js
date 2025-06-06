@@ -20,6 +20,10 @@ export function GameProvider({ children }) {
   });
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
   const [diceRoll, setDiceRoll] = useState(null);
+  const [hasRolled, setHasRolled] = useState(() => {
+    const savedHasRolled = localStorage.getItem('hasRolled');
+    return savedHasRolled === 'true';
+  });
   const [movementDone, setMovementDone] = useState(false);
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
@@ -48,6 +52,23 @@ export function GameProvider({ children }) {
     }
   }, [sessionId]);
 
+  // Save hasRolled state to localStorage
+  useEffect(() => {
+    if (hasRolled) {
+      localStorage.setItem('hasRolled', 'true');
+    } else {
+      localStorage.removeItem('hasRolled');
+    }
+  }, [hasRolled]);
+
+  // Clear hasRolled when turn ends
+  useEffect(() => {
+    if (!isMyTurn) {
+      setHasRolled(false);
+      localStorage.removeItem('hasRolled');
+    }
+  }, [currentPlayerId]);
+
   // Auto-rejoin on refresh/reconnect
   useEffect(() => {
     const handleReconnect = () => {
@@ -56,7 +77,6 @@ export function GameProvider({ children }) {
       
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        // Emit joinLobby with the saved name to trigger reconnection
         socket.emit('joinLobby', { name: playerData.name });
       }
     };
@@ -78,9 +98,11 @@ export function GameProvider({ children }) {
     localStorage.removeItem('gamePlayer');
     localStorage.removeItem('gameState');
     localStorage.removeItem('sessionId');
+    localStorage.removeItem('hasRolled');
     setPlayer(null);
     setGameState('lobby');
     setSessionId(null);
+    setHasRolled(false);
   };
 
   // Update player whenever players array changes
@@ -110,8 +132,10 @@ export function GameProvider({ children }) {
       setGameState('playing');
       setCurrentPlayerId(cid);
       setDiceRoll(null);
+      setHasRolled(false);
       setMovementDone(false);
       setInsufficientFunds(false);
+      localStorage.removeItem('hasRolled');
     });
 
     // Add game over handler
@@ -131,13 +155,19 @@ export function GameProvider({ children }) {
     socket.on('turnEnded', ({ nextPlayerId }) => {
       setCurrentPlayerId(nextPlayerId);
       setDiceRoll(null);
+      setHasRolled(false);
       setMovementDone(false);
       setInsufficientFunds(false);
+      localStorage.removeItem('hasRolled');
     });
 
     // DICE RESULT
     socket.on('diceResult', ({ playerId, die1, die2, total }) => {
       setDiceRoll({ playerId, die1, die2, total });
+      if (playerId === socket.id) {
+        setHasRolled(true);
+        localStorage.setItem('hasRolled', 'true');
+      }
     });
 
     // TILE MOVED
@@ -394,6 +424,9 @@ export function GameProvider({ children }) {
     };
   }, [socket?.id, player]);
 
+  // Calculate if it's the current player's turn
+  const isMyTurn = player?.socketId === currentPlayerId;
+
   return (
     <GameContext.Provider
       value={{
@@ -410,11 +443,14 @@ export function GameProvider({ children }) {
         setGameState,
         diceRoll,
         setDiceRoll,
+        hasRolled,
+        setHasRolled,
         movementDone,
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
-        handleQuit
+        handleQuit,
+        isMyTurn
       }}
     >
       {children}

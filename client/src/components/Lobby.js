@@ -146,7 +146,7 @@ const Lobby = () => {
         flex: 1,
         display: 'flex',
         justifyContent: 'center',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: '40px',
         padding: '40px'
       }}>
@@ -155,7 +155,8 @@ const Lobby = () => {
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           padding: '3rem',
           borderRadius: '15px',
-          width: '500px'
+          width: '500px',
+          alignSelf: 'flex-start'
         }}>
           <h1 style={{ 
             textAlign: 'center', 
@@ -328,7 +329,9 @@ const Lobby = () => {
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           padding: '3rem',
           borderRadius: '15px',
-          width: '500px'
+          width: '500px',
+          alignSelf: 'flex-start',
+          minHeight: '200px'
         }}>
           <h2 style={{ 
             textAlign: 'center', 
@@ -385,7 +388,8 @@ const Lobby = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        minHeight: '80px'
       }}>
         {hasJoined && (
           <button

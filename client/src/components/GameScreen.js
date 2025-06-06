@@ -1291,6 +1291,49 @@ export default function GameScreen() {
           margin: '0 auto',
           position: 'relative'
         }}>
+          {/* Quit Game Button Section */}
+          <div style={{
+            width: '200px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '250px'
+          }}>
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+                  socket.emit('quitGame');
+                  handleQuit();
+                }
+              }}
+              disabled={isMyTurn}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1.2em',
+                backgroundColor: isMyTurn ? '#666666' : '#ff4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isMyTurn ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.3s',
+                opacity: isMyTurn ? 0.7 : 1
+              }}
+              onMouseOver={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+              onMouseOut={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+            >
+              Quit Game
+            </button>
+          </div>
+
+          {/* Vertical Gradient Separator */}
+          <div style={{
+            width: '1px',
+            height: '200px',
+            margin: '25px 0',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+            alignSelf: 'center'
+          }} />
+
           {/* Dice Roller Section */}
           <div style={{
             width: '400px',
@@ -1301,9 +1344,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            overflow: 'hidden',
-            borderRadius: '15px'
+            overflow: 'hidden'
           }}>
             {isMyTurn && (
               <>
@@ -1349,9 +1390,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            gap: '15px',
-            borderRadius: '15px'
+            gap: '15px'
           }}>
             <div style={{
               fontSize: '1.8em',
@@ -1386,7 +1425,7 @@ export default function GameScreen() {
             </div>
           </div>
 
-          {/* Vertical Gradient Separator 2 */}
+          {/* Vertical Gradient Separator */}
           <div style={{
             width: '1px',
             height: '200px',
@@ -1403,9 +1442,7 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            borderRadius: '15px'
+            justifyContent: 'center'
           }}>
             {(() => {
               // Show RPS game if active
@@ -1783,29 +1820,6 @@ export default function GameScreen() {
                   height: '100%',
                   gap: '20px'
                 }}>
-                  {/* quit game button */}
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
-                        socket.emit('quitGame');
-                        handleQuit(); // Use the new handleQuit function
-                      }
-                    }}
-                    style={{
-                      padding: '10px 20px',
-                      fontSize: '1.2em',
-                      backgroundColor: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.3s'
-                    }}
-                    onMouseOver={(e) => e.target.style.backgroundColor = '#ff6666'}
-                    onMouseOut={(e) => e.target.style.backgroundColor = '#ff4444'}
-                  >
-                    Quit Game
-                  </button>
                   {rpsGame && (
                     <div style={{
                       display: 'flex',
