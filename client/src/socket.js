@@ -14,7 +14,8 @@ const socket = io(SOCKET_SERVER_URL, {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     autoConnect: true,
-    forceNew: true
+    forceNew: false,
+    reconnection: true
 });
 
 // Add connection event handlers
@@ -28,6 +29,26 @@ socket.on('connect_error', (error) => {
 
 socket.on('disconnect', (reason) => {
     console.log('Disconnected:', reason);
+    if (reason === 'io server disconnect' || reason === 'transport close') {
+        socket.connect();
+    }
+});
+
+// Add reconnect event handlers
+socket.on('reconnect', (attemptNumber) => {
+    console.log('Reconnected after', attemptNumber, 'attempts');
+});
+
+socket.on('reconnect_attempt', (attemptNumber) => {
+    console.log('Attempting to reconnect:', attemptNumber);
+});
+
+socket.on('reconnect_error', (error) => {
+    console.error('Reconnection error:', error);
+});
+
+socket.on('reconnect_failed', () => {
+    console.error('Failed to reconnect after all attempts');
 });
 
 export default socket;

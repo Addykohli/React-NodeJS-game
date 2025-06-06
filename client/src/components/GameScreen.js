@@ -268,7 +268,8 @@ export default function GameScreen() {
     setPlayers,
     currentPlayerId,
     socket,
-    movementDone
+    movementDone,
+    handleQuit
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -1787,7 +1788,7 @@ export default function GameScreen() {
                     onClick={() => {
                       if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
                         socket.emit('quitGame');
-                        window.location.reload(); // Refresh the page to return to lobby
+                        handleQuit(); // Use the new handleQuit function
                       }
                     }}
                     style={{

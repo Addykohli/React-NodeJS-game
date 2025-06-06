@@ -4,18 +4,84 @@ import socket from '../socket';
 export const GameContext = createContext();
 
 export function GameProvider({ children }) {
-  const [player, setPlayer]               = useState(null);
-  const [players, setPlayers]             = useState([]);
+  // Initialize state from localStorage if available
+  const [player, setPlayer] = useState(() => {
+    const savedPlayer = localStorage.getItem('gamePlayer');
+    return savedPlayer ? JSON.parse(savedPlayer) : null;
+  });
+  const [players, setPlayers] = useState([]);
+  const [gameState, setGameState] = useState(() => {
+    const savedGameState = localStorage.getItem('gameState');
+    return savedGameState || 'lobby';
+  });
+  const [sessionId, setSessionId] = useState(() => {
+    const savedSessionId = localStorage.getItem('sessionId');
+    return savedSessionId || null;
+  });
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
-  const [sessionId, setSessionId]         = useState(null);
-  const [gameState, setGameState]         = useState('lobby');
-
-  // dice + movement flags
-  const [diceRoll, setDiceRoll]           = useState(null);
-  const [movementDone, setMovementDone]   = useState(false);
-
-  // buy/rent UI
+  const [diceRoll, setDiceRoll] = useState(null);
+  const [movementDone, setMovementDone] = useState(false);
   const [insufficientFunds, setInsufficientFunds] = useState(false);
+
+  // Save important state to localStorage whenever it changes
+  useEffect(() => {
+    if (player) {
+      localStorage.setItem('gamePlayer', JSON.stringify(player));
+    } else {
+      localStorage.removeItem('gamePlayer');
+    }
+  }, [player]);
+
+  useEffect(() => {
+    if (gameState) {
+      localStorage.setItem('gameState', gameState);
+    } else {
+      localStorage.removeItem('gameState');
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('sessionId', sessionId);
+    } else {
+      localStorage.removeItem('sessionId');
+    }
+  }, [sessionId]);
+
+  // Auto-rejoin on refresh/reconnect
+  useEffect(() => {
+    const handleReconnect = () => {
+      const savedPlayer = localStorage.getItem('gamePlayer');
+      const savedGameState = localStorage.getItem('gameState');
+      
+      if (savedPlayer) {
+        const playerData = JSON.parse(savedPlayer);
+        // Emit joinLobby with the saved name to trigger reconnection
+        socket.emit('joinLobby', { name: playerData.name });
+      }
+    };
+
+    socket.on('connect', handleReconnect);
+
+    // Initial connection check
+    if (socket.connected && player) {
+      handleReconnect();
+    }
+
+    return () => {
+      socket.off('connect', handleReconnect);
+    };
+  }, [player]);
+
+  // Clear session data on quit
+  const handleQuit = () => {
+    localStorage.removeItem('gamePlayer');
+    localStorage.removeItem('gameState');
+    localStorage.removeItem('sessionId');
+    setPlayer(null);
+    setGameState('lobby');
+    setSessionId(null);
+  };
 
   // Update player whenever players array changes
   useEffect(() => {
@@ -46,6 +112,19 @@ export function GameProvider({ children }) {
       setDiceRoll(null);
       setMovementDone(false);
       setInsufficientFunds(false);
+    });
+
+    // Add game over handler
+    socket.on('gameOver', ({ winner }) => {
+      alert(`Game Over! ${winner} wins as the last player remaining!`);
+      handleQuit(); // Clean up game state
+    });
+
+    // PLAYER QUIT
+    socket.on('playerQuit', ({ playerName, temporary }) => {
+      if (!temporary) {
+        setPlayers(prev => prev.filter(p => p.name !== playerName));
+      }
     });
 
     // TURN ENDED
@@ -297,6 +376,8 @@ export function GameProvider({ children }) {
     return () => {
       socket.off('lobbyUpdate');
       socket.off('gameStart');
+      socket.off('gameOver');
+      socket.off('playerQuit');
       socket.off('turnEnded');
       socket.off('diceResult');
       socket.off('playerMoved');
@@ -333,6 +414,7 @@ export function GameProvider({ children }) {
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
+        handleQuit
       }}
     >
       {children}

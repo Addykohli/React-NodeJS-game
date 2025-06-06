@@ -16,11 +16,19 @@ const Lobby = () => {
     players = [],
     setPlayers,
     setGameState,
-    socket
+    socket,
+    handleQuit
   } = useContext(GameContext);
 
-  const [name, setName] = useState('');
-  const [hasJoined, setHasJoined] = useState(false);
+  const [name, setName] = useState(() => {
+    // Initialize name from localStorage if available
+    const savedPlayer = localStorage.getItem('gamePlayer');
+    return savedPlayer ? JSON.parse(savedPlayer).name : '';
+  });
+  const [hasJoined, setHasJoined] = useState(() => {
+    // Initialize hasJoined based on whether we have a saved player
+    return !!localStorage.getItem('gamePlayer');
+  });
   const [selectedPiece, setSelectedPiece] = useState('');
   const [error, setError] = useState('');
 
@@ -384,7 +392,7 @@ const Lobby = () => {
             onClick={() => {
               if (window.confirm('Are you sure you want to quit? This will remove you from the lobby.')) {
                 socket.emit('quitGame');
-                window.location.reload();
+                handleQuit();
               }
             }}
             style={{

@@ -901,38 +901,39 @@ io.on('connection', socket => {
     const disconnectingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
     
     if (disconnectingPlayer && hasStarted) {
-      // Check if it was their turn and they had moved but not ended turn
-      const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
-      if (isCurrentPlayer) {
-        console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
+      // Only handle disconnect if player hasn't already quit
+      if (!disconnectingPlayer.hasQuit) {
+        console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
+        disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
         
-        // End their turn if they had already moved (movementDone was emitted)
-        const currentPlayer = engine.getPlayer(socket.id);
-        if (currentPlayer && currentPlayer.hasMoved) {
-          console.log(`Auto-ending turn for disconnected player ${disconnectingPlayer.name}`);
-          const nextPlayerId = engine.endTurn();
-          io.emit('turnEnded', { nextPlayerId });
+        // Check if it was their turn
+        const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+        if (isCurrentPlayer) {
+          console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
           
-          // Update game session if exists
-          if (currentSessionId) {
-            GameSession.findByIdAndUpdate(currentSessionId, { 
-              currentPlayerIndex: engine.session.currentPlayerIndex 
-            }).catch(err => {
-              console.error('Error updating game session after auto-end turn:', err);
-            });
+          // End their turn if they had already moved
+          const currentPlayer = engine.getPlayer(socket.id);
+          if (currentPlayer && currentPlayer.hasMoved) {
+            console.log(`Auto-ending turn for disconnected player ${disconnectingPlayer.name}`);
+            const nextPlayerId = engine.endTurn();
+            io.emit('turnEnded', { nextPlayerId });
+            
+            // Update game session if exists
+            if (currentSessionId) {
+              GameSession.findByIdAndUpdate(currentSessionId, { 
+                currentPlayerIndex: engine.session.currentPlayerIndex 
+              }).catch(err => {
+                console.error('Error updating game session after auto-end turn:', err);
+              });
+            }
           }
         }
+        
+        io.emit('playerDisconnected', {
+          playerName: disconnectingPlayer.name,
+          temporary: true
+        });
       }
-
-      // Store the disconnected player's info
-      console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
-      disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
-      
-      // Don't remove from engine or lobby if game has started
-      io.emit('playerDisconnected', {
-        playerName: disconnectingPlayer.name,
-        temporary: true
-      });
     } else if (!hasStarted) {
       // Only remove from lobby and engine if game hasn't started
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
@@ -1876,41 +1877,79 @@ io.on('connection', socket => {
     const quittingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
     
     if (quittingPlayer && hasStarted) {
-      // Check if it was their turn and they had moved but not ended turn
+      console.log(`Player ${quittingPlayer.name} quit the game`);
+      
+      // Mark player as quit to prevent disconnect handler from processing
+      quittingPlayer.hasQuit = true;
+      
+      // Remove from disconnectedPlayers if they were there
+      disconnectedPlayers.delete(quittingPlayer.name);
+      
+      // Check if it was their turn and handle turn ending
       const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
       if (isCurrentPlayer) {
-        console.log(`Current player ${quittingPlayer.name} disconnected during their turn`);
+        console.log(`Current player ${quittingPlayer.name} quit during their turn`);
         
-        // End their turn if they had already moved (movementDone was emitted)
+        // End their turn if they had already moved
         const currentPlayer = engine.getPlayer(socket.id);
         if (currentPlayer && currentPlayer.hasMoved) {
-          console.log(`Auto-ending turn for disconnected player ${quittingPlayer.name}`);
-          const nextPlayerId = engine.endTurn();
-          io.emit('turnEnded', { nextPlayerId });
-          
+          console.log(`Auto-ending turn for quit player ${quittingPlayer.name}`);
+        }
+        
+        // Always advance turn for quitting current player
+        const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
+        engine.session.currentPlayerIndex = nextPlayerIndex;
+        const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
+        io.emit('turnEnded', { nextPlayerId });
+        
+        // Update game session if exists
+        if (currentSessionId) {
+          GameSession.findByIdAndUpdate(currentSessionId, { 
+            currentPlayerIndex: nextPlayerIndex 
+          }).catch(err => {
+            console.error('Error updating game session after quit:', err);
+          });
+        }
+      } else {
+        // If they weren't the current player, adjust currentPlayerIndex if needed
+        const quitPlayerIndex = engine.session.players.findIndex(p => p.socketId === socket.id);
+        if (quitPlayerIndex !== -1 && quitPlayerIndex < engine.session.currentPlayerIndex) {
+          engine.session.currentPlayerIndex--;
           // Update game session if exists
           if (currentSessionId) {
             GameSession.findByIdAndUpdate(currentSessionId, { 
               currentPlayerIndex: engine.session.currentPlayerIndex 
             }).catch(err => {
-              console.error('Error updating game session after auto-end turn:', err);
+              console.error('Error updating game session after quit:', err);
             });
           }
         }
       }
-  
-      // Not storing the quitting player's info
-      console.log(`Not storing quitting player: ${quittingPlayer.name}`);
-  
-      // remove from engine if game has started
+
+      // Remove from engine and update game state
       engine.removePlayer(socket.id);
+      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
       
+      // Notify all clients
       io.emit('playerQuit', {
         playerName: quittingPlayer.name,
         temporary: false
       });
+      
+      // If only one player remains, end the game
+      if (engine.session.players.length === 1) {
+        const winner = engine.session.players[0];
+        io.emit('gameOver', {
+          winner: winner.name
+        });
+        // Reset game state
+        hasStarted = false;
+        lobbyPlayers = [];
+        engine.session.players = [];
+        currentSessionId = null;
+      }
     } else if (!hasStarted) {
-      // remove from lobby and engine if game hasn't started
+      // Remove from lobby and engine if game hasn't started
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
       engine.removePlayer(socket.id);
       io.emit('lobbyUpdate', lobbyPlayers);
