@@ -1276,6 +1276,34 @@ export default function GameScreen() {
         padding: '20px 100px',
         zIndex: 99
       }}>
+        {/* Quit Game Button */}
+        <button
+          onClick={() => {
+            if (socket) {
+              socket.emit('quitGame');
+              setGameState('lobby');
+            }
+          }}
+          style={{
+            position: 'absolute',
+            left: '20px',
+            top: '20px',
+            padding: '10px 20px',
+            backgroundColor: '#f44336',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1.2em',
+            transition: 'all 0.2s ease',
+            ':hover': {
+              backgroundColor: '#d32f2f'
+            }
+          }}
+        >
+          Quit Game
+        </button>
+
         {/* Footer Components Container */}
         <div style={{
           display: 'flex',
@@ -1296,9 +1324,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            overflow: 'hidden',
-            borderRadius: '15px'
+            overflow: 'hidden'
           }}>
             {isMyTurn && (
               <>
@@ -1344,9 +1370,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            gap: '15px',
-            borderRadius: '15px'
+            gap: '15px'
           }}>
             <div style={{
               fontSize: '1.8em',
@@ -1398,9 +1422,7 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            borderRadius: '15px'
+            justifyContent: 'center'
           }}>
             {(() => {
               // Show RPS game if active

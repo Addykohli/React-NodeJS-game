@@ -933,11 +933,73 @@ io.on('connection', socket => {
         playerName: disconnectingPlayer.name,
         temporary: true
       });
-    } else if (!hasStarted) {
-      // Only remove from lobby and engine if game hasn't started
+    }
+    // Only remove from lobby and engine if game hasn't started
+    lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+    engine.removePlayer(socket.id);
+    io.emit('lobbyUpdate', lobbyPlayers);
+  });
+
+  // Handle quit game
+  socket.on('quitGame', async () => {
+    console.log('[quitGame]', socket.id);
+    
+    // Find the quitting player
+    const quittingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
+    
+    if (quittingPlayer && hasStarted) {
+      // Check if it was their turn and they had moved but not ended turn
+      const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+      if (isCurrentPlayer) {
+        console.log(`Current player ${quittingPlayer.name} quit during their turn`);
+        
+        // End their turn if they had already moved
+        const currentPlayer = engine.getPlayer(socket.id);
+        if (currentPlayer && currentPlayer.hasMoved) {
+          console.log(`Auto-ending turn for quit player ${quittingPlayer.name}`);
+          const nextPlayerId = engine.endTurn();
+          io.emit('turnEnded', { nextPlayerId });
+          
+          // Update game session if exists
+          if (currentSessionId) {
+            await GameSession.findByIdAndUpdate(currentSessionId, { 
+              currentPlayerIndex: engine.session.currentPlayerIndex 
+            });
+          }
+        }
+      }
+
+      // Remove player from database
+      try {
+        await Player.findOneAndDelete({ socketId: socket.id });
+      } catch (err) {
+        console.error('Error deleting player from database:', err);
+      }
+
+      // Remove from engine and lobby
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
       engine.removePlayer(socket.id);
+
+      // Update game session
+      if (currentSessionId) {
+        try {
+          await GameSession.findByIdAndUpdate(currentSessionId, {
+            players: engine.session.players
+          });
+        } catch (err) {
+          console.error('Error updating game session after player quit:', err);
+        }
+      }
+
+      // Notify all clients about the permanent removal
+      io.emit('playerQuit', {
+        playerId: socket.id,
+        playerName: quittingPlayer.name
+      });
       io.emit('lobbyUpdate', lobbyPlayers);
+
+      // Broadcast game event
+      broadcastGameEvent(`${quittingPlayer.name} has quit the game`);
     }
   });
 
