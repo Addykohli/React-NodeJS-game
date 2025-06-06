@@ -26,6 +26,7 @@ export function GameProvider({ children }) {
   });
   const [movementDone, setMovementDone] = useState(false);
   const [insufficientFunds, setInsufficientFunds] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // Save important state to localStorage whenever it changes
   useEffect(() => {
@@ -74,24 +75,35 @@ export function GameProvider({ children }) {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       const savedGameState = localStorage.getItem('gameState');
+      const savedSessionId = localStorage.getItem('sessionId');
       
-      if (savedPlayer) {
+      if (savedPlayer && savedGameState === 'playing' && savedSessionId) {
+        setIsReconnecting(true);
+        const playerData = JSON.parse(savedPlayer);
+        socket.emit('rejoinGame', { 
+          name: playerData.name,
+          sessionId: savedSessionId,
+          playerData: playerData
+        });
+      } else if (savedPlayer && !isReconnecting) {
         const playerData = JSON.parse(savedPlayer);
         socket.emit('joinLobby', { name: playerData.name });
       }
     };
 
     socket.on('connect', handleReconnect);
+    socket.on('reconnect', handleReconnect);
 
     // Initial connection check
-    if (socket.connected && player) {
+    if (socket.connected && player && !isReconnecting) {
       handleReconnect();
     }
 
     return () => {
       socket.off('connect', handleReconnect);
+      socket.off('reconnect', handleReconnect);
     };
-  }, [player]);
+  }, [player, isReconnecting]);
 
   // Clear session data on quit
   const handleQuit = () => {
@@ -103,6 +115,7 @@ export function GameProvider({ children }) {
     setGameState('lobby');
     setSessionId(null);
     setHasRolled(false);
+    setIsReconnecting(false);
   };
 
   // Update player whenever players array changes
@@ -403,6 +416,15 @@ export function GameProvider({ children }) {
       );
     });
 
+    // REJOIN SUCCESS
+    socket.on('rejoinSuccess', ({ gameState: state, sessionId: sid, players: ps, currentPlayerId: cid }) => {
+      setGameState(state);
+      setSessionId(sid);
+      setPlayers(ps);
+      setCurrentPlayerId(cid);
+      setIsReconnecting(false);
+    });
+
     return () => {
       socket.off('lobbyUpdate');
       socket.off('gameStart');
@@ -421,6 +443,7 @@ export function GameProvider({ children }) {
       socket.off('roadCashResult');
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
+      socket.off('rejoinSuccess');
     };
   }, [socket?.id, player]);
 

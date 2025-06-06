@@ -1,507 +1,258 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 const TradePanel = () => {
   const { socket, player, players } = useContext(GameContext);
-  
-  // Offer section state
-  const [offerMoney, setOfferMoney] = useState(0);
-  const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
-  const [isOfferExpanded, setIsOfferExpanded] = useState(false);
-  const [isOfferPropertiesExpanded, setIsOfferPropertiesExpanded] = useState(false);
-  const [offerReady, setOfferReady] = useState(false);
-  
-  // Ask section state
-  const [askMoney, setAskMoney] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [selectedAskProperties, setSelectedAskProperties] = useState([]);
-  const [isAskExpanded, setIsAskExpanded] = useState(false);
-  const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
-  const [askReady, setAskReady] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [offerAmount, setOfferAmount] = useState(1000);
+  const [incomingTrades, setIncomingTrades] = useState([]);
+  const [showPanel, setShowPanel] = useState(false);
 
-  // Incoming offers state
-  const [incomingOffers, setIncomingOffers] = useState([]);
+  useEffect(() => {
+    const handleTradeOffer = (offer) => {
+      setIncomingTrades(prev => [...prev, offer]);
+    };
 
-  // Effect to listen for trade requests
-  React.useEffect(() => {
-    if (!socket) return;
-
-    socket.on('tradeRequest', (offer) => {
-      setIncomingOffers(prev => [...prev, offer]);
-    });
-
-    socket.on('tradeAccepted', ({ offerId }) => {
-      setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-      // Refresh player data will be handled by GameContext
-    });
-
-    socket.on('tradeRejected', ({ offerId, reason, message, keepOffer }) => {
-      if (!keepOffer) {
-        setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
+    const handleTradeResponse = ({ offerId, accepted }) => {
+      setIncomingTrades(prev => prev.filter(trade => trade.offerId !== offerId));
+      // Also hide the panel if we were the one who made the offer
+      if (accepted) {
+        setShowPanel(false);
+        setSelectedPlayer(null);
+        setSelectedProperty(null);
+        setOfferAmount(1000);
       }
-      // Only show alert if there's a message
-      if (message) {
-        alert(message);
-      }
-    });
+    };
+
+    socket.on('tradeOffer', handleTradeOffer);
+    socket.on('tradeResponse', handleTradeResponse);
 
     return () => {
-      socket.off('tradeRequest');
-      socket.off('tradeAccepted');
-      socket.off('tradeRejected');
+      socket.off('tradeOffer', handleTradeOffer);
+      socket.off('tradeResponse', handleTradeResponse);
     };
   }, [socket]);
 
-  // Update ready states
-  React.useEffect(() => {
-    setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
-  }, [offerMoney, selectedOfferProperties]);
-
-  React.useEffect(() => {
-    setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
-  }, [askMoney, selectedAskProperties]);
-
-  const handleMoneyChange = (section, amount) => {
-    if (section === 'offer') {
-      const newAmount = Math.max(0, Math.min(offerMoney + amount, player.money));
-      setOfferMoney(newAmount);
-    } else {
-      const newAmount = Math.max(0, askMoney + amount);
-      setAskMoney(newAmount);
-    }
-  };
-
-  const handlePropertyToggle = (section, propertyId) => {
-    if (section === 'offer') {
-      setSelectedOfferProperties(prev => 
-        prev.includes(propertyId) 
-          ? prev.filter(id => id !== propertyId)
-          : [...prev, propertyId]
-      );
-    } else {
-      setSelectedAskProperties(prev => 
-        prev.includes(propertyId) 
-          ? prev.filter(id => id !== propertyId)
-          : [...prev, propertyId]
-      );
-    }
-  };
-
   const handlePlayerSelect = (playerId) => {
     setSelectedPlayer(playerId);
-    setSelectedAskProperties([]); // Reset selected properties when player changes
-    setIsAskPropertiesExpanded(false);
+    setSelectedProperty(null);
   };
 
-  const handleTradeRequest = () => {
-    if (!offerReady || !askReady || !selectedPlayer) return;
+  const handlePropertySelect = (propertyId) => {
+    setSelectedProperty(propertyId);
+  };
 
-    const tradeRequest = {
-      from: player.socketId,
-      to: selectedPlayer,
-      offer: {
-        money: offerMoney,
-        properties: selectedOfferProperties
-      },
-      ask: {
-        money: askMoney,
-        properties: selectedAskProperties
-      },
-      id: Date.now() // Simple unique ID
-    };
+  const handleAmountChange = (e) => {
+    const amount = parseInt(e.target.value);
+    if (!isNaN(amount) && amount >= 0) {
+      setOfferAmount(amount);
+    }
+  };
 
-    socket.emit('tradeRequest', tradeRequest);
-
-    // Reset form
-    setOfferMoney(0);
-    setSelectedOfferProperties([]);
-    setAskMoney(0);
-    setSelectedAskProperties([]);
-    setSelectedPlayer(null);
-    setIsOfferPropertiesExpanded(false);
-    setIsAskPropertiesExpanded(false);
+  const handleSendOffer = () => {
+    if (selectedPlayer && selectedProperty && offerAmount >= 0) {
+      socket.emit('tradeOffer', {
+        toPlayerId: selectedPlayer,
+        propertyId: selectedProperty,
+        amount: offerAmount,
+        offerId: Date.now() // Use timestamp as unique ID
+      });
+    }
   };
 
   const handleTradeResponse = (offerId, accepted) => {
     socket.emit('tradeResponse', { offerId, accepted });
+    setIncomingTrades(prev => prev.filter(trade => trade.offerId !== offerId));
   };
 
+  const otherPlayers = players.filter(p => p.socketId !== player?.socketId);
+  const selectedPlayerData = players.find(p => p.socketId === selectedPlayer);
+
   return (
-    <div className="trade-panel" style={{
-      padding: '20px',
+    <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '20px'
+      gap: '10px',
+      padding: '10px',
+      height: '100%',
+      overflowY: 'auto'
     }}>
-      {/* Offer Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <button 
-          onClick={() => setIsOfferExpanded(!isOfferExpanded)}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#4CAF50',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            marginBottom: '10px',
-            cursor: 'pointer',
-            fontSize: '1.2em'
-          }}
-        >
-          Offer
-        </button>
-        
-        {isOfferExpanded && (
-          <div style={{ 
-            marginBottom: '10px',
-            width: '100%',
+      {/* Toggle button */}
+      <button
+        onClick={() => setShowPanel(!showPanel)}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: showPanel ? '#f44336' : '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          marginBottom: '10px'
+        }}
+      >
+        {showPanel ? 'Close Trade' : 'Open Trade'}
+      </button>
+
+      {showPanel && (
+        <>
+          {/* Player selection */}
+          <div style={{
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            gap: '15px'
+            gap: '5px'
           }}>
-            {/* Money Input */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px'
+            <label>Select Player:</label>
+            <div style={{
+              display: 'flex',
+              gap: '5px',
+              flexWrap: 'wrap'
             }}>
-              <button 
-                onClick={() => handleMoneyChange('offer', -500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#f44336',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.2em'
-                }}
-              >-</button>
-              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${offerMoney}</span>
-              <button 
-                onClick={() => handleMoneyChange('offer', 500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#4CAF50',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.2em'
-                }}
-              >+</button>
+              {otherPlayers.map(p => (
+                <button
+                  key={p.socketId}
+                  onClick={() => handlePlayerSelect(p.socketId)}
+                  style={{
+                    padding: '5px 10px',
+                    backgroundColor: selectedPlayer === p.socketId ? '#2196F3' : '#ddd',
+                    color: selectedPlayer === p.socketId ? 'white' : 'black',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {p.name}
+                </button>
+              ))}
             </div>
+          </div>
 
-            {/* Properties Selection */}
-            <button 
-              onClick={() => setIsOfferPropertiesExpanded(!isOfferPropertiesExpanded)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                backgroundColor: '#2196F3',
-                border: 'none',
-                borderRadius: '5px',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '1.1em'
-              }}
-            >
-              Properties
-            </button>
-            {isOfferPropertiesExpanded && (
-              <div style={{ 
-                marginTop: '10px',
-                width: '100%'
+          {/* Property selection */}
+          {selectedPlayer && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px'
+            }}>
+              <label>Select Property:</label>
+              <div style={{
+                display: 'flex',
+                gap: '5px',
+                flexWrap: 'wrap'
               }}>
-                {player.properties.map(propId => {
+                {selectedPlayerData?.properties?.map(propId => {
                   const property = tiles.find(t => t.id === propId);
                   return (
-                    <div key={propId} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px',
-                      marginBottom: '5px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '5px',
-                      minHeight: '40px'
-                    }}>
-                      <span style={{ fontSize: '1.1em' }}>{property.name}</span>
-                      <input
-                        type="checkbox"
-                        checked={selectedOfferProperties.includes(propId)}
-                        onChange={() => handlePropertyToggle('offer', propId)}
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          cursor: 'pointer'
-                        }}
-                      />
-                    </div>
+                    <button
+                      key={propId}
+                      onClick={() => handlePropertySelect(propId)}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: selectedProperty === propId ? '#2196F3' : '#ddd',
+                        color: selectedProperty === propId ? 'white' : 'black',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {property?.name || `Property ${propId}`}
+                    </button>
                   );
                 })}
               </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Ask Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <button 
-          onClick={() => setIsAskExpanded(!isAskExpanded)}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#2196F3',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            marginBottom: '10px',
-            cursor: 'pointer',
-            fontSize: '1.2em'
-          }}
-        >
-          Ask
-        </button>
-        
-        {isAskExpanded && (
-          <div style={{ 
-            marginBottom: '10px',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            {/* Money Input */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px'
-            }}>
-              <button 
-                onClick={() => handleMoneyChange('ask', -500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#f44336',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.2em'
-                }}
-              >-</button>
-              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${askMoney}</span>
-              <button 
-                onClick={() => handleMoneyChange('ask', 500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#4CAF50',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.2em'
-                }}
-              >+</button>
             </div>
+          )}
 
-            {/* Player Selection */}
-            <div style={{ 
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px',
+          {/* Offer amount */}
+          {selectedProperty && (
+            <div style={{
               display: 'flex',
-              justifyContent: 'center'
+              flexDirection: 'column',
+              gap: '5px'
             }}>
-              <select 
-                value={selectedPlayer || ''} 
-                onChange={(e) => handlePlayerSelect(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              <label>Offer Amount:</label>
+              <input
+                type="number"
+                value={offerAmount}
+                onChange={handleAmountChange}
+                style={{
+                  padding: '5px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd'
+                }}
+              />
+              <button
+                onClick={handleSendOffer}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
                   border: 'none',
-                  borderRadius: '5px',
-                  fontSize: '1.1em',
-                  textAlign: 'center'
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginTop: '10px'
                 }}
               >
-                <option value="">Select Player</option>
-                {players
-                  .filter(p => p.socketId !== player.socketId)
-                  .map(p => (
-                    <option key={p.socketId} value={p.socketId}>
-                      {p.name}
-                    </option>
-                  ))
-                }
-              </select>
+                Send Offer
+              </button>
             </div>
+          )}
+        </>
+      )}
 
-            {/* Properties Selection */}
-            {selectedPlayer && (
-              <div style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <button 
-                  onClick={() => setIsAskPropertiesExpanded(!isAskPropertiesExpanded)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    backgroundColor: '#2196F3',
-                    border: 'none',
-                    borderRadius: '5px',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontSize: '1.1em'
-                  }}
-                >
-                  Properties
-                </button>
-                {isAskPropertiesExpanded && (
-                  <div style={{ 
-                    marginTop: '10px',
-                    width: '100%'
-                  }}>
-                    {players
-                      .find(p => p.socketId === selectedPlayer)
-                      ?.properties.map(propId => {
-                        const property = tiles.find(t => t.id === propId);
-                        return (
-                          <div key={propId} style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px',
-                            marginBottom: '5px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            borderRadius: '5px',
-                            minHeight: '40px'
-                          }}>
-                            <span style={{ fontSize: '1.1em' }}>{property.name}</span>
-                            <input
-                              type="checkbox"
-                              checked={selectedAskProperties.includes(propId)}
-                              onChange={() => handlePropertyToggle('ask', propId)}
-                              style={{
-                                width: '20px',
-                                height: '20px',
-                                cursor: 'pointer'
-                              }}
-                            />
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Trade Request Button Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: 'calc(100% - 30px)'
-      }}>
-        <button
-          onClick={handleTradeRequest}
-          disabled={!offerReady || !askReady || !selectedPlayer}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: offerReady && askReady && selectedPlayer ? '#4CAF50' : '#666',
-            border: 'none',
-            borderRadius: '5px',
-            color: 'white',
-            fontSize: '1.2em',
-            cursor: offerReady && askReady && selectedPlayer ? 'pointer' : 'not-allowed'
-          }}
-        >
-          Request Trade
-        </button>
-      </div>
-
-      {/* Incoming Offers Section */}
-      {incomingOffers.length > 0 && (
-        <div style={{ 
-          marginTop: '10px',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          borderRadius: '10px',
-          padding: '15px'
+      {/* Incoming trade offers */}
+      {incomingTrades.length > 0 && (
+        <div style={{
+          marginTop: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
         }}>
-          <h3 style={{ 
-            color: 'white', 
-            marginTop: 0,
-            marginBottom: '15px'
-          }}>Incoming Offers:</h3>
-          {incomingOffers.map(offer => {
-            const fromPlayer = players.find(p => p.socketId === offer.from);
+          <h3>Incoming Offers:</h3>
+          {incomingTrades.map(trade => {
+            const fromPlayer = players.find(p => p.socketId === trade.fromPlayerId);
+            const property = tiles.find(t => t.id === trade.propertyId);
             return (
-              <div key={offer.id} style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                padding: '10px',
-                marginBottom: '10px',
-                borderRadius: '5px'
-              }}>
-                <p>From: {fromPlayer?.name}</p>
-                <p>Offers: ${offer.offer.money}</p>
-                <p>Properties Offered: {offer.offer.properties.map(propId => 
-                  tiles.find(t => t.id === propId)?.name
-                ).join(', ')}</p>
-                <p>Asks: ${offer.ask.money}</p>
-                <p>Properties Asked: {offer.ask.properties.map(propId => 
-                  tiles.find(t => t.id === propId)?.name
-                ).join(', ')}</p>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                  <button 
-                    onClick={() => handleTradeResponse(offer.id, true)}
-                    style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '5px 10px' }}
+              <div
+                key={trade.offerId}
+                style={{
+                  padding: '10px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                  borderRadius: '4px'
+                }}
+              >
+                <p>{fromPlayer?.name} offers ${trade.amount} for {property?.name}</p>
+                <div style={{
+                  display: 'flex',
+                  gap: '10px',
+                  marginTop: '5px'
+                }}>
+                  <button
+                    onClick={() => handleTradeResponse(trade.offerId, true)}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
                   >
                     Accept
                   </button>
-                  <button 
-                    onClick={() => handleTradeResponse(offer.id, false)}
-                    style={{ backgroundColor: '#f44336', color: 'white', border: 'none', padding: '5px 10px' }}
+                  <button
+                    onClick={() => handleTradeResponse(trade.offerId, false)}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#f44336',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
                   >
-                    Reject
+                    Decline
                   </button>
                 </div>
               </div>
