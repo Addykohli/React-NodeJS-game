@@ -39,6 +39,10 @@ const Player = sequelize.define('Player', {
   loan: {
     type: DataTypes.INTEGER,
     defaultValue: 0
+  },
+  hasMoved: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   timestamps: true

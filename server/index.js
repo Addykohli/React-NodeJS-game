@@ -144,6 +144,9 @@ io.on('connection', socket => {
 
         disconnectedPlayers.delete(name);
 
+        // Check if this player was the current player when they disconnected
+        const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+        
         socket.emit('gameStart', {
           players: engine.session.players,
           sessionId: currentSessionId,
@@ -159,8 +162,8 @@ io.on('connection', socket => {
             tileId: currentPlayer.tileId
           });
           
-          // Only emit movementDone if it's not their turn
-          if (currentPlayer.socketId !== engine.session.players[engine.session.currentPlayerIndex].socketId) {
+          // Only emit movementDone if it's not their turn or if they had already moved
+          if (!isCurrentPlayer || currentPlayer.hasMoved) {
             socket.emit('movementDone');
           }
         }
@@ -922,19 +925,25 @@ io.on('connection', socket => {
         if (isCurrentPlayer) {
           console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
           
-          // Always advance turn for disconnected current player
-          const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
-          engine.session.currentPlayerIndex = nextPlayerIndex;
-          const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
-          io.emit('turnEnded', { nextPlayerId });
-          
-          // Update game session if exists
-          if (currentSessionId) {
-            GameSession.findByIdAndUpdate(currentSessionId, { 
-              currentPlayerIndex: nextPlayerIndex 
-            }).catch(err => {
-              console.error('Error updating game session after disconnect:', err);
-            });
+          // Only advance turn if they had already rolled
+          const currentPlayer = engine.getPlayer(socket.id);
+          if (currentPlayer && currentPlayer.hasMoved) {
+            console.log(`Player had already rolled, advancing turn`);
+            const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
+            engine.session.currentPlayerIndex = nextPlayerIndex;
+            const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
+            io.emit('turnEnded', { nextPlayerId });
+            
+            // Update game session if exists
+            if (currentSessionId) {
+              GameSession.findByIdAndUpdate(currentSessionId, { 
+                currentPlayerIndex: nextPlayerIndex 
+              }).catch(err => {
+                console.error('Error updating game session after disconnect:', err);
+              });
+            }
+          } else {
+            console.log(`Player had not rolled yet, keeping their turn`);
           }
         }
         
