@@ -268,9 +268,7 @@ export default function GameScreen() {
     setPlayers,
     currentPlayerId,
     socket,
-    movementDone,
-    gameState,
-    setGameState
+    movementDone
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -427,6 +425,10 @@ export default function GameScreen() {
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
         setError(`${playerName} temporarily disconnected. They can rejoin with the same name.`);
+        setTimeout(() => setError(null), 5000);
+      }
+      else {
+        setError(`${playerName} has quit the game.`);
         setTimeout(() => setError(null), 5000);
       }
     });
@@ -1278,34 +1280,6 @@ export default function GameScreen() {
         padding: '20px 100px',
         zIndex: 99
       }}>
-        {/* Quit Game Button */}
-        <button
-          onClick={() => {
-            if (socket) {
-              socket.emit('quitGame');
-              setGameState('lobby');
-            }
-          }}
-          style={{
-            position: 'absolute',
-            left: '20px',
-            top: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#f44336',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '1.2em',
-            transition: 'all 0.2s ease',
-            ':hover': {
-              backgroundColor: '#d32f2f'
-            }
-          }}
-        >
-          Quit Game
-        </button>
-
         {/* Footer Components Container */}
         <div style={{
           display: 'flex',
@@ -1326,7 +1300,9 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            overflow: 'hidden'
+            background: 'rgba(60, 60, 60, 0.3)',
+            overflow: 'hidden',
+            borderRadius: '15px'
           }}>
             {isMyTurn && (
               <>
@@ -1372,7 +1348,9 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '15px'
+            background: 'rgba(60, 60, 60, 0.3)',
+            gap: '15px',
+            borderRadius: '15px'
           }}>
             <div style={{
               fontSize: '1.8em',
@@ -1424,7 +1402,9 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            background: 'rgba(60, 60, 60, 0.3)',
+            borderRadius: '15px'
           }}>
             {(() => {
               // Show RPS game if active
@@ -1802,6 +1782,29 @@ export default function GameScreen() {
                   height: '100%',
                   gap: '20px'
                 }}>
+                  {/* quit game button */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+                        socket.emit('quitGame');
+                        window.location.reload(); // Refresh the page to return to lobby
+                      }
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      fontSize: '1.2em',
+                      backgroundColor: '#ff4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.3s'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#ff6666'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#ff4444'}
+                  >
+                    Quit Game
+                  </button>
                   {rpsGame && (
                     <div style={{
                       display: 'flex',

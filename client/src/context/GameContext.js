@@ -83,18 +83,6 @@ export function GameProvider({ children }) {
       setInsufficientFunds(true);
     });
 
-    // QUIT GAME
-    socket.on('playerQuit', ({ playerId }) => {
-      // Remove the player from the players list
-      setPlayers(prev => prev.filter(p => p.socketId !== playerId));
-      
-      // If this is the current player, reset their state
-      if (player?.socketId === playerId) {
-        setPlayer(null);
-        setGameState('lobby');
-      }
-    });
-
     // RENT PAID
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney }) => {
       console.log('[GameContext] Updating money after rent payment:', {
@@ -322,8 +310,6 @@ export function GameProvider({ children }) {
       socket.off('roadCashResult');
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
-      socket.off('playerQuit');
-      socket.off('playerDisconnected');
     };
   }, [socket?.id, player]);
 

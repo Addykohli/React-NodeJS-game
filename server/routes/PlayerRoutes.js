@@ -113,7 +113,7 @@ router.post('/join', async (req, res) => {
     const newPlayer = await Player.create({
       name,
       isConnected: true,
-      money: 15000,
+      money: 10000,
       properties: [],
       tileId: 1,
       hasMoved: false

@@ -127,204 +127,206 @@ const Lobby = () => {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
       minHeight: '100vh',
-      padding: '40px',
       backgroundImage: `url(${bgImage})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       color: 'white'
     }}>
+      {/* Main content area */}
       <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        padding: '3rem',
-        borderRadius: '15px',
-        width: '95%',
-        maxWidth: '900px'
+        flex: 1,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '40px',
+        padding: '40px'
       }}>
-        <h1 style={{ 
-          textAlign: 'center', 
-          marginBottom: '3rem',
-          fontSize: '3em'
-        }}>Game Lobby</h1>
-        {!hasJoined ? (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '25px',
-            alignItems: 'center'
-          }}>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Enter your name"
-              style={{
-                padding: '20px',
-                fontSize: '1.5rem',
-                borderRadius: '10px',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                width: '100%',
-                maxWidth: '400px',
-                outline: 'none'
-              }}
-            />
-            {error && (
-              <div style={{
-                color: '#ff6b6b',
-                fontSize: '1.2rem',
-                textAlign: 'center',
-                padding: '15px',
-                backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                borderRadius: '8px',
-                width: '100%',
-                maxWidth: '400px'
-              }}>
-                {error}
-              </div>
-            )}
-            <button
-              onClick={joinLobby}
-              disabled={!name.trim()}
-              style={{
-                padding: '20px 40px',
-                fontSize: '1.5rem',
-                backgroundColor: name.trim() ? 'rgba(76, 175, 80, 0.8)' : 'rgba(204, 204, 204, 0.3)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: name.trim() ? 'pointer' : 'not-allowed',
-                transition: 'background-color 0.3s',
-                width: '100%',
-                maxWidth: '400px'
-              }}
-            >
-              Join Game
-            </button>
-            <p style={{
-              color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '1.2rem',
-              textAlign: 'center',
-              marginTop: '20px',
-              lineHeight: '1.6'
-            }}>
-              If you were previously in a game and got disconnected,<br />
-              enter the same name to reconnect.
-            </p>
-          </div>
-        ) :
-          <>
+        {/* Left Box - Join and Setup */}
+        <div style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '3rem',
+          borderRadius: '15px',
+          width: '500px'
+        }}>
+          <h1 style={{ 
+            textAlign: 'center', 
+            marginBottom: '3rem',
+            fontSize: '3em'
+          }}>Game Lobby</h1>
+          {!hasJoined ? (
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '30px',
-              marginBottom: '30px',
+              gap: '25px',
               alignItems: 'center'
             }}>
-              <p style={{ fontSize: '1.8rem' }}>Select your game piece:</p>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                gap: '25px',
-                justifyContent: 'center',
-                width: '100%',
-                maxWidth: '600px'
-              }}>
-                {availablePieces.map((piece, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      padding: '20px',
-                      borderRadius: '12px',
-                      transition: 'transform 0.2s, background-color 0.2s'
-                    }}
-                    onMouseOver={e => {
-                      e.currentTarget.style.transform = 'scale(1.05)';
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseOut={e => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                    }}
-                    onClick={() => choosePiece(piece)}
-                  >
-                    <img
-                      src={`/pieces/${piece}`}
-                      alt={piece}
-                      width={90}
-                      height={90}
-                      style={{ marginBottom: '10px' }}
-                    />
-                    <div style={{ fontSize: '1.2rem' }}>{piece.replace('.png', '')}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {selectedPiece && (
-              <div style={{
-                textAlign: 'center',
-                marginTop: '30px',
-                padding: '25px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px'
-              }}>
-                <p style={{ 
-                  marginBottom: '20px',
-                  fontSize: '1.6rem'
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Enter your name"
+                style={{
+                  padding: '20px',
+                  fontSize: '1.5rem',
+                  borderRadius: '10px',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  width: '100%',
+                  maxWidth: '400px',
+                  outline: 'none'
+                }}
+              />
+              {error && (
+                <div style={{
+                  color: '#ff6b6b',
+                  fontSize: '1.2rem',
+                  textAlign: 'center',
+                  padding: '15px',
+                  backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                  borderRadius: '8px',
+                  width: '100%',
+                  maxWidth: '400px'
                 }}>
-                  Welcome, <strong>{thisPlayer.name}</strong>! You've selected:
-                  <img
-                    src={`/pieces/${selectedPiece}`}
-                    alt=""
-                    width={45}
-                    style={{ marginLeft: '15px', verticalAlign: 'middle' }}
-                  />
-                </p>
-                {showReadyButton ? (
-                  <button
-                    onClick={handleReady}
-                    style={{
-                      padding: '20px 40px',
-                      fontSize: '1.5rem',
-                      backgroundColor: 'rgba(76, 175, 80, 0.8)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.3s'
-                    }}
-                  >
-                    Ready
-                  </button>
-                ) : (
-                  <p style={{ 
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '1.4rem'
-                  }}>Waiting for others…</p>
-                )}
+                  {error}
+                </div>
+              )}
+              <button
+                onClick={joinLobby}
+                disabled={!name.trim()}
+                style={{
+                  padding: '20px 40px',
+                  fontSize: '1.5rem',
+                  backgroundColor: name.trim() ? 'rgba(76, 175, 80, 0.8)' : 'rgba(204, 204, 204, 0.3)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: name.trim() ? 'pointer' : 'not-allowed',
+                  transition: 'background-color 0.3s',
+                  width: '100%',
+                  maxWidth: '400px'
+                }}
+              >
+                Join Game
+              </button>
+              <p style={{
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '1.2rem',
+                textAlign: 'center',
+                marginTop: '20px',
+                lineHeight: '1.6'
+              }}>
+                If you were previously in a game and got disconnected,<br />
+                enter the same name to reconnect.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '30px',
+                marginBottom: '30px',
+                alignItems: 'center'
+              }}>
+                <p style={{ fontSize: '1.8rem' }}>Select your game piece:</p>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: '25px',
+                  justifyContent: 'center',
+                  width: '100%',
+                  maxWidth: '600px'
+                }}>
+                  {availablePieces.map((piece, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        padding: '20px',
+                        borderRadius: '12px',
+                        transition: 'transform 0.2s, background-color 0.2s'
+                      }}
+                      onMouseOver={e => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                      }}
+                      onMouseOut={e => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                      }}
+                      onClick={() => choosePiece(piece)}
+                    >
+                      <img
+                        src={`/pieces/${piece}`}
+                        alt={piece}
+                        width={90}
+                        height={90}
+                        style={{ marginBottom: '10px' }}
+                      />
+                      <div style={{ fontSize: '1.2rem' }}>{piece.replace('.png', '')}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-          </>
-        }
+              {selectedPiece && (
+                <div style={{
+                  textAlign: 'center',
+                  marginTop: '30px',
+                  padding: '25px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px'
+                }}>
+                  <p style={{ 
+                    marginBottom: '20px',
+                    fontSize: '1.6rem'
+                  }}>
+                    Welcome, <strong>{thisPlayer.name}</strong>! You've selected:
+                    <img
+                      src={`/pieces/${selectedPiece}`}
+                      alt=""
+                      width={45}
+                      style={{ marginLeft: '15px', verticalAlign: 'middle' }}
+                    />
+                  </p>
+                  {showReadyButton && (
+                    <button
+                      onClick={handleReady}
+                      style={{
+                        padding: '20px 40px',
+                        fontSize: '1.5rem',
+                        backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.3s'
+                      }}
+                    >
+                      Ready
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
-        <hr style={{
-          width: '80%',
-          margin: '3rem auto',
-          border: 'none',
-          borderTop: '2px solid rgba(255, 255, 255, 0.2)'
-        }} />
-
-        <div style={{ textAlign: 'center' }}>
-          <h3 style={{ 
+        {/* Right Box - Players List */}
+        <div style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          padding: '3rem',
+          borderRadius: '15px',
+          width: '500px'
+        }}>
+          <h2 style={{ 
+            textAlign: 'center', 
             marginBottom: '2rem',
             fontSize: '2.2rem'
-          }}>Players in Lobby:</h3>
+          }}>Players in Lobby</h2>
           <ul style={{
             listStyle: 'none',
             padding: '0',
@@ -366,6 +368,39 @@ const Lobby = () => {
             ))}
           </ul>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        padding: '20px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        {hasJoined && (
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to quit? This will remove you from the lobby.')) {
+                socket.emit('quitGame');
+                window.location.reload();
+              }
+            }}
+            style={{
+              padding: '15px 30px',
+              fontSize: '1.2rem',
+              backgroundColor: 'rgba(244, 67, 54, 0.8)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+          >
+            Quit Game
+          </button>
+        )}
       </div>
     </div>
   );
