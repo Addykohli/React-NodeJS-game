@@ -19,12 +19,14 @@ export function GameProvider({ children }) {
     return savedSessionId || null;
   });
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
-  const [diceRoll, setDiceRoll] = useState(null);
-  const [hasRolled, setHasRolled] = useState(() => {
-    const savedHasRolled = localStorage.getItem('hasRolled');
-    return savedHasRolled === 'true';
+  const [diceRoll, setDiceRoll] = useState(() => {
+    const savedDiceRoll = localStorage.getItem('gameDiceRoll');
+    return savedDiceRoll ? JSON.parse(savedDiceRoll) : null;
   });
-  const [movementDone, setMovementDone] = useState(false);
+  const [movementDone, setMovementDone] = useState(() => {
+    const savedMovementDone = localStorage.getItem('gameMovementDone');
+    return savedMovementDone ? JSON.parse(savedMovementDone) : false;
+  });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
   // Save important state to localStorage whenever it changes
@@ -52,36 +54,28 @@ export function GameProvider({ children }) {
     }
   }, [sessionId]);
 
-  // Save hasRolled state to localStorage
   useEffect(() => {
-    if (hasRolled) {
-      localStorage.setItem('hasRolled', 'true');
+    if (diceRoll) {
+      localStorage.setItem('gameDiceRoll', JSON.stringify(diceRoll));
     } else {
-      localStorage.removeItem('hasRolled');
+      localStorage.removeItem('gameDiceRoll');
     }
-  }, [hasRolled]);
+  }, [diceRoll]);
 
-  // Clear hasRolled when turn ends
   useEffect(() => {
-    if (!isMyTurn) {
-      setHasRolled(false);
-      localStorage.removeItem('hasRolled');
-    }
-  }, [currentPlayerId]);
+    localStorage.setItem('gameMovementDone', JSON.stringify(movementDone));
+  }, [movementDone]);
 
   // Auto-rejoin on refresh/reconnect
   useEffect(() => {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       const savedGameState = localStorage.getItem('gameState');
-      const savedHasRolled = localStorage.getItem('hasRolled');
       
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        socket.emit('joinLobby', { 
-          name: playerData.name,
-          hasRolled: savedHasRolled === 'true' // Send hasRolled state to server
-        });
+        // Emit joinLobby with the saved name to trigger reconnection
+        socket.emit('joinLobby', { name: playerData.name });
       }
     };
 
@@ -102,11 +96,13 @@ export function GameProvider({ children }) {
     localStorage.removeItem('gamePlayer');
     localStorage.removeItem('gameState');
     localStorage.removeItem('sessionId');
-    localStorage.removeItem('hasRolled');
+    localStorage.removeItem('gameDiceRoll');
+    localStorage.removeItem('gameMovementDone');
     setPlayer(null);
     setGameState('lobby');
     setSessionId(null);
-    setHasRolled(false);
+    setDiceRoll(null);
+    setMovementDone(false);
   };
 
   // Update player whenever players array changes
@@ -136,22 +132,41 @@ export function GameProvider({ children }) {
       setGameState('playing');
       setCurrentPlayerId(cid);
       setDiceRoll(null);
-      setHasRolled(false);
       setMovementDone(false);
       setInsufficientFunds(false);
-      localStorage.removeItem('hasRolled');
     });
 
-    // Add game over handler
+    // GAME OVER
     socket.on('gameOver', ({ winner }) => {
-      alert(`Game Over! ${winner} wins as the last player remaining!`);
-      handleQuit(); // Clean up game state
+      setGameState('lobby');
+      setCurrentPlayerId(null);
+      setDiceRoll(null);
+      setMovementDone(false);
+      setInsufficientFunds(false);
+      localStorage.removeItem('gamePlayer');
+      localStorage.removeItem('gameState');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('gameDiceRoll');
+      localStorage.removeItem('gameMovementDone');
     });
 
     // PLAYER QUIT
     socket.on('playerQuit', ({ playerName, temporary }) => {
       if (!temporary) {
         setPlayers(prev => prev.filter(p => p.name !== playerName));
+        // If it's the current player who quit
+        if (player?.name === playerName) {
+          localStorage.removeItem('gamePlayer');
+          localStorage.removeItem('gameState');
+          localStorage.removeItem('sessionId');
+          localStorage.removeItem('gameDiceRoll');
+          localStorage.removeItem('gameMovementDone');
+          setPlayer(null);
+          setGameState('lobby');
+          setSessionId(null);
+          setDiceRoll(null);
+          setMovementDone(false);
+        }
       }
     });
 
@@ -159,19 +174,15 @@ export function GameProvider({ children }) {
     socket.on('turnEnded', ({ nextPlayerId }) => {
       setCurrentPlayerId(nextPlayerId);
       setDiceRoll(null);
-      setHasRolled(false);
       setMovementDone(false);
       setInsufficientFunds(false);
-      localStorage.removeItem('hasRolled');
+      localStorage.removeItem('gameDiceRoll');
+      localStorage.setItem('gameMovementDone', 'false');
     });
 
     // DICE RESULT
     socket.on('diceResult', ({ playerId, die1, die2, total }) => {
       setDiceRoll({ playerId, die1, die2, total });
-      if (playerId === socket.id) {
-        setHasRolled(true);
-        localStorage.setItem('hasRolled', 'true');
-      }
     });
 
     // TILE MOVED
@@ -428,9 +439,6 @@ export function GameProvider({ children }) {
     };
   }, [socket?.id, player]);
 
-  // Calculate if it's the current player's turn
-  const isMyTurn = player?.socketId === currentPlayerId;
-
   return (
     <GameContext.Provider
       value={{
@@ -447,14 +455,11 @@ export function GameProvider({ children }) {
         setGameState,
         diceRoll,
         setDiceRoll,
-        hasRolled,
-        setHasRolled,
         movementDone,
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
-        handleQuit,
-        isMyTurn
+        handleQuit
       }}
     >
       {children}

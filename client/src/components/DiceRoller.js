@@ -4,14 +4,7 @@ import { tiles } from '../data/tiles';
 import Dicebox from '../assets/diceBoard.png';
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
-  const { 
-    player, 
-    currentPlayerId, 
-    socket, 
-    movementDone, 
-    hasRolled, 
-    setHasRolled 
-  } = useContext(GameContext);
+  const { player, currentPlayerId, socket, movementDone } = useContext(GameContext);
   const isMyTurn = player?.socketId === currentPlayerId;
   const [rolling, setRolling] = useState(false);
   const [die1, setDie1] = useState(null);
@@ -93,7 +86,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setDie2(null);
     setDone(false);
     setBranchOptions(null);
-    setHasRolled(false);
   };
 
   const chooseBranch = (idx) => {
@@ -120,7 +112,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       }}
     >
       {/* Roll button */}
-      {!hasRolled && !done && !branchOptions && (
+      {!die1 && !done && !branchOptions && (
         <button
           onClick={handleRoll}
           style={{ 
@@ -148,7 +140,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       )}
 
       {/* Show dice faces once rolled */}
-      {hasRolled && die1 && (
+      {die1 && (
         <div
           style={{
             display: 'flex',

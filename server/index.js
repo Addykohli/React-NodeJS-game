@@ -68,16 +68,13 @@ initDatabase()
 
 app.use(express.json());
 
-// Initialize server state
-let engine;
-let currentSessionId = null;
-let disconnectedPlayers = [];
-let tradeOffers = [];
-
+const engine          = new GameEngine();
 let lobbyPlayers      = [];
 let hasStarted        = false;
+let currentSessionId  = null;
 const branchResolvers = {};
 const activeRPSGames = {};
+const disconnectedPlayers = new Map(); // Store disconnected players by name
 const gameEvents = []; // Store game events history
 let activeTradeOffers = []; // Store active trade offers
 
@@ -99,45 +96,8 @@ io.on('connection', socket => {
   // Send game events history to newly connected clients
   socket.emit('gameEventsHistory', gameEvents);
 
-  socket.on('joinLobby', async ({ name, hasRolled }) => {
+  socket.on('joinLobby', async ({ name }) => {
     console.log('[joinLobby] name:', name);
-    
-    // Check if player was disconnected
-    const disconnectedPlayerIndex = disconnectedPlayers.findIndex(p => p.name === name);
-    if (disconnectedPlayerIndex !== -1) {
-      // Get and remove player from disconnected list
-      const disconnectedPlayer = disconnectedPlayers[disconnectedPlayerIndex];
-      disconnectedPlayers.splice(disconnectedPlayerIndex, 1);
-      
-      // Restore player state
-      const player = {
-        ...disconnectedPlayer,
-        socketId: socket.id,
-        hasRolled: hasRolled || false
-      };
-      
-      // If this was the current player and they haven't rolled, don't auto-end their turn
-      if (engine.currentPlayerId === disconnectedPlayer.socketId && !hasRolled) {
-        engine.currentPlayerId = socket.id;
-      }
-      
-      // Update socket ID in engine
-      engine.updatePlayerSocketId(disconnectedPlayer.socketId, socket.id);
-      
-      // Update database
-      try {
-        await Player.update(
-          { socketId: socket.id },
-          { where: { name: name } }
-        );
-      } catch (error) {
-        console.error('Error updating player socket ID:', error);
-      }
-      
-      // Notify all clients
-      io.emit('lobbyUpdate', engine.session.players);
-      return;
-    }
     
     // Check if name is already taken by an ACTIVE player
     const isNameTaken = lobbyPlayers.some(p => 
@@ -937,33 +897,49 @@ io.on('connection', socket => {
   socket.on('disconnect', () => {
     console.log('[disconnect]', socket.id);
     
-    // Find the disconnected player
-    const player = engine?.getPlayer(socket.id);
-    if (!player) return;
+    // Find the disconnecting player
+    const disconnectingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
     
-    // Store disconnected player data
-    const disconnectedPlayer = {
-      ...player,
-      disconnectedAt: Date.now()
-    };
-    disconnectedPlayers.push(disconnectedPlayer);
-    console.log('Storing disconnected player:', player.name);
-
-    // Handle current player disconnection
-    if (engine?.currentPlayerId === socket.id) {
-      console.log('Current player', player.name, 'disconnected during their turn');
-      // End their turn if they had already rolled
-      if (player.hasRolled) {
-        engine.endTurn();
-        io.emit('turnEnded', { nextPlayerId: engine.currentPlayerId });
+    if (disconnectingPlayer && hasStarted) {
+      // Only handle disconnect if player hasn't already quit
+      if (!disconnectingPlayer.hasQuit) {
+        console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
+        disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
+        
+        // Check if it was their turn
+        const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+        if (isCurrentPlayer) {
+          console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
+          
+          // End their turn if they had already moved
+          const currentPlayer = engine.getPlayer(socket.id);
+          if (currentPlayer && currentPlayer.hasMoved) {
+            console.log(`Auto-ending turn for disconnected player ${disconnectingPlayer.name}`);
+            const nextPlayerId = engine.endTurn();
+            io.emit('turnEnded', { nextPlayerId });
+            
+            // Update game session if exists
+            if (currentSessionId) {
+              GameSession.findByIdAndUpdate(currentSessionId, { 
+                currentPlayerIndex: engine.session.currentPlayerIndex 
+              }).catch(err => {
+                console.error('Error updating game session after auto-end turn:', err);
+              });
+            }
+          }
+        }
+        
+        io.emit('playerDisconnected', {
+          playerName: disconnectingPlayer.name,
+          temporary: true
+        });
       }
+    } else if (!hasStarted) {
+      // Only remove from lobby and engine if game hasn't started
+      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+      engine.removePlayer(socket.id);
+      io.emit('lobbyUpdate', lobbyPlayers);
     }
-
-    // Notify other players
-    io.emit('playerQuit', { 
-      playerName: player.name,
-      temporary: true // Indicate this is a temporary disconnect
-    });
   });
 
   // Handle property ownership updates
