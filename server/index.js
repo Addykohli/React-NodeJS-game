@@ -120,10 +120,13 @@ io.on('connection', socket => {
         const oldSocketId = disconnectedPlayer.socketId;
         disconnectedPlayer.socketId = socket.id;
         
+        // Reset player's turn state
+        disconnectedPlayer.hasMoved = false;
+        
         // Update the player in database
         try {
           await Player.update(
-            { socketId: socket.id },
+            { socketId: socket.id, hasMoved: false },
             { where: { socketId: oldSocketId } }
           );
         } catch (err) {
@@ -132,11 +135,11 @@ io.on('connection', socket => {
         
         // Update engine and lobby states
         engine.session.players = engine.session.players.map(p =>
-          p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
+          p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: false } : p
         );
         
         lobbyPlayers = lobbyPlayers.map(p =>
-          p.socketId === oldSocketId ? { ...p, socketId: socket.id } : p
+          p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: false } : p
         );
 
         disconnectedPlayers.delete(name);
@@ -156,7 +159,8 @@ io.on('connection', socket => {
             tileId: currentPlayer.tileId
           });
           
-          if (currentPlayer.socketId === engine.session.players[engine.session.currentPlayerIndex].socketId) {
+          // Only emit movementDone if it's not their turn
+          if (currentPlayer.socketId !== engine.session.players[engine.session.currentPlayerIndex].socketId) {
             socket.emit('movementDone');
           }
         }
@@ -904,6 +908,13 @@ io.on('connection', socket => {
       // Only handle disconnect if player hasn't already quit
       if (!disconnectingPlayer.hasQuit) {
         console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
+        
+        // Reset player's turn state before storing
+        const currentPlayer = engine.getPlayer(socket.id);
+        if (currentPlayer) {
+          currentPlayer.hasMoved = false;
+        }
+        
         disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
         
         // Check if it was their turn
@@ -911,21 +922,19 @@ io.on('connection', socket => {
         if (isCurrentPlayer) {
           console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
           
-          // End their turn if they had already moved
-          const currentPlayer = engine.getPlayer(socket.id);
-          if (currentPlayer && currentPlayer.hasMoved) {
-            console.log(`Auto-ending turn for disconnected player ${disconnectingPlayer.name}`);
-            const nextPlayerId = engine.endTurn();
-            io.emit('turnEnded', { nextPlayerId });
-            
-            // Update game session if exists
-            if (currentSessionId) {
-              GameSession.findByIdAndUpdate(currentSessionId, { 
-                currentPlayerIndex: engine.session.currentPlayerIndex 
-              }).catch(err => {
-                console.error('Error updating game session after auto-end turn:', err);
-              });
-            }
+          // Always advance turn for disconnected current player
+          const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
+          engine.session.currentPlayerIndex = nextPlayerIndex;
+          const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
+          io.emit('turnEnded', { nextPlayerId });
+          
+          // Update game session if exists
+          if (currentSessionId) {
+            GameSession.findByIdAndUpdate(currentSessionId, { 
+              currentPlayerIndex: nextPlayerIndex 
+            }).catch(err => {
+              console.error('Error updating game session after disconnect:', err);
+            });
           }
         }
         
