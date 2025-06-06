@@ -39,12 +39,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       }
     };
     const onBranchChoices = ({ options }) => setBranchOptions(options);
-    const onMovementDone = () => {
-      // Only set done if player has rolled the dice
-      if (hasRolled) {
-        setDone(true);
-      }
-    };
+    const onMovementDone = () => setDone(true);
 
     // Add casino result handler
     const onCasinoResult = ({ playerId }) => {
@@ -81,7 +76,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       socket.off('stonePaperScissorsResult');
       socket.off('stonePaperScissorsTieResolved');
     };
-  }, [player, socket, hasRolled]);
+  }, [player, socket]);
 
   if (!player || player.socketId !== currentPlayerId) return null;
 
@@ -93,9 +88,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   };
 
   const handleDone = () => {
-    // Only allow ending turn if player has rolled
-    if (!hasRolled) return;
-    
     socket.emit('endTurn');
     setDie1(null);
     setDie2(null);
@@ -221,8 +213,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </div>
       )}
 
-      {/* Done button - Only show if player has rolled and movement is done */}
-      {hasRolled && done && (!isOnCasino || casinoPlayed) && !rpsGame && (
+      {/* Done button - Only show if not on casino or if casino has been played */}
+      {done && (!isOnCasino || casinoPlayed) && !rpsGame && (
         <button
           onClick={handleDone}
           style={{ 
