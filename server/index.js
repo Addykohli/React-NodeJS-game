@@ -8,6 +8,7 @@ const GameSession   = require('./models/GameSession');
 const GameEngine    = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
 const sequelize     = require('./config/database');
+const { Op }        = require('sequelize');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
@@ -119,60 +120,118 @@ io.on('connection', socket => {
         // Player is reconnecting
         const oldSocketId = disconnectedPlayer.socketId;
 
-        // Get the player's state from database
         try {
-          const playerState = await Player.findOne({
-            where: { socketId: oldSocketId }
+          // First, get all active players' states from database
+          const allPlayerStates = await Player.findAll({
+            where: {
+              socketId: {
+                [Op.in]: engine.session.players.map(p => p.socketId)
+              }
+            }
           });
-          
-          if (playerState) {
-            // Update socket ID and preserve hasMoved state
-            await Player.update(
-              { socketId: socket.id },
-              { where: { socketId: oldSocketId } }
-            );
 
-            // Update engine and lobby states, preserving hasMoved
-            engine.session.players = engine.session.players.map(p =>
-              p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: playerState.hasMoved } : p
-            );
+          // Create a map for quick lookup
+          const playerStateMap = new Map(
+            allPlayerStates.map(p => [p.socketId, p])
+          );
+
+          // Update the reconnecting player's socket ID
+          await Player.update(
+            { socketId: socket.id },
+            { where: { socketId: oldSocketId } }
+          );
+
+          // Update the state map with the new socket ID
+          if (playerStateMap.has(oldSocketId)) {
+            const playerState = playerStateMap.get(oldSocketId);
+            playerStateMap.delete(oldSocketId);
+            playerStateMap.set(socket.id, {
+              ...playerState,
+              socketId: socket.id
+            });
+          }
+
+          // Update engine state with fresh data from database
+          engine.session.players = engine.session.players.map(p => {
+            const dbState = playerStateMap.get(p.socketId === oldSocketId ? socket.id : p.socketId);
+            if (dbState) {
+              return {
+                ...p,
+                socketId: p.socketId === oldSocketId ? socket.id : p.socketId,
+                money: dbState.money,
+                properties: dbState.properties,
+                tileId: dbState.tileId,
+                prevTile: dbState.prevTile,
+                loan: dbState.loan,
+                hasMoved: dbState.hasMoved
+              };
+            }
+            return p;
+          });
+
+          // Update lobby players with fresh data
+          lobbyPlayers = lobbyPlayers.map(p => {
+            const dbState = playerStateMap.get(p.socketId === oldSocketId ? socket.id : p.socketId);
+            if (dbState) {
+              return {
+                ...p,
+                socketId: p.socketId === oldSocketId ? socket.id : p.socketId,
+                money: dbState.money,
+                properties: dbState.properties,
+                tileId: dbState.tileId,
+                prevTile: dbState.prevTile,
+                loan: dbState.loan,
+                hasMoved: dbState.hasMoved
+              };
+            }
+            return p;
+          });
+
+          // Update the disconnected player's state
+          if (disconnectedPlayer) {
+            const dbState = playerStateMap.get(socket.id);
+            if (dbState) {
+              Object.assign(disconnectedPlayer, {
+                socketId: socket.id,
+                money: dbState.money,
+                properties: dbState.properties,
+                tileId: dbState.tileId,
+                prevTile: dbState.prevTile,
+                loan: dbState.loan,
+                hasMoved: dbState.hasMoved
+              });
+            }
+          }
+
+          disconnectedPlayers.delete(name);
+
+          // Check if this player was the current player when they disconnected
+          const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
+          
+          // Emit updated game state to all players
+          io.emit('gameStart', {
+            players: engine.session.players,
+            sessionId: currentSessionId,
+            currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
+          });
+
+          io.emit('lobbyUpdate', lobbyPlayers);
+          
+          const currentPlayer = engine.getPlayer(socket.id);
+          if (currentPlayer) {
+            socket.emit('playerMoved', {
+              playerId: socket.id,
+              tileId: currentPlayer.tileId
+            });
             
-            lobbyPlayers = lobbyPlayers.map(p =>
-              p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: playerState.hasMoved } : p
-            );
-
-            // Update the disconnected player's state
-            disconnectedPlayer.socketId = socket.id;
-            disconnectedPlayer.hasMoved = playerState.hasMoved;
+            // Only emit movementDone if it's not their turn or if they had already moved
+            if (!isCurrentPlayer || currentPlayer.hasMoved) {
+              socket.emit('movementDone');
+            }
           }
+
         } catch (err) {
-          console.error('Error restoring player state:', err);
-        }
-
-        disconnectedPlayers.delete(name);
-
-        // Check if this player was the current player when they disconnected
-        const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
-        
-        socket.emit('gameStart', {
-          players: engine.session.players,
-          sessionId: currentSessionId,
-          currentPlayerId: engine.session.players[engine.session.currentPlayerIndex].socketId
-        });
-
-        io.emit('lobbyUpdate', lobbyPlayers);
-        
-        const currentPlayer = engine.getPlayer(socket.id);
-        if (currentPlayer) {
-          socket.emit('playerMoved', {
-            playerId: socket.id,
-            tileId: currentPlayer.tileId
-          });
-          
-          // Only emit movementDone if it's not their turn or if they had already moved
-          if (!isCurrentPlayer || currentPlayer.hasMoved) {
-            socket.emit('movementDone');
-          }
+          console.error('Error restoring game state:', err);
         }
         return;
       }
@@ -986,77 +1045,89 @@ io.on('connection', socket => {
     const player = engine.getPlayer(playerId);
     if (!player) return;
 
-    if (action === 'add') {
-      // Add property to player's properties if not already owned
-      if (!player.properties.includes(propertyId)) {
-        player.properties.push(propertyId);
-      }
-    } else if (action === 'remove') {
-      // Remove property from player's properties and refund the cost
-      player.properties = player.properties.filter(id => id !== propertyId);
-      if (refundAmount) {
-        player.money += refundAmount;
-      }
-    }
+    // Start a transaction
+    const transaction = await sequelize.transaction();
 
     try {
-      // Start a transaction
-      const transaction = await sequelize.transaction();
+      // Update player state
+      if (action === 'add') {
+        // Add property to player's properties if not already owned
+        if (!player.properties.includes(propertyId)) {
+          player.properties.push(propertyId);
+        }
+      } else if (action === 'remove') {
+        // Remove property from player's properties and refund the cost
+        player.properties = player.properties.filter(id => id !== propertyId);
+        if (refundAmount) {
+          player.money += refundAmount;
+        }
+      }
 
-      try {
-        // Update player in database within transaction
-        const [updatedRows] = await Player.update(
+      // Update player in database
+      await Player.update(
+        { 
+          properties: player.properties,
+          money: player.money
+        },
+        { 
+          where: { socketId: playerId },
+          transaction
+        }
+      );
+
+      // Update game session if exists
+      if (currentSessionId) {
+        await GameSession.update(
+          { players: engine.session.players },
           { 
-            properties: player.properties,
-            money: player.money
-          },
-          { 
-            where: { socketId: playerId },
+            where: { id: currentSessionId },
             transaction
           }
         );
-
-        if (updatedRows === 0) {
-          throw new Error('Failed to update player');
-        }
-
-        // Update game session if exists
-        if (currentSessionId) {
-          await GameSession.update(
-            { players: engine.session.players },
-            { 
-              where: { id: currentSessionId },
-              transaction
-            }
-          );
-        }
-
-        // Commit transaction
-        await transaction.commit();
-
-        // Notify all clients about the property update and money change
-        io.emit('propertyUpdated', {
-          playerId,
-          propertyId,
-          action,
-          newMoney: player.money
-        });
-
-        // Broadcast game event for property sale
-        if (action === 'remove') {
-          const { tiles } = require('./data/tiles.cjs');
-          const property = tiles.find(t => t.id === propertyId);
-          if (property) {
-            broadcastGameEvent(`${player.name} sold ${property.name} for $${refundAmount}`);
-          }
-        }
-      } catch (err) {
-        // Rollback transaction on error
-        await transaction.rollback();
-        console.error('Error updating property ownership:', err);
       }
+
+      // Commit transaction
+      await transaction.commit();
+
+      // After successful database update, update engine state
+      engine.session.players = engine.session.players.map(p => {
+        if (p.socketId === playerId) {
+          return {
+            ...p,
+            properties: player.properties,
+            money: player.money
+          };
+        }
+        return p;
+      });
+
+      // Notify all clients about the property update and money change
+      io.emit('propertyUpdated', {
+        playerId,
+        propertyId,
+        action,
+        newMoney: player.money,
+        newProperties: player.properties
+      });
+
+      // Broadcast game event for property action
+      const { tiles } = require('./data/tiles.cjs');
+      const property = tiles.find(t => t.id === propertyId);
+      if (property) {
+        if (action === 'remove') {
+          broadcastGameEvent(`${player.name} sold ${property.name} for $${refundAmount}`);
+        } else {
+          broadcastGameEvent(`${player.name} acquired ${property.name}`);
+        }
+      }
+
     } catch (err) {
-      console.error('Error starting transaction:', err);
+      // Rollback transaction on error
+      await transaction.rollback();
+      console.error('Error updating property ownership:', err);
+      socket.emit('propertyUpdateFailed', {
+        message: 'Error updating property. Please try again.'
+      });
     }
   });
 
@@ -1838,13 +1909,13 @@ io.on('connection', socket => {
             offerId,
             fromPlayer: {
               socketId: fromPlayer.socketId,
-              money: fromPlayer.money,
-              properties: fromPlayer.properties
+              properties: fromPlayer.properties,
+              money: fromPlayer.money
             },
             toPlayer: {
               socketId: toPlayer.socketId,
-              money: toPlayer.money,
-              properties: toPlayer.properties
+              properties: toPlayer.properties,
+              money: toPlayer.money
             }
           });
 
