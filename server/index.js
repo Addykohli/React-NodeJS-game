@@ -118,29 +118,36 @@ io.on('connection', socket => {
       if (disconnectedPlayer) {
         // Player is reconnecting
         const oldSocketId = disconnectedPlayer.socketId;
-        disconnectedPlayer.socketId = socket.id;
-        
-        // Reset player's turn state
-        disconnectedPlayer.hasMoved = false;
-        
-        // Update the player in database
+
+        // Get the player's state from database
         try {
-          await Player.update(
-            { socketId: socket.id, hasMoved: false },
-            { where: { socketId: oldSocketId } }
-          );
+          const playerState = await Player.findOne({
+            where: { socketId: oldSocketId }
+          });
+          
+          if (playerState) {
+            // Update socket ID and preserve hasMoved state
+            await Player.update(
+              { socketId: socket.id },
+              { where: { socketId: oldSocketId } }
+            );
+
+            // Update engine and lobby states, preserving hasMoved
+            engine.session.players = engine.session.players.map(p =>
+              p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: playerState.hasMoved } : p
+            );
+            
+            lobbyPlayers = lobbyPlayers.map(p =>
+              p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: playerState.hasMoved } : p
+            );
+
+            // Update the disconnected player's state
+            disconnectedPlayer.socketId = socket.id;
+            disconnectedPlayer.hasMoved = playerState.hasMoved;
+          }
         } catch (err) {
-          console.error('Error updating reconnected player:', err);
+          console.error('Error restoring player state:', err);
         }
-        
-        // Update engine and lobby states
-        engine.session.players = engine.session.players.map(p =>
-          p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: false } : p
-        );
-        
-        lobbyPlayers = lobbyPlayers.map(p =>
-          p.socketId === oldSocketId ? { ...p, socketId: socket.id, hasMoved: false } : p
-        );
 
         disconnectedPlayers.delete(name);
 
@@ -243,36 +250,39 @@ io.on('connection', socket => {
   });
 
   socket.on('rollDice', async ({ testRoll }) => {
-    console.log('[rollDice] for', socket.id, testRoll ? `(test roll: ${testRoll})` : '');
+    console.log('[rollDice] for', socket.id);
     
-    let die1, die2, total;
-    
-    if (testRoll !== null && testRoll !== undefined) {
-      // Use test roll value
-      if (testRoll <= 7) {
-        die1 = Math.min(testRoll - 1, 6);
-        die2 = testRoll - die1;
-      } else {
-        die1 = 6;
-        die2 = testRoll - 6;
-      }
-      total = testRoll;
-    } else {
-      // Normal random roll
-      const result = engine.rollDice(socket.id);
-      die1 = result.die1;
-      die2 = result.die2;
-      total = result.total;
+    // Get current player
+    const currentPlayer = engine.getPlayer(socket.id);
+    if (!currentPlayer) return;
+
+    // Don't allow rolling if player has already moved
+    if (currentPlayer.hasMoved) {
+      console.log('Player has already moved this turn');
+      return;
     }
 
-    console.log('Dice rolled:', die1, die2, 'total:', total);
-    io.emit('diceResult', { playerId: socket.id, die1, die2, total });
+    let roll;
+    if (testRoll) {
+      roll = { die1: Math.ceil(testRoll/2), die2: Math.floor(testRoll/2), total: testRoll };
+    } else {
+      roll = engine.rollDice(socket.id);
+    }
+    console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
-    let remaining = total;
+    // Emit dice result to all players
+    io.emit('diceResult', {
+      playerId: socket.id,
+      die1: roll.die1,
+      die2: roll.die2,
+      total: roll.total
+    });
+
+    let remaining = roll.total;
     let passedStart = false; // Track if passed start during movement
 
     while (remaining > 0) {
-      const step = engine.moveOneStep(socket.id, total);
+      const step = engine.moveOneStep(socket.id, roll.total);
       if (!step) break;
 
       if (step.branchChoices) {
@@ -382,7 +392,7 @@ io.on('connection', socket => {
         const from = engine.getPlayer(socket.id).prevTile;
         const to   = engine.getPlayer(socket.id).tileId;
         await GameSession.findByIdAndUpdate(currentSessionId, {
-          $push: { moves: { playerSocketId: socket.id, die1, die2, fromTile: from, toTile: to } }
+          $push: { moves: { playerSocketId: socket.id, die1: roll.die1, die2: roll.die2, fromTile: from, toTile: to } }
         });
       }
 
@@ -391,7 +401,6 @@ io.on('connection', socket => {
     }
 
     // Handle rent payment AFTER all movement is complete
-    const currentPlayer = engine.getPlayer(socket.id);
     const finalTileId = currentPlayer.tileId;
 
     // Update prevTile based on final position
@@ -610,6 +619,16 @@ io.on('connection', socket => {
       rollingPlayer.hasMoved = true;
     }
     socket.emit('movementDone');
+
+    // After all movement is complete, mark player as moved and persist it
+    try {
+      await Player.update(
+        { hasMoved: true },
+        { where: { socketId: socket.id } }
+      );
+    } catch (err) {
+      console.error('Error updating hasMoved state:', err);
+    }
   });
 
   socket.on('branchChoice', idx => {
