@@ -268,7 +268,8 @@ export default function GameScreen() {
     setPlayers,
     currentPlayerId,
     socket,
-    movementDone
+    movementDone,
+    quitGame
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -1276,6 +1277,32 @@ export default function GameScreen() {
         padding: '20px 100px',
         zIndex: 99
       }}>
+        {/* Quit Game Button */}
+        <button
+          onClick={quitGame}
+          style={{
+            position: 'absolute',
+            left: '20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            padding: '12px 24px',
+            backgroundColor: 'rgba(255, 59, 59, 0.2)',
+            border: '1px solid rgba(255, 59, 59, 0.4)',
+            color: '#ff3b3b',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '1.1em',
+            transition: 'all 0.3s ease',
+            zIndex: 100,
+            ':hover': {
+              backgroundColor: 'rgba(255, 59, 59, 0.3)',
+              border: '1px solid rgba(255, 59, 59, 0.6)',
+            }
+          }}
+        >
+          Quit Game
+        </button>
+
         {/* Footer Components Container */}
         <div style={{
           display: 'flex',
@@ -1296,9 +1323,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            overflow: 'hidden',
-            borderRadius: '15px'
+            overflow: 'hidden'
           }}>
             {isMyTurn && (
               <>
@@ -1328,7 +1353,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator 1 */}
           <div style={{
-            width: '1px',
+            width: '2px',
             height: '200px',
             margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
@@ -1344,9 +1369,7 @@ export default function GameScreen() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            gap: '15px',
-            borderRadius: '15px'
+            gap: '15px'
           }}>
             <div style={{
               fontSize: '1.8em',
@@ -1383,7 +1406,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator 2 */}
           <div style={{
-            width: '1px',
+            width: '2px',
             height: '200px',
             margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
@@ -1398,9 +1421,7 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(60, 60, 60, 0.3)',
-            borderRadius: '15px'
+            justifyContent: 'center'
           }}>
             {(() => {
               // Show RPS game if active
@@ -1889,6 +1910,5 @@ export default function GameScreen() {
         </div>
       </div>
     </div>
-    
   );
 }
