@@ -1002,7 +1002,27 @@ io.on('connection', socket => {
           const currentPlayer = engine.getPlayer(socket.id);
           if (currentPlayer && currentPlayer.hasMoved) {
             console.log(`Player had already moved, advancing turn`);
-            // ... advance turn code ...
+            
+            // Advance to next player
+            const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
+            engine.session.currentPlayerIndex = nextPlayerIndex;
+            const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
+
+            // Update game session if exists
+            if (currentSessionId) {
+              try {
+                await GameSession.update(
+                  { currentPlayerIndex: nextPlayerIndex },
+                  { where: { id: currentSessionId } }
+                );
+              } catch (err) {
+                console.error('Error updating game session after turn advance:', err);
+              }
+            }
+
+            // Notify all clients about turn change
+            io.emit('turnEnded', { nextPlayerId });
+            console.log('Turn advanced to next player:', nextPlayerId);
           } else {
             console.log(`Player had not moved yet, keeping their turn`);
           }

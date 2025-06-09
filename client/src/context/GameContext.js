@@ -172,12 +172,24 @@ export function GameProvider({ children }) {
 
     // TURN ENDED
     socket.on('turnEnded', ({ nextPlayerId }) => {
+      console.log('[GameContext] Turn ended, next player:', nextPlayerId);
       setCurrentPlayerId(nextPlayerId);
       setDiceRoll(null);
       setMovementDone(false);
       setInsufficientFunds(false);
+      
+      // Clear turn-related localStorage
       localStorage.removeItem('gameDiceRoll');
-      localStorage.setItem('gameMovementDone', 'false');
+      localStorage.removeItem('gameMovementDone');
+
+      // If it's now our turn, ensure we start fresh
+      if (socket.id === nextPlayerId) {
+        console.log('[GameContext] It is now our turn');
+        const currentPlayer = players.find(p => p.socketId === socket.id);
+        if (currentPlayer) {
+          currentPlayer.hasMoved = false;
+        }
+      }
     });
 
     // DICE RESULT
