@@ -157,6 +157,9 @@ io.on('connection', socket => {
             disconnectedPlayer.money = playerState.money;
             disconnectedPlayer.properties = playerState.properties;
             disconnectedPlayer.loan = playerState.loan;
+            disconnectedPlayer.piece = playerState.piece;
+            disconnectedPlayer.tileId = playerState.tileId;
+            disconnectedPlayer.prevTile = playerState.prevTile;
           }
         } catch (err) {
           console.error('Error restoring player state:', err);

@@ -105,9 +105,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '2px solid #333',
-        borderRadius: '12px',
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
         textAlign: 'center',
       }}
     >

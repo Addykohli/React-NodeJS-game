@@ -1296,8 +1296,9 @@ export default function GameScreen() {
             width: '200px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            height: '250px'
+            justifyContent: 'flex-start',
+            height: '250px',
+            paddingLeft: '20px'
           }}>
             <button
               onClick={() => {
@@ -1357,7 +1358,6 @@ export default function GameScreen() {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     color: '#fff',
                     padding: '8px 16px',
-                    borderRadius: '4px',
                     zIndex: 100
                   }}>
                     {testRollInput}
@@ -1374,7 +1374,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator 1 */}
           <div style={{
-            width: '1px',
+            width: '2px',
             height: '200px',
             margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
@@ -1427,7 +1427,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator */}
           <div style={{
-            width: '1px',
+            width: '2px',
             height: '200px',
             margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
