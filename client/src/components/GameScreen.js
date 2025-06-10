@@ -1241,7 +1241,30 @@ export default function GameScreen() {
           }}>
             <Board />
             <PlayerStats />
-            {/* Add Road Cash UI here */}
+            {/* Add RPS Bills display on top of board */}
+            {rpsResult && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                padding: '20px',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                zIndex: 1000,
+                textAlign: 'center',
+                color: '#fff',
+                fontSize: '1.4em'
+              }}>
+                {rpsResult.winners.map(winner => (
+                  <div key={winner.socketId} style={{ marginBottom: '10px' }}>
+                    ${winner.drawnAmount.toLocaleString()}
+                  </div>
+                ))}
+              </div>
+            )}
+            
             {isMyTurn && tileMeta?.id === 22 && (
               <div style={{
                 position: 'absolute',
@@ -1283,7 +1306,7 @@ export default function GameScreen() {
         {/* Quit Game Button - Aligned Left */}
         <div style={{
           position: 'absolute',  // Position absolutely
-          left: '20px',         // Align to left
+          left: '30px',         // Align to left
           top: '50%',           // Center vertically
           transform: 'translateY(-50%)'  // Center vertically
         }}>
@@ -1439,7 +1462,7 @@ export default function GameScreen() {
                     gap: '15px'
                   }}>
                     {rpsResult ? (
-                      // Show result for multiple players
+                      // Show result without amounts
                       <div style={{
                         textAlign: 'center',
                         color: '#fff',
@@ -1459,20 +1482,8 @@ export default function GameScreen() {
                           </div>
                         ))}
                       </div>
-                    ) : rpsTieAmount ? (
-                      <RPSTieResolver
-                        maxAmount={rpsTieAmount.maxAmount}
-                        gameId={rpsTieAmount.gameId}
-                        tiedPlayerId={rpsTieAmount.tiedPlayerId}
-                        tiedPlayerName={rpsTieAmount.tiedPlayerName}
-                        socket={socket}
-                        onResolved={() => {
-                          setRpsTieAmount(null);
-                          setRpsGame(null);
-                        }}
-                      />
                     ) : (
-                      // Show RPS buttons for all involved players
+                      // Rest of the RPS UI remains the same
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -1812,7 +1823,7 @@ export default function GameScreen() {
                       gap: '15px'
                     }}>
                       {rpsResult ? (
-                        // Show result for multiple players
+                        // Show result without amounts
                         <div style={{
                           textAlign: 'center',
                           color: '#fff',
@@ -1832,20 +1843,8 @@ export default function GameScreen() {
                             </div>
                           ))}
                         </div>
-                      ) : rpsTieAmount ? (
-                        <RPSTieResolver
-                          maxAmount={rpsTieAmount.maxAmount}
-                          gameId={rpsTieAmount.gameId}
-                          tiedPlayerId={rpsTieAmount.tiedPlayerId}
-                          tiedPlayerName={rpsTieAmount.tiedPlayerName}
-                          socket={socket}
-                          onResolved={() => {
-                            setRpsTieAmount(null);
-                            setRpsGame(null);
-                          }}
-                        />
                       ) : (
-                        // Show RPS buttons for all involved players
+                        // Rest of the RPS UI remains the same
                         <div style={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -1915,6 +1914,5 @@ export default function GameScreen() {
         </div>
       </div>
     </div>
-    
   );
 }
