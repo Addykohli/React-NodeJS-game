@@ -1276,65 +1276,51 @@ export default function GameScreen() {
         borderTop: '2px solid #666',
         transition: 'all 0.3s ease',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '20px 100px',
+        flexDirection: 'column',  // Changed to column
+        padding: '20px',
         zIndex: 99
       }}>
-        {/* Footer Components Container */}
+        {/* Quit Game Button - Aligned Left */}
+        <div style={{
+          position: 'absolute',  // Position absolutely
+          left: '20px',         // Align to left
+          top: '50%',           // Center vertically
+          transform: 'translateY(-50%)'  // Center vertically
+        }}>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+                socket.emit('quitGame');
+                handleQuit();
+              }
+            }}
+            disabled={isMyTurn}
+            style={{
+              padding: '10px 20px',
+              fontSize: '1.2em',
+              backgroundColor: isMyTurn ? '#666666' : '#ff4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: isMyTurn ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.3s',
+              opacity: isMyTurn ? 0.7 : 1
+            }}
+            onMouseOver={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+            onMouseOut={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+          >
+            Quit Game
+          </button>
+        </div>
+
+        {/* Center Sections Container */}
         <div style={{
           display: 'flex',
-          justifyContent: 'center',
-          gap: '0px',
-          width: '100%',
-          maxWidth: '1400px',
-          margin: '0 auto',
-          position: 'relative'
+          justifyContent: 'center',  // Center the sections
+          alignItems: 'center',
+          gap: '40px',  // Space between sections
+          margin: '0 auto'  // Center the container
         }}>
-          {/* Quit Game Button Section */}
-          <div style={{
-            width: '200px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            height: '250px',
-            paddingLeft: '20px'
-          }}>
-            <button
-              onClick={() => {
-                if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
-                  socket.emit('quitGame');
-                  handleQuit();
-                }
-              }}
-              disabled={isMyTurn}
-              style={{
-                padding: '10px 20px',
-                fontSize: '1.2em',
-                backgroundColor: isMyTurn ? '#666666' : '#ff4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: isMyTurn ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.3s',
-                opacity: isMyTurn ? 0.7 : 1
-              }}
-              onMouseOver={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
-              onMouseOut={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
-            >
-              Quit Game
-            </button>
-          </div>
-
-          {/* Vertical Gradient Separator */}
-          <div style={{
-            width: '1px',
-            height: '200px',
-            margin: '25px 0',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-            alignSelf: 'center'
-          }} />
-
           {/* Dice Roller Section */}
           <div style={{
             width: '400px',
@@ -1372,11 +1358,10 @@ export default function GameScreen() {
             />
           </div>
 
-          {/* Vertical Gradient Separator 1 */}
+          {/* Vertical Gradient Separator */}
           <div style={{
-            width: '2px',
+            width: '3px',
             height: '200px',
-            margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
             alignSelf: 'center'
           }} />
@@ -1427,9 +1412,8 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator */}
           <div style={{
-            width: '2px',
+            width: '3px',
             height: '200px',
-            margin: '25px 0',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
             alignSelf: 'center'
           }} />
