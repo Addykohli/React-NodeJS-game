@@ -852,7 +852,7 @@ export default function GameScreen() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      minHeight: '100vh',
+      minHeight: '100%',
       transition: 'all 0.3s ease',
       backgroundImage: `url(${bgImage})`,
       backgroundSize: 'cover',
@@ -866,7 +866,7 @@ export default function GameScreen() {
       <div style={{
         position: 'fixed',
         right: '0px', 
-        height: '100vh',
+        height: '100%',
         width: activeSidePanel ? '680px' : '180px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
@@ -940,7 +940,7 @@ export default function GameScreen() {
               left: '180px',
               top: 0,
               width: '470px',
-              height: '100vh',
+              height: '100%',
               backgroundColor: `${config.color}`,
               transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
               transition: 'transform 0.3s ease',
@@ -1288,27 +1288,31 @@ export default function GameScreen() {
       </div>
 
       {/* Fixed Footer */}
-      <div style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        minHeight: '300px',
-        backgroundColor: 'rgba(0, 0, 0, 0.95)',
-        borderTop: '2px solid #666',
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        flexDirection: 'column',  // Changed to column
-        padding: '20px',
-        zIndex: 99
-      }}>
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          minHeight: '300px',
+          backgroundColor: 'rgba(0, 0, 0, 0.95)',
+          borderTop: '2px solid #666',
+          transition: 'all 0.3s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px',
+          zIndex: 99
+        }}
+      >
         {/* Quit Game Button - Aligned Left */}
-        <div style={{
-          position: 'absolute',  // Position absolutely
-          left: '20px',         // Align to left
-          top: '50%',           // Center vertically
-          transform: 'translateY(-50%)'  // Center vertically
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: '20px',
+            top: '50%',
+            transform: 'translateY(-50%)'
+          }}
+        >
           <button
             onClick={() => {
               if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
@@ -1328,128 +1332,169 @@ export default function GameScreen() {
               transition: 'background-color 0.3s',
               opacity: isMyTurn ? 0.7 : 1
             }}
-            onMouseOver={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
-            onMouseOut={(e) => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+            onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+            onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
           >
             Quit Game
           </button>
         </div>
 
         {/* Center Sections Container */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',  // Center the sections
-          alignItems: 'center',
-          gap: '40px',  // Space between sections
-          margin: '0 auto'  // Center the container
-        }}>
-          {/* Dice Roller Section */}
-          <div style={{
-            width: '400px',
-            position: 'relative',
-            padding: '20px',
-            height: '250px',
+        <div
+          style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            flexDirection: 'row',
             justifyContent: 'center',
-            overflow: 'hidden'
-          }}>
+            alignItems: 'center',
+            gap: '40px',
+            margin: '0 auto',
+            width: '100%',
+            maxWidth: '1200px',
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Dice Roller Section */}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              minWidth: '260px',
+              position: 'relative',
+              padding: '20px',
+              height: '250px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              flex: 1,
+            }}
+          >
             {isMyTurn && (
               <>
                 {testRollMode && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: '#fff',
-                    padding: '8px 16px',
-                    zIndex: 100
-                  }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      zIndex: 100
+                    }}
+                  >
                     {testRollInput}
                   </div>
                 )}
               </>
             )}
-            <DiceRoller 
-              testRollMode={testRollMode} 
+            <DiceRoller
+              testRollMode={testRollMode}
               hasCasinoPlayed={hasCasinoPlayed}
               style={{ position: 'relative', zIndex: 1 }}
             />
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div style={{
-            width: '3px',
-            height: '200px',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-            alignSelf: 'center'
-          }} />
+          <div
+            style={{
+              width: '3px',
+              height: '200px',
+              background:
+                'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+              alignSelf: 'center',
+              display: 'none', // Hide on mobile, show on desktop via media query
+            }}
+            className="footer-separator"
+          />
 
           {/* Dashboard Section */}
-          <div style={{
-            width: '400px',
-            height: '250px',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '15px'
-          }}>
-            <div style={{
-              fontSize: '1.8em',
-              color: 'white',
-              textAlign: 'center'
-            }}>
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              minWidth: '260px',
+              height: '250px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '15px',
+              flex: 1,
+            }}
+          >
+            <div
+              style={{
+                fontSize: '1.8em',
+                color: 'white',
+                textAlign: 'center'
+              }}
+            >
               {player?.name}
             </div>
-            <div style={{
-              fontSize: '1.6em',
-              color: '#4CAF50',
-              textAlign: 'center'
-            }}>
+            <div
+              style={{
+                fontSize: '1.6em',
+                color: '#4CAF50',
+                textAlign: 'center'
+              }}
+            >
               ${player?.money?.toLocaleString()}
             </div>
             {player?.loan > 0 && (
-              <div style={{
-                fontSize: '1.4em',
-                color: '#ff4444',
-                textAlign: 'center'
-              }}>
+              <div
+                style={{
+                  fontSize: '1.4em',
+                  color: '#ff4444',
+                  textAlign: 'center'
+                }}
+              >
                 Loan: ${player?.loan?.toLocaleString()}
               </div>
             )}
-            <div style={{
-              fontSize: '1.4em',
-              color: 'white',
-              textAlign: 'center',
-              marginTop: '10px'
-            }}>
+            <div
+              style={{
+                fontSize: '1.4em',
+                color: 'white',
+                textAlign: 'center',
+                marginTop: '10px'
+              }}
+            >
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
             </div>
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div style={{
-            width: '3px',
-            height: '200px',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-            alignSelf: 'center'
-          }} />
+          <div
+            style={{
+              width: '3px',
+              height: '200px',
+              background:
+                'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+              alignSelf: 'center',
+              display: 'none', // Hide on mobile, show on desktop via media query
+            }}
+            className="footer-separator"
+          />
 
           {/* Events Section */}
-          <div style={{
-            width: '400px',
-            height: '250px',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              minWidth: '260px',
+              height: '250px',
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flex: 1,
+            }}
+          >
             {(() => {
               // Show RPS game if active
               if (rpsGame) {
@@ -1850,6 +1895,27 @@ export default function GameScreen() {
             })()}
           </div>
         </div>
+        {/* Responsive styles for mobile */}
+        <style>{`
+          @media (max-width: 900px) {
+            .footer-separator {
+              display: none !important;
+            }
+            div[style*='display: flex'][style*='flex-direction: row'] {
+              flex-direction: column !important;
+              gap: 10px !important;
+              align-items: stretch !important;
+              max-width: 100vw !important;
+            }
+            div[style*='max-width: 400px'] {
+              max-width: 100vw !important;
+              min-width: 0 !important;
+              width: 100% !important;
+              height: auto !important;
+              padding: 10px !important;
+            }
+          }
+        `}</style>
       </div>
     </div>
     
