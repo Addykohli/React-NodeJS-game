@@ -934,15 +934,15 @@ export default function GameScreen() {
           <div
             className="quit-game-mobile"
             style={{
-              position: 'fixed',
+              position: 'absolute',
               left: 0,
               bottom: 0,
-              width: '180px',
-              zIndex: 3000,
+              width: '180px', // match the bar width
               padding: '10px 0 20px 0',
               textAlign: 'center',
               background: 'rgba(0,0,0,1)',
               borderTop: '2px solid #333',
+              zIndex: 2000,
               display: 'block',
             }}
           >
@@ -1347,10 +1347,10 @@ export default function GameScreen() {
           transition: 'all 0.3s ease',
           display: 'flex',
           flexDirection: 'column',
-          padding: '10px 0 0 0',
+          padding: '20px 10px 10px 10px',
           zIndex: 99,
           height: 'auto',
-          maxHeight: '60vh',
+          maxHeight: '40vh',
         }}
       >
         {/* Quit Game Button - Desktop only */}
@@ -1415,60 +1415,133 @@ export default function GameScreen() {
               width: '100%',
               minWidth: 0,
               flex: '1 1 0',
+              position: 'relative',
               padding: '10px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              overflow: 'hidden',
               height: '100%',
               minHeight: '120px',
-              boxSizing: 'border-box',
             }}
           >
-            {isMyTurn && (
-              <>
-                {testRollMode && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                      color: '#fff',
-                      padding: '8px 16px',
-                      zIndex: 100,
-                      fontSize: '1em',
-                    }}
-                  >
-                    {testRollInput}
-                  </div>
-                )}
-              </>
-            )}
-            <DiceRoller
-              testRollMode={testRollMode}
-              hasCasinoPlayed={hasCasinoPlayed}
-              style={{ position: 'relative', zIndex: 1 }}
-            />
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+              {isMyTurn && (
+                <>
+                  {testRollMode && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        color: '#fff',
+                        padding: '8px 16px',
+                        zIndex: 100,
+                        fontSize: '1em',
+                      }}
+                    >
+                      {testRollInput}
+                    </div>
+                  )}
+                </>
+              )}
+              <DiceRoller
+                testRollMode={testRollMode}
+                hasCasinoPlayed={hasCasinoPlayed}
+                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}
+              />
+            </div>
           </div>
 
           {/* Vertical Gradient Separator */}
+          <div className="footer-separator" style={{
+            width: '6px',
+            minWidth: '6px',
+            maxWidth: '6px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
+            margin: '0 0',
+            opacity: 1,
+            display: 'block',
+          }} />
+
+          {/* Dashboard Section */}
           <div
-            className="footer-separator"
+            className="footer-section"
             style={{
-              width: '3px',
-              minWidth: '3px',
-              maxWidth: '3px',
+              width: '100%',
+              minWidth: 0,
+              flex: '1 1 0',
+              padding: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
               height: '100%',
-              background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%), #fff',
-              alignSelf: 'stretch',
-              margin: '0 0',
-              opacity: 1,
-              display: 'block',
-              boxSizing: 'border-box',
             }}
-          />
+          >
+            <div
+              style={{
+                fontSize: '1.3em',
+                color: 'white',
+                textAlign: 'center',
+                wordBreak: 'break-word',
+              }}
+            >
+              {player?.name}
+            </div>
+            <div
+              style={{
+                fontSize: '1.1em',
+                color: '#4CAF50',
+                textAlign: 'center',
+                wordBreak: 'break-word',
+              }}
+            >
+              ${player?.money?.toLocaleString()}
+            </div>
+            {player?.loan > 0 && (
+              <div
+                style={{
+                  fontSize: '1em',
+                  color: '#ff4444',
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
+                }}
+              >
+                Loan: ${player?.loan?.toLocaleString()}
+              </div>
+            )}
+            <div
+              style={{
+                fontSize: '1em',
+                color: 'white',
+                textAlign: 'center',
+                marginTop: '4px',
+                wordBreak: 'break-word',
+              }}
+            >
+              {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
+            </div>
+          </div>
+
+          {/* Vertical Gradient Separator */}
+          <div className="footer-separator" style={{
+            width: '6px',
+            minWidth: '6px',
+            maxWidth: '6px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
+            margin: '0 0',
+            opacity: 1,
+            display: 'block',
+          }} />
 
           {/* Events Section */}
           <div
