@@ -90,7 +90,7 @@ const broadcastGameEvent = (message) => {
   });
 };
 
-io.on('connection', (socket) => {
+io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
 
   // Send game events history to newly connected clients
@@ -2053,50 +2053,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Add this new handler for player state persistence
-  socket.on('requestPlayerState', () => {
-    try {
-      const player = gameState.players.find(p => p.socketId === socket.id);
-      if (player) {
-        socket.emit('playerStateResponse', player);
-      }
-    } catch (err) {
-      console.error('Error fetching player state:', err);
-    }
-  });
-
-  // Modify the existing disconnect handler to save state
-  socket.on('disconnect', () => {
-    const player = gameState.players.find(p => p.socketId === socket.id);
-    if (player) {
-      // Store last known state before disconnect
-      gameState.disconnectedPlayers[socket.id] = {
-        ...player,
-        disconnectedAt: Date.now()
-      };
-    }
-    // ...existing disconnect logic...
-  });
-
-  // Modify the existing reconnect logic
-  socket.on('playerReconnect', (playerName) => {
-    const disconnectedPlayer = gameState.disconnectedPlayers[socket.id];
-    if (disconnectedPlayer) {
-      const player = {
-        ...disconnectedPlayer,
-        socketId: socket.id,
-        connected: true
-      };
-      delete gameState.disconnectedPlayers[socket.id];
-      // Update player in game state
-      gameState.players = gameState.players.map(p => 
-        p.name === playerName ? player : p
-      );
-      socket.emit('playerStateResponse', player);
-    }
-  });
-
-  // ...existing code...
 });
 
 
