@@ -1241,30 +1241,98 @@ export default function GameScreen() {
           }}>
             <Board />
             <PlayerStats />
-            {/* Add RPS Bills display on top of board */}
-            {rpsResult && (
+            {/* RPS Game UI */}
+            {rpsGame && (
               <div style={{
                 position: 'absolute',
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                padding: '20px',
-                borderRadius: '12px',
-                border: '2px solid rgba(255, 255, 255, 0.1)',
                 zIndex: 1000,
-                textAlign: 'center',
-                color: '#fff',
-                fontSize: '1.4em'
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '15px'
               }}>
-                {rpsResult.winners.map(winner => (
-                  <div key={winner.socketId} style={{ marginBottom: '10px' }}>
-                    ${winner.drawnAmount.toLocaleString()}
+                {rpsResult ? (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}>
+                    <div style={{ color: '#fff', fontSize: '1.4em' }}>
+                      {rpsResult.landingPlayer.name}'s choice: {rpsResult.landingPlayer.choice}
+                    </div>
+                    {rpsResult.winners.map(winner => (
+                      <div key={winner.socketId} style={{ color: '#f44336', fontSize: '1.4em' }}>
+                        Lost against {winner.name} ({winner.choice})
+                      </div>
+                    ))}
+                    {rpsResult.losers.map(loser => (
+                      <div key={loser.socketId} style={{ color: '#4CAF50', fontSize: '1.4em' }}>
+                        Won against {loser.name} ({loser.choice})
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : rpsTieAmount ? (
+                  <RPSTieResolver
+                    maxAmount={rpsTieAmount.maxAmount}
+                    gameId={rpsTieAmount.gameId}
+                    tiedPlayerId={rpsTieAmount.tiedPlayerId}
+                    tiedPlayerName={rpsTieAmount.tiedPlayerName}
+                    socket={socket}
+                    onResolved={() => {
+                      setRpsTieAmount(null);
+                      setRpsGame(null);
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '15px'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      gap: '20px'
+                    }}>
+                      {['rock', 'paper', 'scissors'].map(choice => (
+                        <button
+                          key={choice}
+                          onClick={() => {
+                            setRpsChoice(choice);
+                            socket.emit('stonePaperScissorsChoice', {
+                              choice,
+                              gameId: rpsGame.gameId
+                            });
+                          }}
+                          style={{
+                            padding: '12px 24px',
+                            fontSize: '1.4em',
+                            backgroundColor: '#2196F3',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            textTransform: 'capitalize'
+                          }}
+                        >
+                          {choice}
+                        </button>
+                      ))}
+                    </div>
+                    {rpsChoice && (
+                      <div style={{ color: '#fff', fontSize: '1.4em' }}>
+                        You chose: {rpsChoice}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-            
+            {/* Road Cash UI */}
             {isMyTurn && tileMeta?.id === 22 && (
               <div style={{
                 position: 'absolute',
@@ -1283,6 +1351,21 @@ export default function GameScreen() {
               }}>
                 <RoadCash isMyTurn={isMyTurn} socket={socket} />
               </div>
+            )}
+          </div>
+
+          {/* Events Section in Footer - Now only shows error messages */}
+          <div style={{
+            width: '400px',
+            height: '250px',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            {error && (
+              <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
             )}
           </div>
         </div>
@@ -1306,7 +1389,7 @@ export default function GameScreen() {
         {/* Quit Game Button - Aligned Left */}
         <div style={{
           position: 'absolute',  // Position absolutely
-          left: '30px',         // Align to left
+          left: '20px',         // Align to left
           top: '50%',           // Center vertically
           transform: 'translateY(-50%)'  // Center vertically
         }}>
@@ -1441,7 +1524,7 @@ export default function GameScreen() {
             alignSelf: 'center'
           }} />
 
-          {/* Events Section */}
+          {/* Events Section in Footer */}
           <div style={{
             width: '400px',
             height: '250px',
@@ -1451,468 +1534,14 @@ export default function GameScreen() {
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            {(() => {
-              // Show RPS game if active
-              if (rpsGame) {
-                return (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '15px'
-                  }}>
-                    {rpsResult ? (
-                      // Show result without amounts
-                      <div style={{
-                        textAlign: 'center',
-                        color: '#fff',
-                        fontSize: '1.4em'
-                      }}>
-                        <div>
-                          {rpsResult.landingPlayer.name}'s choice: {rpsResult.landingPlayer.choice}
-                        </div>
-                        {rpsResult.winners.map(winner => (
-                          <div key={winner.socketId} style={{ color: '#f44336' }}>
-                            Lost against {winner.name} ({winner.choice})
-                          </div>
-                        ))}
-                        {rpsResult.losers.map(loser => (
-                          <div key={loser.socketId} style={{ color: '#4CAF50' }}>
-                            Won against {loser.name} ({loser.choice})
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      // Rest of the RPS UI remains the same
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '15px'
-                      }}>
-                        {((player?.socketId === rpsGame.landingPlayer.socketId) ||
-                          rpsGame.closestPlayers.some(p => p.socketId === player?.socketId)) && !rpsChoice && (
-                          <>
-                            <div style={{ color: '#fff', fontSize: '1.2em', textAlign: 'center' }}>
-                              {player?.socketId === rpsGame.landingPlayer.socketId ? (
-                                <>
-                                  Playing against {rpsGame.closestPlayers.map(p => p.name).join(', ')}
-                                  <br />Choose your move:
-                                </>
-                              ) : (
-                                <>
-                                  Playing against {rpsGame.landingPlayer.name}
-                                  <br />Choose your move:
-                                </>
-                              )}
-                            </div>
-                            <div style={{
-                              display: 'flex',
-                              gap: '10px'
-                            }}>
-                              {['rock', 'paper', 'scissors'].map(choice => (
-                                <button
-                                  key={choice}
-                                  onClick={() => {
-                                    setRpsChoice(choice);
-                                    socket.emit('stonePaperScissorsChoice', {
-                                      choice,
-                                      gameId: rpsGame.gameId
-                                    });
-                                  }}
-                                  style={{
-                                    padding: '12px 24px',
-                                    fontSize: '1.1em',
-                                    backgroundColor: '#2196F3',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: 'pointer',
-                                    textTransform: 'capitalize'
-                                  }}
-                                >
-                                  {choice}
-                                </button>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                        {rpsChoice && (
-                          <div style={{ color: '#fff', fontSize: '1.2em' }}>
-                            You chose: {rpsChoice}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              // Show "Your Turn" for current player before landing
-              if (isMyTurn && !movementDone) {
-                return (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#fff',
-                    fontSize: '1.6em',
-                    fontWeight: 'bold',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-                  }}>
-                    Your Turn
-                  </div>
-                );
-              }
-
-              // Buy Property
-              if (isMyTurn && tileMeta?.type === 'property' && 
-                  !players.some(p => p.properties.includes(tileMeta?.id))) {
-                return (
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '10px'
-                  }}>
-                    <button
-                      onClick={handleBuy}
-                      disabled={player.money < tileMeta.cost || (player.loan || 0) > 10000}
-                      style={{
-                        padding: '15px 30px',  // Increased padding
-                        fontSize: '1.4em',     // Increased font size
-                        backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? '#4CAF50' : '#ccc',
-                        color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'white' : '#ff0000',
-                        border: 'none',
-                        borderRadius: '12px',  // Increased border radius
-                        cursor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'pointer' : 'not-allowed',
-                        fontWeight: 'bold',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  // Added shadow
-                        transition: 'transform 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.05)'
-                        }
-                      }}
-                    >
-                      Buy (${tileMeta.cost})
-                    </button>
-                    {error && (
-                      <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
-                    )}
-                    {(player.loan || 0) > 10000 && (
-                      <p style={{ color: 'tomato', margin: 0 }}>Cannot buy property when loan exceeds $10,000</p>
-                    )}
-                  </div>
-                );
-              }
-
-              // Casino
-              if (inCasino && isMyTurn) {
-                return (
-                  <CasinoBetting 
-                    isMyTurn={isMyTurn} 
-                    currentMoney={player?.money || 0}
-                    socket={socket}
-                    player={player}
-                    onCasinoPlayed={() => setHasCasinoPlayed(true)}
-                  />
-                );
-              }
-
-              // Corner Choice
-              if (isMyTurn && tileMeta?.name?.toLowerCase().includes('choose corner')) {
-                return (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gridTemplateRows: '1fr 1fr',
-                    gap: '10px',
-                    width: '100%',
-                    height: '100%',
-                    maxWidth: '300px',
-                    maxHeight: '250px',
-                    padding: '10px'
-                  }}>
-                    <button
-                      onClick={() => {
-                        socket.emit('teleport', { toTile: 1, prevTile: 30 });
-                        setError(null);
-                        setHasChosenCorner(true);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: 0,
-                        border: '2px solid #666',
-                        borderRadius: '8px',
-                        backgroundImage: `url(${startIcon})`,
-                        backgroundSize: '60%',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 30%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        width: '100%',
-                        height: '100%',
-                        position: 'relative',
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s'
-                      }}
-                    >
-                      <span style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 6px 6px',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1em',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-                        position: 'absolute',
-                        bottom: 0,
-                        width: '100%',
-                        textAlign: 'center'
-                      }}>Start</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        socket.emit('teleport', { toTile: 22, prevTile: 21 });
-                        setError(null);
-                        setHasChosenCorner(true);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: 0,
-                        border: '2px solid #666',
-                        borderRadius: '8px',
-                        backgroundImage: `url(${roadIcon})`,
-                        backgroundSize: '60%',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 30%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        width: '100%',
-                        height: '100%',
-                        position: 'relative',
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s'
-                      }}
-                    >
-                      <span style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 6px 6px',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1em',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-                        position: 'absolute',
-                        bottom: 0,
-                        width: '100%',
-                        textAlign: 'center'
-                      }}>Road</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        socket.emit('teleport', { toTile: 7, prevTile: 6 });
-                        setError(null);
-                        setHasChosenCorner(true);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: 0,
-                        border: '2px solid #666',
-                        borderRadius: '8px',
-                        backgroundImage: `url(${hotelIcon})`,
-                        backgroundSize: '60%',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 30%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        width: '100%',
-                        height: '100%',
-                        position: 'relative',
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s'
-                      }}
-                    >
-                      <span style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 6px 6px',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1em',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-                        position: 'absolute',
-                        bottom: 0,
-                        width: '100%',
-                        textAlign: 'center'
-                      }}>Hotel</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        socket.emit('teleport', { toTile: 16, prevTile: 15 });
-                        setError(null);
-                        setHasChosenCorner(true);
-                      }}
-                      style={{
-                        margin: 0,
-                        padding: 0,
-                        border: '2px solid #666',
-                        borderRadius: '8px',
-                        backgroundImage: `url(${casinoIcon})`,
-                        backgroundSize: '60%',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'center 30%',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        justifyContent: 'center',
-                        width: '100%',
-                        height: '100%',
-                        position: 'relative',
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        transition: 'transform 0.2s, background-color 0.2s'
-                      }}
-                    >
-                      <span style={{
-                        padding: '4px 8px',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        borderRadius: '0 0 6px 6px',
-                        color: '#fff',
-                        fontWeight: 'bold',
-                        fontSize: '1em',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-                        position: 'absolute',
-                        bottom: 0,
-                        width: '100%',
-                        textAlign: 'center'
-                      }}>Casino</span>
-                    </button>
-                  </div>
-                );
-              }
-
-              // Show error message if any
-              if (error) {
-                return (
-                  <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
-                );
-              }
-
-              // Show empty state for non-turn players or when no action is needed
-              return (
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  gap: '20px'
-                }}>
-                  {rpsGame && (
-                    <div style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '15px'
-                    }}>
-                      {rpsResult ? (
-                        // Show result without amounts
-                        <div style={{
-                          textAlign: 'center',
-                          color: '#fff',
-                          fontSize: '1.4em'
-                        }}>
-                          <div>
-                            {rpsResult.landingPlayer.name}'s choice: {rpsResult.landingPlayer.choice}
-                          </div>
-                          {rpsResult.winners.map(winner => (
-                            <div key={winner.socketId} style={{ color: '#f44336' }}>
-                              Lost against {winner.name} ({winner.choice})
-                            </div>
-                          ))}
-                          {rpsResult.losers.map(loser => (
-                            <div key={loser.socketId} style={{ color: '#4CAF50' }}>
-                              Won against {loser.name} ({loser.choice})
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        // Rest of the RPS UI remains the same
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          gap: '15px'
-                        }}>
-                          {((player?.socketId === rpsGame.landingPlayer.socketId) ||
-                            rpsGame.closestPlayers.some(p => p.socketId === player?.socketId)) && !rpsChoice && (
-                            <>
-                              <div style={{ color: '#fff', fontSize: '1.2em', textAlign: 'center' }}>
-                                {player?.socketId === rpsGame.landingPlayer.socketId ? (
-                                  <>
-                                    Playing against {rpsGame.closestPlayers.map(p => p.name).join(', ')}
-                                    <br />Choose your move:
-                                  </>
-                                ) : (
-                                  <>
-                                    Playing against {rpsGame.landingPlayer.name}
-                                    <br />Choose your move:
-                                  </>
-                                )}
-                              </div>
-                              <div style={{
-                                display: 'flex',
-                                gap: '10px'
-                              }}>
-                                {['rock', 'paper', 'scissors'].map(choice => (
-                                  <button
-                                    key={choice}
-                                    onClick={() => {
-                                      setRpsChoice(choice);
-                                      socket.emit('stonePaperScissorsChoice', {
-                                        choice,
-                                        gameId: rpsGame.gameId
-                                      });
-                                    }}
-                                    style={{
-                                      padding: '12px 24px',
-                                      fontSize: '1.1em',
-                                      backgroundColor: '#2196F3',
-                                      color: 'white',
-                                      border: 'none',
-                                      borderRadius: '4px',
-                                      cursor: 'pointer',
-                                      textTransform: 'capitalize'
-                                    }}
-                                  >
-                                    {choice}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                          {rpsChoice && (
-                            <div style={{ color: '#fff', fontSize: '1.2em' }}>
-                              You chose: {rpsChoice}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {/* Only show other game events here, not RPS */}
+            {error && (
+              <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
+            )}
           </div>
         </div>
       </div>
     </div>
+    
   );
 }
