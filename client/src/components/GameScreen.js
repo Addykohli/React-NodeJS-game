@@ -1399,23 +1399,13 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'row',
             justifyContent: 'center',
-            alignItems: 'stretch',
+            alignItems: 'center',
             gap: '0',
             margin: '0 auto',
             width: '100%',
             maxWidth: '1200px',
             flexWrap: 'nowrap',
             height: '100%',
-            ...(window.innerWidth <= 900 ? {
-              display: 'grid',
-              gridTemplateColumns: '1fr 6px 1fr 6px 1fr',
-              width: '100vw',
-              maxWidth: '100vw',
-              minWidth: 0,
-              gap: 0,
-              alignItems: 'center',
-              height: '100%',
-            } : {})
           }}
         >
           {/* Dice Roller Section */}
@@ -1423,14 +1413,13 @@ export default function GameScreen() {
             className="footer-section"
             style={{
               minWidth: 0,
-              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              flex: '1 1 0',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: 'column',
               height: '100%',
-              gridColumn: window.innerWidth <= 900 ? '1' : undefined,
             }}
           >
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
@@ -1471,25 +1460,24 @@ export default function GameScreen() {
             maxWidth: '6px',
             height: '80%',
             alignSelf: 'center',
+            flex: '0 0 6px',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
             margin: '0 0',
             opacity: 1,
             display: 'block',
-            gridColumn: window.innerWidth <= 900 ? '2' : undefined,
           }} />
           {/* Dashboard Section */}
           <div
             className="footer-section"
             style={{
               minWidth: 0,
-              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              flex: '1 1 0',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: 'column',
               height: '100%',
-              gridColumn: window.innerWidth <= 900 ? '3' : undefined,
             }}
           >
             <div
@@ -1543,25 +1531,24 @@ export default function GameScreen() {
             maxWidth: '6px',
             height: '80%',
             alignSelf: 'center',
+            flex: '0 0 6px',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
             margin: '0 0',
             opacity: 1,
             display: 'block',
-            gridColumn: window.innerWidth <= 900 ? '4' : undefined,
           }} />
           {/* Events Section */}
           <div
             className="footer-section"
             style={{
               minWidth: 0,
-              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              flex: '1 1 0',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexDirection: 'column',
               height: '100%',
-              gridColumn: window.innerWidth <= 900 ? '5' : undefined,
             }}
           >
             {(() => {
