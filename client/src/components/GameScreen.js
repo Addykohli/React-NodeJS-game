@@ -1398,7 +1398,7 @@ export default function GameScreen() {
           style={{
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'center',
+            justifyContent: 'space-between', // changed from center to space-between
             alignItems: 'stretch',
             gap: '0',
             margin: '0 auto',
@@ -1412,9 +1412,8 @@ export default function GameScreen() {
           <div
             className="footer-section"
             style={{
-              width: '100%',
-              minWidth: 0,
               flex: '1 1 0',
+              minWidth: 0,
               position: 'relative',
               padding: '10px',
               display: 'flex',
@@ -1424,6 +1423,8 @@ export default function GameScreen() {
               overflow: 'hidden',
               height: '100%',
               minHeight: '120px',
+              width: '100%',
+              maxWidth: '100%',
             }}
           >
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
@@ -1451,7 +1452,7 @@ export default function GameScreen() {
               <DiceRoller
                 testRollMode={testRollMode}
                 hasCasinoPlayed={hasCasinoPlayed}
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}
+                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
               />
             </div>
           </div>
@@ -1473,9 +1474,8 @@ export default function GameScreen() {
           <div
             className="footer-section"
             style={{
-              width: '100%',
-              minWidth: 0,
               flex: '1 1 0',
+              minWidth: 0,
               padding: '10px',
               display: 'flex',
               flexDirection: 'column',
@@ -1483,6 +1483,8 @@ export default function GameScreen() {
               justifyContent: 'center',
               gap: '8px',
               height: '100%',
+              width: '100%',
+              maxWidth: '100%',
             }}
           >
             <div
@@ -1547,15 +1549,16 @@ export default function GameScreen() {
           <div
             className="footer-section"
             style={{
-              width: '100%',
-              minWidth: 0,
               flex: '1 1 0',
+              minWidth: 0,
               padding: '10px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               height: '100%',
+              width: '100%',
+              maxWidth: '100%',
             }}
           >
             {(() => {
@@ -1962,7 +1965,7 @@ export default function GameScreen() {
         <style>{`
           @media (max-width: 900px) {
             .footer-bar {
-              min-height: 180px !important;
+              min-height: 120px !important;
               max-height: 60vh !important;
               height: auto !important;
               padding: 0 0 0 0 !important;
@@ -1975,6 +1978,7 @@ export default function GameScreen() {
               width: 100vw !important;
               flex-wrap: nowrap !important;
               height: 100% !important;
+              justify-content: space-between !important;
             }
             .footer-section {
               flex: 1 1 0 !important;
@@ -1984,6 +1988,18 @@ export default function GameScreen() {
               height: 100% !important;
               padding: 4px !important;
               font-size: 0.95em !important;
+              box-sizing: border-box !important;
+              overflow: hidden !important;
+              display: flex !important;
+              flex-direction: column !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            .footer-section > * {
+              max-width: 100% !important;
+              width: 100% !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
             }
             .quit-game-desktop {
               display: none !important;
@@ -1992,7 +2008,7 @@ export default function GameScreen() {
               display: block !important;
               width: 100% !important;
               padding: 10px 0 20px 0 !important;
-              text-align: center !important;
+                           text-align: center !important;
             }
           }
           @media (min-width: 901px) {
@@ -2007,4 +2023,3 @@ export default function GameScreen() {
     
   );
 }
-//test

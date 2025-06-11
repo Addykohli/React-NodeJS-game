@@ -119,15 +119,25 @@ export function GameProvider({ children }) {
     }
   }, [players, socket?.id]);
 
+  // Utility to ensure each player has a piece field
+  function ensurePiece(players, prevPlayers = []) {
+    return players.map(p => {
+      if (p.piece !== undefined) return p;
+      // Try to preserve piece from previous state if possible
+      const prev = prevPlayers.find(prevP => prevP.socketId === p.socketId);
+      return { ...p, piece: prev?.piece ?? null };
+    });
+  }
+
   useEffect(() => {
     // LOBBY UPDATE
     socket.on('lobbyUpdate', updated => {
-      setPlayers(updated);
+      setPlayers(prev => ensurePiece(updated, prev));
     });
 
     // GAME START
     socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid }) => {
-      setPlayers(ps);
+      setPlayers(prev => ensurePiece(ps, prev));
       setSessionId(sid);
       setGameState('playing');
       setCurrentPlayerId(cid);
@@ -200,12 +210,16 @@ export function GameProvider({ children }) {
     // TILE MOVED
     socket.on('playerMoved', ({ playerId, tileId }) => {
       setPlayers(prev =>
-        prev.map(p => p.socketId === playerId ? { ...p, tileId } : p)
+        prev.map(p => 
+          p.socketId === playerId 
+            ? { ...p, tileId, piece: p.piece ?? null } 
+            : p
+        )
       );
       
       // Update current player's position if it's them
       if (player?.socketId === playerId) {
-        setPlayer(prev => ({ ...prev, tileId }));
+        setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
       }
     });
 
