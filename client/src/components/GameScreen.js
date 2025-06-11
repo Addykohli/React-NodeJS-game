@@ -929,6 +929,52 @@ export default function GameScreen() {
               )}
             </React.Fragment>
           ))}
+
+          {/* Quit Game Button - Mobile only, stick to bottom of side panel */}
+          <div
+            className="quit-game-mobile"
+            style={{
+              position: 'absolute',
+              left: 0,
+              bottom: 0,
+              width: '180px', // match the bar width
+              padding: '10px 0 20px 0',
+              textAlign: 'center',
+              background: 'rgba(0,0,0,1)',
+              borderTop: '2px solid #333',
+              zIndex: 2000,
+              display: 'block',
+            }}
+          >
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+                  socket.emit('quitGame');
+                  handleQuit();
+                }
+              }}
+              disabled={isMyTurn}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1.2em',
+                backgroundColor: isMyTurn ? '#666666' : '#ff4444',
+                color: 'white',
+                border: '5px outset #fff',
+                borderRadius: '8px',
+                cursor: isMyTurn ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.3s',
+                opacity: isMyTurn ? 0.7 : 1,
+                width: '90%',
+                maxWidth: '160px',
+                margin: '0 auto',
+                display: 'block',
+              }}
+              onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+              onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+            >
+              Quit Game
+            </button>
+          </div>
         </div>
 
         {/* Active Panel Content */}
@@ -1408,13 +1454,16 @@ export default function GameScreen() {
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div style={{
+          <div className="footer-separator" style={{
             width: '3px',
-            height: '100%',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-            alignSelf: 'center',
             minWidth: '3px',
             maxWidth: '3px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
+            margin: '0 0',
+            opacity: 1,
+            display: 'block',
           }} />
 
           {/* Dashboard Section */}
@@ -1479,13 +1528,16 @@ export default function GameScreen() {
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div style={{
+          <div className="footer-separator" style={{
             width: '3px',
-            height: '100%',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-            alignSelf: 'center',
             minWidth: '3px',
             maxWidth: '3px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
+            margin: '0 0',
+            opacity: 1,
+            display: 'block',
           }} />
 
           {/* Events Section */}
@@ -1947,38 +1999,7 @@ export default function GameScreen() {
           }
         `}</style>
       </div>
-
-      {/* Quit Game Button - Mobile only, placed at the bottom of the side panel */}
-      <div className="quit-game-mobile">
-        <button
-          onClick={() => {
-            if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
-              socket.emit('quitGame');
-              handleQuit();
-            }
-          }}
-          disabled={isMyTurn}
-          style={{
-            padding: '10px 20px',
-            fontSize: '1.2em',
-            backgroundColor: isMyTurn ? '#666666' : '#ff4444',
-            color: 'white',
-            border: '5px outset #fff',
-            borderRadius: '8px',
-            cursor: isMyTurn ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.3s',
-            opacity: isMyTurn ? 0.7 : 1,
-            width: '90%',
-            maxWidth: '300px',
-            margin: '0 auto',
-            display: 'block',
-          }}
-          onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
-          onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
-        >
-          Quit Game
-        </button>
-      </div>
+      
     </div>
     
   );
