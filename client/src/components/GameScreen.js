@@ -1289,28 +1289,33 @@ export default function GameScreen() {
 
       {/* Fixed Footer */}
       <div
+        className="footer-bar"
         style={{
           position: 'fixed',
           bottom: 0,
           left: 0,
           right: 0,
-          minHeight: '300px',
+          minHeight: '180px',
           backgroundColor: 'rgba(0, 0, 0, 0.95)',
           borderTop: '2px solid #666',
           transition: 'all 0.3s ease',
           display: 'flex',
           flexDirection: 'column',
-          padding: '20px',
-          zIndex: 99
+          padding: '20px 10px 10px 10px',
+          zIndex: 99,
+          height: 'auto',
+          maxHeight: '40vh',
         }}
       >
-        {/* Quit Game Button - Aligned Left */}
+        {/* Quit Game Button - Desktop only */}
         <div
+          className="quit-game-desktop"
           style={{
             position: 'absolute',
             left: '20px',
             top: '50%',
-            transform: 'translateY(-50%)'
+            transform: 'translateY(-50%)',
+            display: 'block',
           }}
         >
           <button
@@ -1330,7 +1335,9 @@ export default function GameScreen() {
               borderRadius: '8px',
               cursor: isMyTurn ? 'not-allowed' : 'pointer',
               transition: 'background-color 0.3s',
-              opacity: isMyTurn ? 0.7 : 1
+              opacity: isMyTurn ? 0.7 : 1,
+              width: '100%',
+              maxWidth: '180px',
             }}
             onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
             onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
@@ -1341,33 +1348,35 @@ export default function GameScreen() {
 
         {/* Center Sections Container */}
         <div
+          className="footer-sections"
           style={{
             display: 'flex',
             flexDirection: 'row',
             justifyContent: 'center',
-            alignItems: 'center',
-            gap: '40px',
+            alignItems: 'stretch',
+            gap: '0',
             margin: '0 auto',
             width: '100%',
             maxWidth: '1200px',
-            flexWrap: 'wrap',
+            flexWrap: 'nowrap',
+            height: '100%',
           }}
         >
           {/* Dice Roller Section */}
           <div
+            className="footer-section"
             style={{
               width: '100%',
-              maxWidth: '400px',
-              minWidth: '260px',
+              minWidth: 0,
+              flex: '1 1 0',
               position: 'relative',
-              padding: '20px',
-              height: '250px',
+              padding: '10px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
-              flex: 1,
+              height: '100%',
             }}
           >
             {isMyTurn && (
@@ -1382,7 +1391,8 @@ export default function GameScreen() {
                       backgroundColor: 'rgba(0, 0, 0, 0.8)',
                       color: '#fff',
                       padding: '8px 16px',
-                      zIndex: 100
+                      zIndex: 100,
+                      fontSize: '1em',
                     }}
                   >
                     {testRollInput}
@@ -1398,48 +1408,47 @@ export default function GameScreen() {
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div
-            style={{
-              width: '3px',
-              height: '200px',
-              background:
-                'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-              alignSelf: 'center',
-              display: 'none', // Hide on mobile, show on desktop via media query
-            }}
-            className="footer-separator"
-          />
+          <div style={{
+            width: '3px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+            alignSelf: 'center',
+            minWidth: '3px',
+            maxWidth: '3px',
+          }} />
 
           {/* Dashboard Section */}
           <div
+            className="footer-section"
             style={{
               width: '100%',
-              maxWidth: '400px',
-              minWidth: '260px',
-              height: '250px',
-              padding: '20px',
+              minWidth: 0,
+              flex: '1 1 0',
+              padding: '10px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '15px',
-              flex: 1,
+              gap: '8px',
+              height: '100%',
             }}
           >
             <div
               style={{
-                fontSize: '1.8em',
+                fontSize: '1.3em',
                 color: 'white',
-                textAlign: 'center'
+                textAlign: 'center',
+                wordBreak: 'break-word',
               }}
             >
               {player?.name}
             </div>
             <div
               style={{
-                fontSize: '1.6em',
+                fontSize: '1.1em',
                 color: '#4CAF50',
-                textAlign: 'center'
+                textAlign: 'center',
+                wordBreak: 'break-word',
               }}
             >
               ${player?.money?.toLocaleString()}
@@ -1447,9 +1456,10 @@ export default function GameScreen() {
             {player?.loan > 0 && (
               <div
                 style={{
-                  fontSize: '1.4em',
+                  fontSize: '1em',
                   color: '#ff4444',
-                  textAlign: 'center'
+                  textAlign: 'center',
+                  wordBreak: 'break-word',
                 }}
               >
                 Loan: ${player?.loan?.toLocaleString()}
@@ -1457,10 +1467,11 @@ export default function GameScreen() {
             )}
             <div
               style={{
-                fontSize: '1.4em',
+                fontSize: '1em',
                 color: 'white',
                 textAlign: 'center',
-                marginTop: '10px'
+                marginTop: '4px',
+                wordBreak: 'break-word',
               }}
             >
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
@@ -1468,31 +1479,28 @@ export default function GameScreen() {
           </div>
 
           {/* Vertical Gradient Separator */}
-          <div
-            style={{
-              width: '3px',
-              height: '200px',
-              background:
-                'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
-              alignSelf: 'center',
-              display: 'none', // Hide on mobile, show on desktop via media query
-            }}
-            className="footer-separator"
-          />
+          <div style={{
+            width: '3px',
+            height: '100%',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)',
+            alignSelf: 'center',
+            minWidth: '3px',
+            maxWidth: '3px',
+          }} />
 
           {/* Events Section */}
           <div
+            className="footer-section"
             style={{
               width: '100%',
-              maxWidth: '400px',
-              minWidth: '260px',
-              height: '250px',
-              padding: '20px',
+              minWidth: 0,
+              flex: '1 1 0',
+              padding: '10px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              flex: 1,
+              height: '100%',
             }}
           >
             {(() => {
@@ -1898,24 +1906,78 @@ export default function GameScreen() {
         {/* Responsive styles for mobile */}
         <style>{`
           @media (max-width: 900px) {
-            .footer-separator {
-              display: none !important;
+            .footer-bar {
+              min-height: 120px !important;
+              max-height: 40vh !important;
+              height: auto !important;
+              padding: 0 0 0 0 !important;
             }
-            div[style*='display: flex'][style*='flex-direction: row'] {
-              flex-direction: column !important;
-              gap: 10px !important;
+            .footer-sections {
+              flex-direction: row !important;
+              gap: 0 !important;
               align-items: stretch !important;
               max-width: 100vw !important;
+              width: 100vw !important;
+              flex-wrap: nowrap !important;
+              height: 100% !important;
             }
-            div[style*='max-width: 400px'] {
-              max-width: 100vw !important;
+            .footer-section {
+              flex: 1 1 0 !important;
               min-width: 0 !important;
+              width: 1% !important;
+              max-width: 100vw !important;
+              height: 100% !important;
+              padding: 4px !important;
+              font-size: 0.95em !important;
+            }
+            .quit-game-desktop {
+              display: none !important;
+            }
+            .quit-game-mobile {
+              display: block !important;
               width: 100% !important;
-              height: auto !important;
-              padding: 10px !important;
+              padding: 10px 0 20px 0 !important;
+              text-align: center !important;
+            }
+          }
+          @media (min-width: 901px) {
+            .quit-game-mobile {
+              display: none !important;
             }
           }
         `}</style>
+      </div>
+
+      {/* Quit Game Button - Mobile only, placed at the bottom of the side panel */}
+      <div className="quit-game-mobile">
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+              socket.emit('quitGame');
+              handleQuit();
+            }
+          }}
+          disabled={isMyTurn}
+          style={{
+            padding: '10px 20px',
+            fontSize: '1.2em',
+            backgroundColor: isMyTurn ? '#666666' : '#ff4444',
+            color: 'white',
+            border: '5px outset #fff',
+            borderRadius: '8px',
+            cursor: isMyTurn ? 'not-allowed' : 'pointer',
+            transition: 'background-color 0.3s',
+            opacity: isMyTurn ? 0.7 : 1,
+            width: '90%',
+            maxWidth: '300px',
+            margin: '0 auto',
+            display: 'block',
+          }}
+          onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+          onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+        >
+          Quit Game
+        </button>
       </div>
     </div>
     
