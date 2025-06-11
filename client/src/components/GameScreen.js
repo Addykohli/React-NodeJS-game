@@ -1406,24 +1406,31 @@ export default function GameScreen() {
             maxWidth: '1200px',
             flexWrap: 'nowrap',
             height: '100%',
+            ...(window.innerWidth <= 900 ? {
+              display: 'grid',
+              gridTemplateColumns: '1fr 6px 1fr 6px 1fr',
+              width: '100vw',
+              maxWidth: '100vw',
+              minWidth: 0,
+              gap: 0,
+              alignItems: 'center',
+              height: '100%',
+            } : {})
           }}
         >
           {/* Dice Roller Section */}
           <div
             className="footer-section"
             style={{
-              width: '100%',
               minWidth: 0,
-              flex: '1 1 0',
-              position: 'relative',
-              padding: '10px',
+              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              overflow: 'hidden',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              overflow: 'hidden',
+              flexDirection: 'column',
               height: '100%',
-              minHeight: '120px',
+              gridColumn: window.innerWidth <= 900 ? '1' : undefined,
             }}
           >
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
@@ -1448,41 +1455,41 @@ export default function GameScreen() {
                   )}
                 </>
               )}
-              <DiceRoller
-                testRollMode={testRollMode}
-                hasCasinoPlayed={hasCasinoPlayed}
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}
-              />
+              <div style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DiceRoller
+                  testRollMode={testRollMode}
+                  hasCasinoPlayed={hasCasinoPlayed}
+                  style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Vertical Gradient Separator */}
+          {/* Separator 1 */}
           <div className="footer-separator" style={{
             width: '6px',
             minWidth: '6px',
             maxWidth: '6px',
-            height: '100%',
+            height: '80%',
+            alignSelf: 'center',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
-            alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
             display: 'block',
+            gridColumn: window.innerWidth <= 900 ? '2' : undefined,
           }} />
-
           {/* Dashboard Section */}
           <div
             className="footer-section"
             style={{
-              width: '100%',
               minWidth: 0,
-              flex: '1 1 0',
-              padding: '10px',
+              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              overflow: 'hidden',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              flexDirection: 'column',
               height: '100%',
+              gridColumn: window.innerWidth <= 900 ? '3' : undefined,
             }}
           >
             <div
@@ -1529,33 +1536,32 @@ export default function GameScreen() {
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
             </div>
           </div>
-
-          {/* Vertical Gradient Separator */}
+          {/* Separator 2 */}
           <div className="footer-separator" style={{
             width: '6px',
             minWidth: '6px',
             maxWidth: '6px',
-            height: '100%',
+            height: '80%',
+            alignSelf: 'center',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
-            alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
             display: 'block',
+            gridColumn: window.innerWidth <= 900 ? '4' : undefined,
           }} />
-
           {/* Events Section */}
           <div
             className="footer-section"
             style={{
-              width: '100%',
               minWidth: 0,
-              flex: '1 1 0',
-              padding: '10px',
+              maxWidth: window.innerWidth <= 900 ? '100vw' : '400px',
+              overflow: 'hidden',
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              flexDirection: 'column',
               height: '100%',
+              gridColumn: window.innerWidth <= 900 ? '5' : undefined,
             }}
           >
             {(() => {
