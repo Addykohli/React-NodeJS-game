@@ -848,6 +848,28 @@ export default function GameScreen() {
     socket.emit('buyProperty');
   };
 
+  // Add useEffect to persist piece information
+  useEffect(() => {
+    if (!socket) return;
+
+    // Request player state when component mounts
+    socket.emit('requestPlayerState');
+
+    // Listen for player state response
+    socket.on('playerStateResponse', (playerState) => {
+      if (playerState) {
+        setPlayer(prev => ({
+          ...prev,
+          piece: playerState.piece // Ensure piece is restored
+        }));
+      }
+    });
+
+    return () => {
+      socket.off('playerStateResponse');
+    };
+  }, [socket, setPlayer]);
+
   return (
     <div style={{
       display: 'flex',
@@ -1398,7 +1420,7 @@ export default function GameScreen() {
           style={{
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between', // changed from center to space-between
+            justifyContent: 'space-between',
             alignItems: 'stretch',
             gap: '0',
             margin: '0 auto',
@@ -1406,6 +1428,7 @@ export default function GameScreen() {
             maxWidth: '1200px',
             flexWrap: 'nowrap',
             height: '100%',
+            padding: '0 10px', // Add padding
           }}
         >
           {/* Dice Roller Section */}
@@ -1968,23 +1991,24 @@ export default function GameScreen() {
               min-height: 120px !important;
               max-height: 60vh !important;
               height: auto !important;
-              padding: 0 0 0 0 !important;
+              padding: 10px 5px !important;
             }
             .footer-sections {
               flex-direction: row !important;
-              gap: 0 !important;
+              gap: 10px !important; // Add gap between sections
               align-items: stretch !important;
-              max-width: 100vw !important;
-              width: 100vw !important;
+              max-width: 100% !important;
+              width: 100% !important;
               flex-wrap: nowrap !important;
               height: 100% !important;
               justify-content: space-between !important;
+              padding: 0 5px !important;
             }
             .footer-section {
-              flex: 1 1 0 !important;
+              flex: 1 !important;
               min-width: 0 !important;
-              width: 1% !important;
-              max-width: 100vw !important;
+              width: 33% !important; // Set equal widths
+              max-width: 33% !important;
               height: 100% !important;
               padding: 4px !important;
               font-size: 0.95em !important;
@@ -1995,23 +2019,20 @@ export default function GameScreen() {
               align-items: center !important;
               justify-content: center !important;
             }
-            .footer-section > * {
-              max-width: 100% !important;
-              width: 100% !important;
-              overflow: hidden !important;
-              text-overflow: ellipsis !important;
-            }
-            .quit-game-desktop {
-              display: none !important;
-            }
-            .quit-game-mobile {
-              display: block !important;
-              width: 100% !important;
-              padding: 10px 0 20px 0 !important;
-                           text-align: center !important;
+            .footer-separator {
+              display: none !important; // Hide separators on mobile
             }
           }
+          
           @media (min-width: 901px) {
+            .footer-sections {
+              padding: 0 20px !important;
+            }
+            .footer-section {
+              flex: 1 !important;
+              width: 33% !important;
+                           max-width: 33% !important;
+            }
             .quit-game-mobile {
               display: none !important;
             }
