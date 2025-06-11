@@ -1399,7 +1399,7 @@ export default function GameScreen() {
             display: 'flex',
             flexDirection: 'row',
             justifyContent: 'center',
-            alignItems: 'center',
+            alignItems: 'stretch',
             gap: '0',
             margin: '0 auto',
             width: '100%',
@@ -1412,14 +1412,18 @@ export default function GameScreen() {
           <div
             className="footer-section"
             style={{
+              width: '100%',
               minWidth: 0,
               flex: '1 1 0',
-              overflow: 'hidden',
+              position: 'relative',
+              padding: '10px',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              flexDirection: 'column',
+              overflow: 'hidden',
               height: '100%',
+              minHeight: '120px',
             }}
           >
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
@@ -1444,39 +1448,40 @@ export default function GameScreen() {
                   )}
                 </>
               )}
-              <div style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <DiceRoller
-                  testRollMode={testRollMode}
-                  hasCasinoPlayed={hasCasinoPlayed}
-                  style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                />
-              </div>
+              <DiceRoller
+                testRollMode={testRollMode}
+                hasCasinoPlayed={hasCasinoPlayed}
+                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}
+              />
             </div>
           </div>
-          {/* Separator 1 */}
+
+          {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '6px',
             minWidth: '6px',
             maxWidth: '6px',
-            height: '80%',
-            alignSelf: 'center',
-            flex: '0 0 6px',
+            height: '100%',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
             display: 'block',
           }} />
+
           {/* Dashboard Section */}
           <div
             className="footer-section"
             style={{
+              width: '100%',
               minWidth: 0,
               flex: '1 1 0',
-              overflow: 'hidden',
+              padding: '10px',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              flexDirection: 'column',
+              gap: '8px',
               height: '100%',
             }}
           >
@@ -1524,30 +1529,32 @@ export default function GameScreen() {
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
             </div>
           </div>
-          {/* Separator 2 */}
+
+          {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '6px',
             minWidth: '6px',
             maxWidth: '6px',
-            height: '80%',
-            alignSelf: 'center',
-            flex: '0 0 6px',
+            height: '100%',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
             display: 'block',
           }} />
+
           {/* Events Section */}
           <div
             className="footer-section"
             style={{
+              width: '100%',
               minWidth: 0,
               flex: '1 1 0',
-              overflow: 'hidden',
+              padding: '10px',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              flexDirection: 'column',
               height: '100%',
             }}
           >
@@ -2000,3 +2007,4 @@ export default function GameScreen() {
     
   );
 }
+//test
