@@ -76,11 +76,15 @@ export function GameProvider({ children }) {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        console.log('[GameContext] Reconnecting with data:', playerData);
-        setPlayer(playerData); // Set player immediately to preserve piece
+        console.log('[GameContext] Reconnecting with data:', {
+          name: playerData.name,
+          piece: playerData.piece,
+          savedState: savedPlayer
+        });
+        
         socket.emit('joinLobby', { 
           name: playerData.name,
-          piece: playerData.piece // Include piece in reconnection
+          piece: playerData.piece 
         });
       }
     };
@@ -89,14 +93,20 @@ export function GameProvider({ children }) {
     return () => socket.off('connect', handleReconnect);
   }, [socket]);
 
-  // Update synchronization between players array and current player
+  // Add piece state sync debugging
   useEffect(() => {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
+      console.log('[GameContext] Syncing player state:', {
+        socketId: socket?.id,
+        foundPlayer: !!me,
+        piece: me?.piece,
+        currentPiece: player?.piece
+      });
       if (me) {
         setPlayer(prev => ({
           ...me,
-          piece: me.piece || prev?.piece // Keep existing piece if not in updated data
+          piece: me.piece || prev?.piece
         }));
       }
     }

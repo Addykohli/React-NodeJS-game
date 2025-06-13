@@ -93,13 +93,19 @@ const Board = () => {
 
         {/* Player pieces */}
         {players.map((p, i) => {
+          console.log('[Board] Rendering piece for player:', {
+            name: p.name,
+            piece: p.piece,
+            socketId: p.socketId
+          });
+          
           if (!p) {
-            console.log(`[Board.js] Missing player at index ${i}:`, p);
+            console.log(`[Board] Missing player at index ${i}`);
             return null;
           }
           const imgSrc = pieceImages[p.piece];
           if (!imgSrc) {
-            console.log(`[Board.js] Player ${p.name} has invalid piece:`, p.piece);
+            console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
             return null;
           }
           const tile = tiles.find(t => t.id === p.tileId);
