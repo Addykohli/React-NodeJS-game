@@ -454,9 +454,9 @@ io.on('connection', socket => {
       // Now handle multiple closest players
       if (pathInfo.closestPlayers.length > 0) {
         const gameId = Date.now();
-        const closestPlayers = pathInfo.closestPlayers.map playerName => 
-          engine.session.players.find(p => p.name === playerName)
-        ).filter(Boolean);
+        const closestPlayers = pathInfo.closestPlayers.map(playerName => {
+          return players.find(p => p.name === playerName);
+        }).filter(Boolean);
         
         // Initialize the game state with multiple players
         activeRPSGames[gameId] = {
