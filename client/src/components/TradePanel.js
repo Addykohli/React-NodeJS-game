@@ -148,7 +148,7 @@ const TradePanel = () => {
           style={{
             width: '100%',
             padding: '10px',
-            backgroundColor: '#4CAF50',
+            backgroundColor: 'rgb(175, 76, 80)',
             border: 'none',
             borderRadius: '5px',
             color: 'white',
@@ -274,7 +274,7 @@ const TradePanel = () => {
           style={{
             width: '100%',
             padding: '10px',
-            backgroundColor: '#2196F3',
+            backgroundColor: 'rgb(103, 213, 132)',
             border: 'none',
             borderRadius: '5px',
             color: 'white',
