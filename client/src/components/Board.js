@@ -6,30 +6,38 @@ import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
-// Map piece names to images with better error handling
-const pieceImages = {};
-for (let i = 1; i <= 8; i++) {
-  try {
-    pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
-    // Also map without .png extension for flexibility
-    pieceImages[`piece${i}`] = require(`../assets/pieces/piece${i}.png`);
-  } catch (err) {
-    console.error(`Failed to load piece${i} image:`, err);
-  }
-}
-
 // Reference piece height in px
 const REFERENCE_HEIGHT = 165;
 
 const Board = () => {
   const { players } = useContext(GameContext);
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
+  const [pieceImages, setPieceImages] = useState({});
   const [pieceScales, setPieceScales] = useState({});
 
   useEffect(() => {
     const img = new window.Image();
     img.onload = () => setBoardSize({ width: img.width, height: img.height });
     img.src = boardImage;
+  }, []);
+
+  // Load piece images dynamically
+  useEffect(() => {
+    const loadPieceImages = async () => {
+      const images = {};
+      for (let i = 1; i <= 8; i++) {
+        try {
+          const pieceImage = require(`../assets/pieces/piece${i}.png`);
+          images[`piece${i}.png`] = pieceImage;
+          images[`piece${i}`] = pieceImage; // Also store without .png
+        } catch (err) {
+          console.error(`Failed to load piece${i} image:`, err);
+        }
+      }
+      setPieceImages(images);
+    };
+
+    loadPieceImages();
   }, []);
 
   // Calculate scales for all pieces based on piece1's height
@@ -56,16 +64,18 @@ const Board = () => {
     };
 
     calculateScales();
-  }, []);
+  }, [pieceImages]);
 
   // Add debug logging for pieces
   useEffect(() => {
-    console.log('Available piece images:', Object.keys(pieceImages));
-    console.log('Current players pieces:', players.map(p => ({
-      name: p.name,
-      piece: p.piece
-    })));
-  }, [players]);
+    console.log('Pieces debug:', {
+      loadedPieces: Object.keys(pieceImages),
+      playerPieces: players.map(p => ({
+        name: p.name,
+        piece: p.piece
+      }))
+    });
+  }, [pieceImages, players]);
 
   return (
     <div style={{
@@ -108,20 +118,21 @@ const Board = () => {
 
         {/* Player pieces */}
         {players.map((p, i) => {
-          if (!p) {
-            console.log(`[Board.js] Missing player at index ${i}:`, p);
+          if (!p?.piece) {
+            console.log(`[Board] Player missing piece:`, p);
             return null;
           }
-          const imgSrc = pieceImages[p.piece];
+
+          // Try both formats for piece image
+          const imgSrc = pieceImages[p.piece] || pieceImages[p.piece + '.png'];
           if (!imgSrc) {
-            console.log(`[Board.js] Player ${p.name} has invalid piece:`, p.piece);
+            console.error(`[Board] Invalid piece for ${p.name}:`, p.piece);
             return null;
           }
+
           const tile = tiles.find(t => t.id === p.tileId);
-          if (!tile) {
-            console.log(`[Board.js] Player ${p.name} on missing tileId:`, p.tileId);
-            return null;
-          }
+          if (!tile) return null;
+
           const { x, y } = tile.position;
           const dimensions = pieceScales[p.piece] || { width: 'auto', height: REFERENCE_HEIGHT };
           

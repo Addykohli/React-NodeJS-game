@@ -591,7 +591,7 @@ const PropertyDisplay = () => {
                 zIndex: isExpanded ? ownedProperties.length : index,
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '14px',
+                padding: '5px',
                 boxSizing: 'border-box',
                 backgroundColor: 'rgb(173, 216, 230)',
                 cursor: isLastProperty ? 'default' : 'pointer'
@@ -616,7 +616,7 @@ const PropertyDisplay = () => {
               }}>
                 <div style={{
                   fontSize: '1.96rem',
-                  marginBottom: '14px',
+                  marginBottom: '1px',
                   textAlign: 'left',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',

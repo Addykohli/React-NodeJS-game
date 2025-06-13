@@ -212,14 +212,18 @@ export function GameProvider({ children }) {
       setPlayers(prev =>
         prev.map(p => 
           p.socketId === playerId 
-            ? { ...p, tileId, piece: p.piece ?? null } 
+            ? { ...p, tileId, piece: p.piece } // Ensure piece is preserved
             : p
         )
       );
       
       // Update current player's position if it's them
       if (player?.socketId === playerId) {
-        setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
+        setPlayer(prev => ({ 
+          ...prev, 
+          tileId, 
+          piece: prev?.piece // Preserve piece
+        }));
       }
     });
 
