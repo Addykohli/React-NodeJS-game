@@ -77,25 +77,25 @@ export function GameProvider({ children }) {
       
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        // Emit joinLobby with the saved name and piece
+        console.log('[GameContext] Reconnecting with data:', playerData);
+        
+        // Include piece in reconnection data
         socket.emit('joinLobby', { 
           name: playerData.name,
-          piece: playerData.piece // Include piece in reconnection
+          piece: playerData.piece // Add piece to reconnection data
         });
       }
     };
 
     socket.on('connect', handleReconnect);
-
+    
     // Initial connection check
     if (socket.connected && player) {
       handleReconnect();
     }
 
-    return () => {
-      socket.off('connect', handleReconnect);
-    };
-  }, [player]);
+    return () => socket.off('connect', handleReconnect);
+  }, [player, socket]);
 
   // Clear session data on quit
   const handleQuit = () => {

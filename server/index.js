@@ -454,7 +454,7 @@ io.on('connection', socket => {
       // Now handle multiple closest players
       if (pathInfo.closestPlayers.length > 0) {
         const gameId = Date.now();
-        const closestPlayers = pathInfo.closestPlayers.map(playerName => 
+        const closestPlayers = pathInfo.closestPlayers.map playerName => 
           engine.session.players.find(p => p.name === playerName)
         ).filter(Boolean);
         
