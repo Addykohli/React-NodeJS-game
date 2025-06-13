@@ -867,7 +867,7 @@ export default function GameScreen() {
         position: 'fixed',
         right: '0px', 
         height: '100%',
-        width: activeSidePanel ? '680px' : '180px',
+        width: activeSidePanel ? '680px' : '210px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
         display: 'flex'
@@ -879,7 +879,7 @@ export default function GameScreen() {
           display: 'flex',
           flexDirection: 'column',
           gap: '0px',
-          padding: '90px 0 30px 0',
+          padding: '80px 0 30px 0',
           backgroundColor: 'rgba(0, 0, 0, 1)',
           borderLeft: '4px solid rgb(52, 52, 52)',
           position: 'relative'
@@ -937,7 +937,7 @@ export default function GameScreen() {
               position: 'absolute',
               left: 0,
               bottom: 0,
-              width: '180px', // match the bar width
+              width: '210px', // match the bar width
               padding: '10px 0 10px 0',
               textAlign: 'center',
               background: 'rgba(0,0,0,1)',
@@ -984,7 +984,7 @@ export default function GameScreen() {
               key={panelId}
               style={{
                 position: 'absolute',
-                left: '180px',
+                left: '210px',
                 top: 0,
                 width: '470px',
                 height: '100%',
@@ -1269,7 +1269,9 @@ export default function GameScreen() {
         justifyContent: 'center',
         position: 'relative',
         top: '120px',
+        left: '320px',
         marginBottom: '700px',
+        marginRight: '640px',
         padding: '60px 20px 0px 20px', 
         minHeight: 'calc(100vh - 300px)' 
       }}>
