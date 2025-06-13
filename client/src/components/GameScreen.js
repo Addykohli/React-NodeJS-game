@@ -1962,15 +1962,12 @@ export default function GameScreen() {
         <style>{`
           @media (max-width: 900px) {
             .footer-bar {
-              position: fixed !important;
               min-height: 200px !important;
               max-height: 60vh !important;
               height: auto !important;
               padding: 0 0 0 0 !important;
               left: 0 !important;
-              right: 210px !important;
-              bottom: 0 !important;
-              width: 100vw !important;
+              right: 180 !important;
             }
             .footer-sections {
               flex-direction: row !important;
@@ -1979,11 +1976,11 @@ export default function GameScreen() {
               flex-wrap: nowrap !important;
               height: 190px !important;
               justify-content: space-between !important;
-              margin-right: 210px !important;
+              margin-right: !important;
             }
             .footer-section {
               flex: 1 1 0 !important;
-              min-width: 210px !important;
+              min-width: 210 !important;
               width: 1% !important;
               max-width: 100vw !important;
               height: 100% !important;
@@ -2002,18 +1999,19 @@ export default function GameScreen() {
               overflow: hidden !important;
               text-overflow: ellipsis !important;
             }
-          }
-          @media (max-width: 900px) {
-            [class*='side-panel'] {
-              position: fixed !important;
-              height: 100vh !important;
-              right: 0 !important;
-              top: 0 !important;
-              z-index: 1000 !important;
+            .quit-game-desktop {
+              display: none !important;
             }
-            [class*='panel-content'] {
-              height: 100vh !important;
-              max-height: 100vh !important;
+            .quit-game-mobile {
+              display: block !important;
+              width: 100% !important;
+              padding: 10px 0 200px 0 !important;
+                           text-align: center !important;
+            }
+          }
+          @media (min-width: 901px) {
+            .quit-game-mobile {
+              display: none !important;
             }
           }
         `}</style>
