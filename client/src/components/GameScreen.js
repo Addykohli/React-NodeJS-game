@@ -938,7 +938,7 @@ export default function GameScreen() {
               left: 0,
               bottom: 0,
               width: '180px', // match the bar width
-              padding: '10px 0 20px 0',
+              padding: '10px 0 10px 0',
               textAlign: 'center',
               background: 'rgba(0,0,0,1)',
               zIndex: 2000,
@@ -954,7 +954,7 @@ export default function GameScreen() {
               }}
               disabled={isMyTurn}
               style={{
-                padding: '10px 20px',
+                padding: '10px 10px',
                 fontSize: '1.2em',
                 backgroundColor: isMyTurn ? '#666666' : '#ff4444',
                 color: 'white',
@@ -1962,16 +1962,17 @@ export default function GameScreen() {
               max-height: 60vh !important;
               height: auto !important;
               padding: 0 0 0 0 !important;
+              left: 0 !important;
+              right: 180 !important;
             }
             .footer-sections {
               flex-direction: row !important;
               gap: 0 !important;
               align-items: stretch !important;
-              max-width: 100vw !important;
-              width: 100vw !important;
               flex-wrap: nowrap !important;
               height: 190px !important;
               justify-content: space-between !important;
+              margin-right: !important;
             }
             .footer-section {
               flex: 1 1 0 !important;
