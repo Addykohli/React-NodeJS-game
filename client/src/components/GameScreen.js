@@ -977,285 +977,287 @@ export default function GameScreen() {
         </div>
 
         {/* Active Panel Content */}
-        {Object.entries(panelConfigs).map(([panelId, config]) => (
-          <div
-            key={panelId}
-            style={{
-              position: 'absolute',
-              left: '180px',
-              top: 0,
-              width: '470px',
-              height: '100%',
-              backgroundColor: `${config.color}`,
-              transform: activeSidePanel === panelId ? 'translateX(0)' : 'translateX(100%)',
-              transition: 'transform 0.3s ease',
-              padding: '60px 40px 20px 20px', // Added top padding
-              color: 'white',
-              overflowY: 'auto',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            <h2 style={{ marginBottom: '20px' }}>{config.title}</h2>
-            {/* Panel specific content */}
-            {panelId === 'info' && (
-              <div style={{
-                height: 'calc(100vh - 250px)',
+        {activeSidePanel && Object.entries(panelConfigs)
+          .filter(([panelId]) => panelId === activeSidePanel)
+          .map(([panelId, config]) => (
+            <div
+              key={panelId}
+              style={{
+                position: 'absolute',
+                left: '180px',
+                top: 0,
+                width: '470px',
+                height: '100%',
+                backgroundColor: `${config.color}`,
+                transform: 'translateX(0)',
+                transition: 'transform 0.3s ease',
+                padding: '60px 40px 20px 20px',
+                color: 'white',
                 overflowY: 'auto',
-                padding: '15px',
                 display: 'flex',
-                flexDirection: 'column-reverse',
-                backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                borderRadius: '8px',
-                gap: '15px'
-              }}>
-                {gameEvents.map((event, index) => {
-                  // Process the message to color-code money amounts
-                  const message = event.message.replace(
-                    /\$(\d+,?\d*)/g,
-                    (match, amount) => {
-                      // Determine if this is a gain or loss
-                      const isGain = event.message.includes('received') || 
-                                   event.message.includes('won') ||
-                                   event.message.includes('bonus');
-                      const isLoss = event.message.includes('paid') || 
-                                   event.message.includes('lost');
+                flexDirection: 'column'
+              }}
+            >
+              <h2 style={{ marginBottom: '20px' }}>{config.title}</h2>
+              {/* Panel specific content */}
+              {panelId === 'info' && (
+                <div style={{
+                  height: 'calc(100vh - 250px)',
+                  overflowY: 'auto',
+                  padding: '15px',
+                  display: 'flex',
+                  flexDirection: 'column-reverse',
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  borderRadius: '8px',
+                  gap: '15px'
+                }}>
+                  {gameEvents.map((event, index) => {
+                    // Process the message to color-code money amounts
+                    const message = event.message.replace(
+                      /\$(\d+,?\d*)/g,
+                      (match, amount) => {
+                        // Determine if this is a gain or loss
+                        const isGain = event.message.includes('received') || 
+                                     event.message.includes('won') ||
+                                     event.message.includes('bonus');
+                        const isLoss = event.message.includes('paid') || 
+                                     event.message.includes('lost');
                       
-                      return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
-                    }
-                  );
-
-                  return (
-                    <div
-                      key={index}
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                        padding: '12px 15px',
-                        borderRadius: '8px',
-                        fontSize: '1.2em',
-                        lineHeight: '1.4'
-                      }}
-                      dangerouslySetInnerHTML={{ __html: message }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-            {panelId === 'bank' && (
-              <div>
-                {/* Borrow Section */}
-                <div style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                  padding: '20px',
-                  borderRadius: '8px',
-                  marginTop: '70px'
-                }}>
-                  <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontSize: '1em',
-                    marginBottom: '20px',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}>
-                    <button
-                      onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
-                      style={{
-                        padding: '8px 12px',
-                        fontSize: '1.7em',
-                        cursor: 'pointer',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        border: 'none',
-                        color: 'white',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      -
-                    </button>
-                    <div style={{
-                      padding: '8px 16px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      borderRadius: '4px',
-                      minWidth: '100px',
-                      textAlign: 'center',
-                      fontSize: '1.7em'
-                    }}>
-                      ${borrowAmount}
-                    </div>
-                    <button
-                      onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
-                      style={{
-                        padding: '8px 12px',
-                        fontSize: '1.7em',
-                        cursor: 'pointer',
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        border: 'none',
-                        color: 'white',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (socket) {
-                        socket.emit('borrowMoney', { amount: borrowAmount });
-                        setBorrowAmount(500); // Reset to default
+                        return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
                       }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                      border: 'none',
-                      color: 'white',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1.1em',
-                      transition: 'background-color 0.2s'
-                    }}
-                  >
-                    Borrow
-                  </button>
+                    );
+
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                          padding: '12px 15px',
+                          borderRadius: '8px',
+                          fontSize: '1.2em',
+                          lineHeight: '1.4'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: message }}
+                      />
+                    );
+                  })}
                 </div>
-
-                {/* Pay Off Section */}
-                <div style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                  padding: '20px',
-                  borderRadius: '8px',
-                  marginTop: '20px',
-                }}>
-                  <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
+              )}
+              {panelId === 'bank' && (
+                <div>
+                  {/* Borrow Section */}
                   <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    marginBottom: '20px',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '1em'
+                    backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    marginTop: '70px'
                   }}>
+                    <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '1em',
+                      marginBottom: '20px',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}>
+                      <button
+                        onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '1.7em',
+                          cursor: 'pointer',
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        -
+                      </button>
+                      <div style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: '4px',
+                        minWidth: '100px',
+                        textAlign: 'center',
+                        fontSize: '1.7em'
+                      }}>
+                        ${borrowAmount}
+                      </div>
+                      <button
+                        onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '1.7em',
+                          cursor: 'pointer',
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
                     <button
-                      onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
-                      disabled={!player?.loan}
+                      onClick={() => {
+                        if (socket) {
+                          socket.emit('borrowMoney', { amount: borrowAmount });
+                          setBorrowAmount(500); // Reset to default
+                        }
+                      }}
                       style={{
-                        padding: '8px 12px',
-                        fontSize: '1.2em',
-                        cursor: player?.loan ? 'pointer' : 'not-allowed',
-                        backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
                         border: 'none',
                         color: 'white',
                         borderRadius: '4px',
-                        fontSize: '1.7em'
+                        cursor: 'pointer',
+                        fontSize: '1.1em',
+                        transition: 'background-color 0.2s'
                       }}
                     >
-                      -
-                    </button>
-                    <div style={{
-                      padding: '8px 16px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                      borderRadius: '4px',
-                      minWidth: '100px',
-                      textAlign: 'center',
-                      fontSize: '1.7em'
-                    }}>
-                      ${Math.min(payoffAmount, player?.loan || 0)}
-                    </div>
-                    <button
-                      onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
-                      disabled={!player?.loan}
-                      style={{
-                        padding: '8px 12px',
-                        fontSize: '1.7em',
-                        cursor: player?.loan ? 'pointer' : 'not-allowed',
-                        backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                        border: 'none',
-                        color: 'white',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      +
+                      Borrow
                     </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (socket && player?.loan && player?.money >= payoffAmount) {
-                        socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
-                        setPayoffAmount(1000); // Reset to default
-                      }
-                    }}
-                    disabled={!player?.loan || player?.money < payoffAmount}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      backgroundColor: player?.loan && player?.money >= payoffAmount 
-                        ? 'rgba(255, 255, 255, 0.3)' 
-                        : 'rgba(255, 255, 255, 0.1)',
-                      border: 'none',
-                      color: 'white',
-                      borderRadius: '4px',
-                      cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
-                      fontSize: '1.1em',
-                      transition: 'background-color 0.2s'
-                    }}
-                  >
-                    Pay Off
-                  </button>
-                  {player?.money < payoffAmount && (
+
+                  {/* Pay Off Section */}
+                  <div style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    marginTop: '20px',
+                  }}>
+                    <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
+                    <div style={{
+                      display: 'flex',
+                      gap: '10px',
+                      marginBottom: '20px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1em'
+                    }}>
+                      <button
+                        onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
+                        disabled={!player?.loan}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '1.2em',
+                          cursor: player?.loan ? 'pointer' : 'not-allowed',
+                          backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: '4px',
+                          fontSize: '1.7em'
+                        }}
+                      >
+                        -
+                      </button>
+                      <div style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: '4px',
+                        minWidth: '100px',
+                        textAlign: 'center',
+                        fontSize: '1.7em'
+                      }}>
+                        ${Math.min(payoffAmount, player?.loan || 0)}
+                      </div>
+                      <button
+                        onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
+                        disabled={!player?.loan}
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '1.7em',
+                          cursor: player?.loan ? 'pointer' : 'not-allowed',
+                          backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                          border: 'none',
+                          color: 'white',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (socket && player?.loan && player?.money >= payoffAmount) {
+                          socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
+                          setPayoffAmount(1000); // Reset to default
+                        }
+                      }}
+                      disabled={!player?.loan || player?.money < payoffAmount}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: player?.loan && player?.money >= payoffAmount 
+                          ? 'rgba(255, 255, 255, 0.3)' 
+                          : 'rgba(255, 255, 255, 0.1)',
+                        border: 'none',
+                        color: 'white',
+                        borderRadius: '4px',
+                        cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
+                        fontSize: '1.1em',
+                        transition: 'background-color 0.2s'
+                      }}
+                    >
+                      Pay Off
+                    </button>
+                    {player?.money < payoffAmount && (
+                      <div style={{
+                        color: '#ff6b6b',
+                        marginTop: '10px',
+                        textAlign: 'center',
+                        fontSize: '0.9em'
+                      }}>
+                        Insufficient funds
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status Section */}
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '20px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                    borderRadius: '8px',
+                  }}>
+                    <h4>Current Status</h4>
+                    <div style={{ 
+                      marginTop: '10px',
+                      fontSize: '1.2em'
+                    }}>
+                      <div style={{ marginBottom: '5px' }}>Money: ${player?.money || 0}</div>
+                      <div> Loan: ${player?.loan || 0}</div>
+                    </div>
+                  </div>
+                  {error && (
                     <div style={{
                       color: '#ff6b6b',
                       marginTop: '10px',
-                      textAlign: 'center',
-                      fontSize: '0.9em'
+                      textAlign: 'center'
                     }}>
-                      Insufficient funds
+                      {error}
                     </div>
                   )}
                 </div>
-
-                {/* Status Section */}
+              )}
+              {panelId === 'chat' && (
                 <div style={{
-                  marginTop: '20px',
-                  padding: '20px',
-                  backgroundColor: 'rgba(0, 0, 0, 0.33)',
-                  borderRadius: '8px',
+                  height: '100%',
+                  padding: '20px'
                 }}>
-                  <h4>Current Status</h4>
-                  <div style={{ 
-                    marginTop: '10px',
-                    fontSize: '1.2em'
-                  }}>
-                    <div style={{ marginBottom: '5px' }}>Money: ${player?.money || 0}</div>
-                    <div> Loan: ${player?.loan || 0}</div>
-                  </div>
+                  <Chat />
                 </div>
-                {error && (
-                  <div style={{
-                    color: '#ff6b6b',
-                    marginTop: '10px',
-                    textAlign: 'center'
-                  }}>
-                    {error}
-                  </div>
-                )}
-              </div>
-            )}
-            {panelId === 'chat' && (
-              <div style={{
-                height: '100%',
-                padding: '20px'
-              }}>
-                <Chat />
-              </div>
-            )}
-            {panelId === 'trade' && (
-              <TradePanel />
-            )}
-          </div>
-        ))}
+              )}
+              {panelId === 'trade' && (
+                <TradePanel />
+              )}
+            </div>
+          ))}
       </div>
 
       {/* Board and Player Stats */}
