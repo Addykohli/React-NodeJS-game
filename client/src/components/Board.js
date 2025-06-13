@@ -6,10 +6,16 @@ import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
-// Map piece names to images
+// Map piece names to images with better error handling
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
-  pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
+  try {
+    pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
+    // Also map without .png extension for flexibility
+    pieceImages[`piece${i}`] = require(`../assets/pieces/piece${i}.png`);
+  } catch (err) {
+    console.error(`Failed to load piece${i} image:`, err);
+  }
 }
 
 // Reference piece height in px
@@ -51,6 +57,15 @@ const Board = () => {
 
     calculateScales();
   }, []);
+
+  // Add debug logging for pieces
+  useEffect(() => {
+    console.log('Available piece images:', Object.keys(pieceImages));
+    console.log('Current players pieces:', players.map(p => ({
+      name: p.name,
+      piece: p.piece
+    })));
+  }, [players]);
 
   return (
     <div style={{
