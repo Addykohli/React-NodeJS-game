@@ -941,7 +941,6 @@ export default function GameScreen() {
               padding: '10px 0 20px 0',
               textAlign: 'center',
               background: 'rgba(0,0,0,1)',
-              borderTop: '2px solid #333',
               zIndex: 2000,
               display: 'block',
             }}
@@ -959,7 +958,7 @@ export default function GameScreen() {
                 fontSize: '1.2em',
                 backgroundColor: isMyTurn ? '#666666' : '#ff4444',
                 color: 'white',
-                border: '5px outset #fff',
+                border: '4px outset rgb(255, 120, 120)',
                 borderRadius: '8px',
                 cursor: isMyTurn ? 'not-allowed' : 'pointer',
                 transition: 'background-color 0.3s',
@@ -1341,7 +1340,7 @@ export default function GameScreen() {
           bottom: 0,
           left: 0,
           right: 0,
-          minHeight: '180px',
+          minHeight: '200px',
           backgroundColor: 'rgba(0, 0, 0, 0.95)',
           borderTop: '2px solid #666',
           transition: 'all 0.3s ease',
@@ -1405,7 +1404,7 @@ export default function GameScreen() {
             width: '100%',
             maxWidth: '1200px',
             flexWrap: 'nowrap',
-            height: '100%',
+            height: '190px',
           }}
         >
           {/* Dice Roller Section */}
@@ -1459,10 +1458,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
-            width: '6px',
-            minWidth: '6px',
-            maxWidth: '6px',
-            height: '100%',
+            width: '2px',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
@@ -1534,10 +1530,7 @@ export default function GameScreen() {
 
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
-            width: '6px',
-            minWidth: '6px',
-            maxWidth: '6px',
-            height: '100%',
+            width: '2px',
             background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
@@ -1965,7 +1958,7 @@ export default function GameScreen() {
         <style>{`
           @media (max-width: 900px) {
             .footer-bar {
-              min-height: 120px !important;
+              min-height: 200px !important;
               max-height: 60vh !important;
               height: auto !important;
               padding: 0 0 0 0 !important;
@@ -1977,12 +1970,12 @@ export default function GameScreen() {
               max-width: 100vw !important;
               width: 100vw !important;
               flex-wrap: nowrap !important;
-              height: 100% !important;
+              height: 190px !important;
               justify-content: space-between !important;
             }
             .footer-section {
               flex: 1 1 0 !important;
-              min-width: 0 !important;
+              min-width: 210 !important;
               width: 1% !important;
               max-width: 100vw !important;
               height: 100% !important;
@@ -2007,7 +2000,7 @@ export default function GameScreen() {
             .quit-game-mobile {
               display: block !important;
               width: 100% !important;
-              padding: 10px 0 20px 0 !important;
+              padding: 10px 0 200px 0 !important;
                            text-align: center !important;
             }
           }
