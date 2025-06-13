@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
   <title>Business Game</title>
   <style>
     html, body {
@@ -18,13 +18,26 @@
       height: 100%;
       overflow: auto;
       position: relative;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+
+    @media screen and (max-width: 768px) {
+      #root {
+        width: 100vw;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        transform-origin: top left;
+        transform: scale(1);
+      }
     }
 
     /* Enable touch-based pinch zoom on mobile devices */
     @media (pointer: coarse) {
       #root {
-        touch-action: pinch-zoom;
-        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x pan-y;
       }
     }
   </style>
