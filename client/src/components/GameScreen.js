@@ -1408,7 +1408,7 @@ export default function GameScreen() {
             width: '100%',
             maxWidth: '1200px',
             flexWrap: 'nowrap',
-            height: '190px',
+            height: '220px',
           }}
         >
           {/* Dice Roller Section */}

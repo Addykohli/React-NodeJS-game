@@ -439,7 +439,7 @@ const TradePanel = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        width: 'calc(100% - 30px)'
+        width: '100%'
       }}>
         <button
           onClick={handleTradeRequest}

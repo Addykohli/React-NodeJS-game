@@ -120,7 +120,7 @@ const PlayerStats = () => {
 
         const style = {
           position: 'absolute',
-          border: '1px solid black',
+          border: '4px outset rgb(190, 190, 190)',
           padding: '16px',
           background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.61)' : 'rgba(80, 80, 80, 0.61)',
           fontSize: '1.5rem',

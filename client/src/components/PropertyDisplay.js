@@ -612,7 +612,7 @@ const PropertyDisplay = () => {
                 color: '#333',
                 fontSize: '1.68rem',
                 fontWeight: 'bold',
-                padding: '14px'
+                padding: '2px'
               }}>
                 <div style={{
                   fontSize: '1.96rem',
