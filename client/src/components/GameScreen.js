@@ -1268,7 +1268,7 @@ export default function GameScreen() {
         alignItems: 'flex-start',
         justifyContent: 'center',
         position: 'relative',
-        top: '140px',
+        top: '120px',
         left: '320px',
         marginBottom: '700px',
         marginRight: '640px',

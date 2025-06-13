@@ -32,7 +32,11 @@ export function GameProvider({ children }) {
   // Save important state to localStorage whenever it changes
   useEffect(() => {
     if (player) {
-      localStorage.setItem('gamePlayer', JSON.stringify(player));
+      const playerData = {
+        ...player,
+        piece: player.piece || null // Ensure piece is included
+      };
+      localStorage.setItem('gamePlayer', JSON.stringify(playerData));
     } else {
       localStorage.removeItem('gamePlayer');
     }
@@ -70,11 +74,13 @@ export function GameProvider({ children }) {
   useEffect(() => {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
+      
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
+        // Emit joinLobby with the saved name and piece
         socket.emit('joinLobby', { 
           name: playerData.name,
-          piece: playerData.piece 
+          piece: playerData.piece // Include piece in reconnection
         });
       }
     };
@@ -89,7 +95,7 @@ export function GameProvider({ children }) {
     return () => {
       socket.off('connect', handleReconnect);
     };
-  }, [socket, player]);
+  }, [player]);
 
   // Clear session data on quit
   const handleQuit = () => {
@@ -212,18 +218,14 @@ export function GameProvider({ children }) {
       setPlayers(prev =>
         prev.map(p => 
           p.socketId === playerId 
-            ? { ...p, tileId, piece: p.piece } // Ensure piece is preserved
+            ? { ...p, tileId, piece: p.piece ?? null } 
             : p
         )
       );
       
       // Update current player's position if it's them
       if (player?.socketId === playerId) {
-        setPlayer(prev => ({ 
-          ...prev, 
-          tileId, 
-          piece: prev?.piece // Preserve piece
-        }));
+        setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
       }
     });
 
@@ -468,51 +470,6 @@ export function GameProvider({ children }) {
       socket.off('tradeAccepted');
     };
   }, [socket?.id, player]);
-
-  // Piece update handler
-  useEffect(() => {
-    const handlePieceUpdate = ({ playerId, piece }) => {
-      setPlayers(prev => 
-        prev.map(p => p.socketId === playerId ? { ...p, piece } : p)
-      );
-      
-      if (player?.socketId === playerId) {
-        const updatedPlayer = { ...player, piece };
-        setPlayer(updatedPlayer);
-        localStorage.setItem('gamePlayer', JSON.stringify(updatedPlayer));
-      }
-    };
-
-    socket.on('pieceUpdated', handlePieceUpdate);
-    return () => socket.off('pieceUpdated', handlePieceUpdate);
-  }, [socket, player, setPlayer]);
-
-  // Movement handler
-  useEffect(() => {
-    const handlePlayerMove = ({ playerId, tileId }) => {
-      setPlayers(prev => 
-        prev.map(p => 
-          p.socketId === playerId ? { ...p, tileId, piece: p.piece } : p
-        )
-      );
-
-      if (player?.socketId === playerId) {
-        setPlayer(prev => ({
-          ...prev,
-          tileId,
-          piece: prev?.piece
-        }));
-        localStorage.setItem('gamePlayer', JSON.stringify({ 
-          ...player, 
-          tileId,
-          piece: player.piece 
-        }));
-      }
-    };
-
-    socket.on('playerMoved', handlePlayerMove);
-    return () => socket.off('playerMoved', handlePlayerMove);
-  }, [socket, player, setPlayer]);
 
   return (
     <GameContext.Provider
