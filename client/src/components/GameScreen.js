@@ -866,15 +866,11 @@ export default function GameScreen() {
       <div style={{
         position: 'fixed',
         right: '0px', 
-        top: '0px',
-        bottom: '0px',
-        height: '100vh',
+        height: '100%',
         width: activeSidePanel ? '680px' : '210px',
         zIndex: 1000,
         transition: 'width 0.3s ease',
-        display: 'flex',
-        overflowY: 'auto',
-        WebkitOverflowScrolling: 'touch'
+        display: 'flex'
       }}>
         {/* Panel Buttons Column */}
         <div style={{
@@ -1264,6 +1260,82 @@ export default function GameScreen() {
           ))}
       </div>
 
+      {/* Board and Player Stats */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        position: 'relative',
+        top: '120px',
+        left: '320px',
+        marginBottom: '700px',
+        marginRight: '640px',
+        padding: '60px 20px 0px 20px', 
+        minHeight: 'calc(100vh - 300px)' 
+      }}>
+        <div style={{ 
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          width: '100%',
+          height: '100%',
+          minHeight: '600px'
+        }}>
+          <div style={{ 
+            position: 'relative',
+            margin: '200px'
+          }}>
+            <Board />
+            <PlayerStats />
+            {/* Add Road Cash UI here */}
+            {isMyTurn && tileMeta?.id === 22 && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gridTemplateRows: '1fr 1fr',
+                gap: '20px',
+                padding: '20px',
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.1)',
+                zIndex: 1000
+              }}>
+                <RoadCash isMyTurn={isMyTurn} socket={socket} />
+              </div>
+            )}
+            {/* RPSTieResolver overlay above board */}
+            {rpsTieAmount && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 2000
+              }}>
+                <RPSTieResolver
+                  maxAmount={rpsTieAmount.maxAmount}
+                  gameId={rpsTieAmount.gameId}
+                  tiedPlayerId={rpsTieAmount.tiedPlayerId}
+                  tiedPlayerName={rpsTieAmount.tiedPlayerName}
+                  socket={socket}
+                  onResolved={() => {
+                    setRpsTieAmount(null);
+                    setRpsGame(null);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Fixed Footer */}
       <div
         className="footer-bar"
@@ -1279,10 +1351,9 @@ export default function GameScreen() {
           display: 'flex',
           flexDirection: 'column',
           padding: '20px 10px 10px 10px',
-          zIndex: 1000,
+          zIndex: 99,
           height: 'auto',
           maxHeight: '40vh',
-          WebkitOverflowScrolling: 'touch'
         }}
       >
         {/* Quit Game Button - Desktop only */}
@@ -1892,17 +1963,15 @@ export default function GameScreen() {
           @media (max-width: 900px) {
             .footer-bar {
               position: fixed !important;
-              bottom: 0 !important;
+              min-height: 200px !important;
+              max-height: 60vh !important;
+              height: auto !important;
+              padding: 0 0 0 0 !important;
               left: 0 !important;
               right: 210px !important;
-              min-height: 200px !important;
-              max-height: 40vh !important;
-              height: auto !important;
-              padding: 10px 0 !important;
-              z-index: 1000 !important;
-              -webkit-overflow-scrolling: touch !important;
+              bottom: 0 !important;
+              width: 100vw !important;
             }
-            
             .footer-sections {
               flex-direction: row !important;
               gap: 0 !important;
@@ -1910,11 +1979,11 @@ export default function GameScreen() {
               flex-wrap: nowrap !important;
               height: 190px !important;
               justify-content: space-between !important;
-              margin-right: !important;
+              margin-right: 210px !important;
             }
             .footer-section {
               flex: 1 1 0 !important;
-              min-width: 210 !important;
+              min-width: 210px !important;
               width: 1% !important;
               max-width: 100vw !important;
               height: 100% !important;
@@ -1933,19 +2002,18 @@ export default function GameScreen() {
               overflow: hidden !important;
               text-overflow: ellipsis !important;
             }
-            .quit-game-desktop {
-              display: none !important;
-            }
-            .quit-game-mobile {
-              display: block !important;
-              width: 100% !important;
-              padding: 10px 0 200px 0 !important;
-                           text-align: center !important;
-            }
           }
-          @media (min-width: 901px) {
-            .quit-game-mobile {
-              display: none !important;
+          @media (max-width: 900px) {
+            [class*='side-panel'] {
+              position: fixed !important;
+              height: 100vh !important;
+              right: 0 !important;
+              top: 0 !important;
+              z-index: 1000 !important;
+            }
+            [class*='panel-content'] {
+              height: 100vh !important;
+              max-height: 100vh !important;
             }
           }
         `}</style>
