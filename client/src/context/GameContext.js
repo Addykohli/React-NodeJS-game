@@ -72,7 +72,6 @@ export function GameProvider({ children }) {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        // Include piece in reconnection data
         socket.emit('joinLobby', { 
           name: playerData.name,
           piece: playerData.piece 
@@ -81,7 +80,15 @@ export function GameProvider({ children }) {
     };
 
     socket.on('connect', handleReconnect);
-    return () => socket.off('connect', handleReconnect);
+
+    // Initial connection check
+    if (socket.connected && player) {
+      handleReconnect();
+    }
+
+    return () => {
+      socket.off('connect', handleReconnect);
+    };
   }, [socket, player]);
 
   // Clear session data on quit
@@ -441,20 +448,71 @@ export function GameProvider({ children }) {
       );
     });
 
-    // Add piece update handler
+    // Reconnection handler useEffect
     useEffect(() => {
-      socket.on('pieceUpdated', ({ playerId, piece }) => {
+      const handleReconnect = () => {
+        const savedPlayer = localStorage.getItem('gamePlayer');
+        if (savedPlayer) {
+          const playerData = JSON.parse(savedPlayer);
+          socket.emit('joinLobby', { 
+            name: playerData.name,
+            piece: playerData.piece 
+          });
+        }
+      };
+
+      socket.on('connect', handleReconnect);
+
+      // Initial connection check
+      if (socket.connected && player) {
+        handleReconnect();
+      }
+
+      return () => {
+        socket.off('connect', handleReconnect);
+      };
+    }, [socket, player]);
+
+    // Piece update handler useEffect
+    useEffect(() => {
+      const handlePieceUpdate = ({ playerId, piece }) => {
         setPlayers(prev => 
           prev.map(p => p.socketId === playerId ? { ...p, piece } : p)
         );
         
         if (player?.socketId === playerId) {
-          setPlayer(prev => ({ ...prev, piece }));
-          localStorage.setItem('gamePlayer', JSON.stringify({ ...player, piece }));
+          const updatedPlayer = { ...player, piece };
+          setPlayer(updatedPlayer);
+          localStorage.setItem('gamePlayer', JSON.stringify(updatedPlayer));
         }
-      });
+      };
 
-      return () => socket.off('pieceUpdated');
+      socket.on('pieceUpdated', handlePieceUpdate);
+      return () => socket.off('pieceUpdated', handlePieceUpdate);
+    }, [socket, player, setPlayer]);
+
+    // Player movement handler useEffect
+    useEffect(() => {
+      const handlePlayerMove = ({ playerId, tileId }) => {
+        setPlayers(prev =>
+          prev.map(p => 
+            p.socketId === playerId 
+              ? { ...p, tileId, piece: p.piece } 
+              : p
+          )
+        );
+        
+        if (player?.socketId === playerId) {
+          setPlayer(prev => ({ 
+            ...prev, 
+            tileId, 
+            piece: prev?.piece 
+          }));
+        }
+      };
+
+      socket.on('playerMoved', handlePlayerMove);
+      return () => socket.off('playerMoved', handlePlayerMove);
     }, [socket, player, setPlayer]);
 
     return () => {
