@@ -70,26 +70,19 @@ export function GameProvider({ children }) {
   useEffect(() => {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
-      const savedGameState = localStorage.getItem('gameState');
-      
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        // Emit joinLobby with the saved name to trigger reconnection
-        socket.emit('joinLobby', { name: playerData.name });
+        // Include piece in reconnection data
+        socket.emit('joinLobby', { 
+          name: playerData.name,
+          piece: playerData.piece 
+        });
       }
     };
 
     socket.on('connect', handleReconnect);
-
-    // Initial connection check
-    if (socket.connected && player) {
-      handleReconnect();
-    }
-
-    return () => {
-      socket.off('connect', handleReconnect);
-    };
-  }, [player]);
+    return () => socket.off('connect', handleReconnect);
+  }, [socket, player]);
 
   // Clear session data on quit
   const handleQuit = () => {
@@ -447,6 +440,22 @@ export function GameProvider({ children }) {
         })
       );
     });
+
+    // Add piece update handler
+    useEffect(() => {
+      socket.on('pieceUpdated', ({ playerId, piece }) => {
+        setPlayers(prev => 
+          prev.map(p => p.socketId === playerId ? { ...p, piece } : p)
+        );
+        
+        if (player?.socketId === playerId) {
+          setPlayer(prev => ({ ...prev, piece }));
+          localStorage.setItem('gamePlayer', JSON.stringify({ ...player, piece }));
+        }
+      });
+
+      return () => socket.off('pieceUpdated');
+    }, [socket, player, setPlayer]);
 
     return () => {
       socket.off('lobbyUpdate');

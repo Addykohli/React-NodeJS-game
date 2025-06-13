@@ -197,6 +197,13 @@ io.on('connection', socket => {
 
     // Create new player
     try {
+      // Check if player already exists
+      const existingPlayer = await Player.findOne({ where: { name: name }});
+      if (existingPlayer) {
+        socket.emit('joinError', { message: 'Name already taken' });
+        return;
+      }
+
       const playerData = {
         socketId: socket.id,
         name,
@@ -220,12 +227,22 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('selectPiece', ({ piece }) => {
-    console.log('[selectPiece] piece:', piece);
-    const p = lobbyPlayers.find(x => x.socketId === socket.id);
-    if (!p) return;
-    p.piece = piece;
-    io.emit('lobbyUpdate', lobbyPlayers);
+  socket.on('selectPiece', async ({ piece }) => {
+    try {
+      const player = await Player.findOne({ where: { socketId: socket.id }});
+      if (player) {
+        await player.update({ piece });
+        
+        // Update engine state
+        engine.session.players = engine.session.players.map(p =>
+          p.socketId === socket.id ? { ...p, piece } : p
+        );
+        
+        io.emit('lobbyUpdate', engine.session.players);
+      }
+    } catch (err) {
+      console.error('Error updating piece:', err);
+    }
   });
 
   socket.on('playerReady', async () => {
