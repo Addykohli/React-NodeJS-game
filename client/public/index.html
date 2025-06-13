@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=5.0, user-scalable=yes"/>
+  <meta name="viewport" content="width=device-width, initial-scale=0.25, minimum-scale=0.25, maximum-scale=5.0, user-scalable=yes"/>
   <title>Business Game</title>
   <style>
     * {
@@ -39,26 +39,22 @@
 
     @media (max-width: 900px) {
       :root {
-        --vh: calc(100vh / 100);
-        --initial-scale: calc(0.25);
-      }
-      
-      html {
-        zoom: var(--initial-scale);
-        -webkit-transform: scale(var(--initial-scale));
-        -webkit-transform-origin: 0 0;
-        transform: scale(var(--initial-scale));
-        transform-origin: 0 0;
-      }
-      
-      body {
-        width: calc(100% / var(--initial-scale));
-        transform-origin: 0 0;
+        --scale-factor: 0.25;
       }
       
       #root {
-        width: calc(100% / var(--initial-scale));
-        min-width: calc(100% / var(--initial-scale));
+        min-width: fit-content;
+        width: fit-content;
+        transform: scale(0.25);
+        transform-origin: top left;
+      }
+      
+      body {
+        min-width: fit-content;
+        overflow-x: auto;
+        touch-action: pan-x pan-y pinch-zoom;
+        width: 400%;
+        height: 400%;
       }
     }
   </style>
