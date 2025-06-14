@@ -107,7 +107,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
       alignItems: 'center',
       justifyContent: 'space-between',
       height: '100%',
-      padding: '15px',
+      padding: '0px',
       gap: '10px'
     }}>
       {/* Money Input */}
@@ -117,16 +117,16 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '100%',
-        padding: '15px',
+        padding: '1px',
         gap: '10px'
       }}>
-        {/* Remove the Casino Betting title and start directly with money input */}
+      
         <div style={{ 
           display: 'flex', 
           alignItems: 'center',
           gap: '8px',
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          padding: '8px 12px',
+          padding: '8px 36px',
           borderRadius: '8px',
           border: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
@@ -183,7 +183,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           display: 'flex',
           gap: '8px',
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          padding: '8px',
+          padding: '2px 8px',
           borderRadius: '8px',
           border: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
@@ -1408,7 +1408,7 @@ export default function GameScreen() {
             width: '100%',
             maxWidth: '1200px',
             flexWrap: 'nowrap',
-            height: '220px',
+            height: '240px',
           }}
         >
           {/* Dice Roller Section */}
@@ -1463,7 +1463,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
@@ -1535,7 +1535,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 20%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.5) 80%, transparent 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,

@@ -142,31 +142,28 @@ const Lobby = () => {
       color: 'white'
     }}>
       {/* Main content area */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        gap: '40px',
-        padding: '40px',
-        '@media (max-width: 900px)': {
-          flexDirection: 'column',
-          alignItems: 'center'
-        }
-      }}>
+      <div 
+        className="lobby-container"
+        style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          gap: '40px',
+          padding: '40px'
+        }}
+      >
         {/* Left Box - Join and Setup */}
-        <div style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '3rem',
-          borderRadius: '15px',
-          width: '500px',
-          alignSelf: 'flex-start',
-          '@media (max-width: 900px)': {
-            width: '90%',
-            maxWidth: '500px',
-            marginBottom: '20px'
-          }
-        }}>
+        <div 
+          className="lobby-box"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: '3rem',
+            borderRadius: '15px',
+            width: '500px',
+            alignSelf: 'flex-start'
+          }}
+        >
           <h1 style={{ 
             textAlign: 'center', 
             marginBottom: '3rem',
@@ -334,18 +331,17 @@ const Lobby = () => {
         </div>
 
         {/* Right Box - Players List */}
-        <div style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          padding: '3rem',
-          borderRadius: '15px',
-          width: '500px',
-          alignSelf: 'flex-start',
-          minHeight: '200px',
-          '@media (max-width: 900px)': {
-            width: '90%',
-            maxWidth: '500px'
-          }
-        }}>
+        <div 
+          className="lobby-box"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            padding: '3rem',
+            borderRadius: '15px',
+            width: '500px',
+            alignSelf: 'flex-start',
+            minHeight: '200px'
+          }}
+        >
           <h2 style={{ 
             textAlign: 'center', 
             marginBottom: '2rem',
@@ -393,6 +389,20 @@ const Lobby = () => {
           </ul>
         </div>
       </div>
+
+      {/* Add responsive styles */}
+      <style>{`
+        @media (max-width: 900px) {
+          .lobby-container {
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+          .lobby-box {
+            width: 90% !important;
+            margin-bottom: 20px !important;
+          }
+        }
+      `}</style>
 
       {/* Footer */}
       <div style={{
