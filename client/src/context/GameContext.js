@@ -465,6 +465,15 @@ export function GameProvider({ children }) {
       );
     });
 
+    socket.on('playersStateUpdate', ({ players }) => {
+      setPlayers(players);
+      // Update the current player's state if it matches
+      const updatedPlayer = players.find(p => p.socketId === socket.id);
+      if (updatedPlayer) {
+        setPlayer(updatedPlayer);
+      }
+    });
+
     return () => {
       socket.off('lobbyUpdate');
       socket.off('gameStart');
@@ -483,6 +492,7 @@ export function GameProvider({ children }) {
       socket.off('roadCashResult');
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
+      socket.off('playersStateUpdate');
     };
   }, [socket?.id, player]);
 

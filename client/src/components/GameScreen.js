@@ -1287,8 +1287,8 @@ export default function GameScreen() {
           }}>
             <Board />
             <PlayerStats />
-            {/* Add Road Cash UI here */}
-            {isMyTurn && tileMeta?.id === 22 && (
+            {/* Road Cash UI here */}
+            {isMyTurn && tileMeta?.id === 22 && player.hasMoved && (
               <div style={{
                 position: 'absolute',
                 top: '50%',

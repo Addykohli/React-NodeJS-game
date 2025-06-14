@@ -1213,33 +1213,56 @@ io.on('connection', socket => {
 
         // Update database and engine for all affected players
         try {
-          // Update landing player
-          await Player.findOneAndUpdate(
-            { socketId: currentGame.landingPlayer.socketId },
-            { money: currentGame.landingPlayer.money }
-          );
+          // Start a transaction
+          const transaction = await sequelize.transaction();
 
-          // Update all winners
-          for (const player of currentGame.winners) {
-          await Player.findOneAndUpdate(
-              { socketId: player.socketId },
-              { money: player.money }
-          );
+          try {
+            // Update landing player
+            await Player.update(
+              { money: currentGame.landingPlayer.money },
+              { 
+                where: { socketId: currentGame.landingPlayer.socketId },
+                transaction
+              }
+            );
+
+            // Update all winners
+            for (const player of currentGame.winners) {
+              await Player.update(
+                { money: player.money },
+                { 
+                  where: { socketId: player.socketId },
+                  transaction
+                }
+              );
+            }
+
+            // Update engine's player data
+            engine.session.players = engine.session.players.map(p => {
+              if (p.socketId === currentGame.landingPlayer.socketId) {
+                return { ...p, money: currentGame.landingPlayer.money };
+              }
+              const winner = currentGame.winners.find(w => w.socketId === p.socketId);
+              if (winner) {
+                return { ...p, money: winner.money };
+              }
+              return p;
+            });
+
+            // Commit transaction
+            await transaction.commit();
+
+            // Broadcast the updated state to all clients
+            io.emit('playersStateUpdate', {
+              players: engine.session.players
+            });
+
+          } catch (err) {
+            await transaction.rollback();
+            console.error('Error updating player money:', err);
           }
-
-          // Update engine's player data
-          engine.session.players = engine.session.players.map(p => {
-            if (p.socketId === currentGame.landingPlayer.socketId) {
-              return { ...p, money: currentGame.landingPlayer.money };
-            }
-            const winner = currentGame.winners.find(w => w.socketId === p.socketId);
-            if (winner) {
-              return { ...p, money: winner.money };
-            }
-            return p;
-          });
         } catch (err) {
-          console.error('Error updating player money after RPS winners:', err);
+          console.error('Error in transaction:', err);
         }
       }
 
@@ -1306,11 +1329,10 @@ io.on('connection', socket => {
     tiedPlayer.money -= amount;
 
     try {
-      // Start a transaction
       const transaction = await sequelize.transaction();
 
       try {
-        // Update both players in database using Sequelize update
+        // Update both players in database
         await Player.update(
           { money: landingPlayer.money },
           { 
@@ -1338,11 +1360,13 @@ io.on('connection', socket => {
           return p;
         });
 
-        // Remove this tied player from the game's ties array
-        currentGame.ties = currentGame.ties.filter(p => p.socketId !== tiedPlayerId);
-
         // Commit transaction
         await transaction.commit();
+
+        // Broadcast the updated state to all clients
+        io.emit('playersStateUpdate', {
+          players: engine.session.players
+        });
 
         // If this was the last tie to resolve, emit final result
         if (currentGame.ties.length === 0) {
@@ -1383,7 +1407,6 @@ io.on('connection', socket => {
           });
         }
       } catch (err) {
-        // Rollback transaction on error
         await transaction.rollback();
         throw err;
       }
@@ -2022,7 +2045,7 @@ io.on('connection', socket => {
         // Update game session if exists
         if (currentSessionId) {
           GameSession.findByIdAndUpdate(currentSessionId, { 
-            currentPlayerIndex: nextPlayerIndex 
+            currentPlayerIndex: nextPlayerId 
           }).catch(err => {
             console.error('Error updating game session after quit:', err);
           });
