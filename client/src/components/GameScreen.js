@@ -148,12 +148,10 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
             -
           </button>
           <div style={{
-            padding: '6px 12px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '4px',
+            padding: '4px 4px',
             minWidth: '100px',
             textAlign: 'center',
-            fontSize: '1.1em',
+            fontSize: '2em',
             color: 'white',
             backgroundColor: 'rgba(0, 0, 0, 0.2)'
           }}>
@@ -188,23 +186,22 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           border: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
           {[
-            { type: 'below', label: '2-6', odds: '2x' },
+            { type: 'below', label: 'Below', odds: '2x' },
             { type: '7', label: '7', odds: '3x' },
-            { type: 'above', label: '8-12', odds: '2x' }
+            { type: 'above', label: 'Above', odds: '2x' }
           ].map(bet => (
             <button
               key={bet.type}
               onClick={() => handleBetSelect(bet.type)}
               disabled={!isMyTurn}
               style={{
-                padding: '8px 12px',
+                padding: '4px',
                 backgroundColor: selectedBet === bet.type ? '#2196F3' : 'rgba(33, 150, 243, 0.3)',
                 color: '#fff',
                 border: selectedBet === bet.type ? '2px solid #90CAF9' : '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '6px',
                 cursor: isMyTurn ? 'pointer' : 'not-allowed',
-                fontSize: '0.9em',
-                fontWeight: 'bold',
+                fontSize: '1.2em',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -1489,7 +1486,7 @@ export default function GameScreen() {
           >
             <div
               style={{
-                fontSize: '1.3em',
+                fontSize: '2em',
                 color: 'white',
                 textAlign: 'center',
                 wordBreak: 'break-word',
@@ -1499,7 +1496,7 @@ export default function GameScreen() {
             </div>
             <div
               style={{
-                fontSize: '1.1em',
+                fontSize: '1.8em',
                 color: '#4CAF50',
                 textAlign: 'center',
                 wordBreak: 'break-word',
@@ -1510,7 +1507,7 @@ export default function GameScreen() {
             {player?.loan > 0 && (
               <div
                 style={{
-                  fontSize: '1em',
+                  fontSize: '1.8em',
                   color: '#ff4444',
                   textAlign: 'center',
                   wordBreak: 'break-word',
