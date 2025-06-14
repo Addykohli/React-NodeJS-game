@@ -84,13 +84,19 @@ router.delete('/clear', async (req, res) => {
 
 // Join game route
 router.post('/join', async (req, res) => {
-  const { name } = req.body;
+  const { name, wasConnected } = req.body;
   
   try {
-    // Check if player with same name exists and is disconnected
-    const existingPlayer = await Player.findOne({
-      where: { name, isConnected: false }
-    });
+    console.log('[/join] Request:', { name, wasConnected });
+    
+    // Check if player exists and was previously connected
+    let existingPlayer = null;
+    if (wasConnected) {
+      existingPlayer = await Player.findOne({
+        where: { name, isConnected: false }
+      });
+      console.log('[/join] Found disconnected player:', existingPlayer);
+    }
 
     if (existingPlayer) {
       // Update existing player
@@ -100,16 +106,18 @@ router.post('/join', async (req, res) => {
       );
 
       if (updatedRows === 0) {
+        console.error('[/join] Failed to update player');
         return res.status(500).json({ error: 'Failed to update player' });
       }
 
+      console.log('[/join] Successfully reconnected player:', existingPlayer.name);
       return res.json({
         ...existingPlayer.toJSON(),
         isConnected: true
       });
     }
 
-    // Create new player if no disconnected player with same name exists
+    // Create new player if no disconnected player found
     const newPlayer = await Player.create({
       name,
       isConnected: true,
@@ -119,9 +127,10 @@ router.post('/join', async (req, res) => {
       hasMoved: false
     });
 
+    console.log('[/join] Created new player:', newPlayer.name);
     res.json(newPlayer);
   } catch (error) {
-    console.error('Error in /join:', error);
+    console.error('[/join] Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

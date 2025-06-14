@@ -148,7 +148,13 @@ const Lobby = () => {
         justifyContent: 'center',
         alignItems: 'flex-start',
         gap: '40px',
-        padding: '40px'
+        padding: '40px',
+        ['@media (max-width: 900px)']: {
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px',
+          padding: '20px'
+        }
       }}>
         {/* Left Box - Join and Setup */}
         <div style={{
@@ -156,7 +162,12 @@ const Lobby = () => {
           padding: '3rem',
           borderRadius: '15px',
           width: '500px',
-          alignSelf: 'flex-start'
+          alignSelf: 'flex-start',
+          ['@media (max-width: 900px)']: {
+            width: '90%',
+            padding: '2rem',
+            alignSelf: 'center'
+          }
         }}>
           <h1 style={{ 
             textAlign: 'center', 
@@ -331,7 +342,11 @@ const Lobby = () => {
           borderRadius: '15px',
           width: '500px',
           alignSelf: 'flex-start',
-          minHeight: '200px'
+          ['@media (max-width: 900px)']: {
+            width: '90%',
+            padding: '2rem',
+            alignSelf: 'center'
+          }
         }}>
           <h2 style={{ 
             textAlign: 'center', 
