@@ -97,7 +97,7 @@ io.on('connection', socket => {
   socket.emit('gameEventsHistory', gameEvents);
 
   socket.on('joinLobby', async ({ name }) => {
-    //console.log('[joinLobby] name:', name);
+    console.log('[joinLobby] name:', name);
     
     // Check if name is already taken by an ACTIVE player
     const isNameTaken = lobbyPlayers.some(p => 
@@ -304,10 +304,10 @@ io.on('connection', socket => {
       if (!step) break;
 
       if (step.branchChoices) {
-        //console.log('Branch choices:', step.branchChoices);
+        console.log('Branch choices:', step.branchChoices);
         socket.emit('branchChoices', { options: step.branchChoices.map(c => c.to) });
         const idx = await new Promise(res => branchResolvers[socket.id] = res);
-        //console.log('Branch selected index:', idx);
+        console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
         io.emit('playerMoved', { playerId: socket.id, tileId: to });
       } else {
@@ -319,12 +319,11 @@ io.on('connection', socket => {
         // Check if player landed on start
         if (newTile === 1 && !passedStart) {
           const bonusAmount = player.loan > 0 ? 4000 : 5000;
-          /*console.log('Player landed on start! Awarding bonus.', 
-            {
+          console.log('Player landed on start! Awarding bonus.', {
             hasLoan: player.loan > 0,
             bonusAmount,
             currentLoan: player.loan
-          });*/
+          });
           
           // Start a transaction
           const transaction = await sequelize.transaction();
@@ -377,11 +376,11 @@ io.on('connection', socket => {
         // This only happens when moving from tile 30 to tile 2-29
         else if (prevTile === 30 && newTile > 1 && !passedStart) {
           const bonusAmount = player.loan > 0 ? 4000 : 5000;
-          /*console.log('Player passed through start! Awarding bonus.', {
+          console.log('Player passed through start! Awarding bonus.', {
             hasLoan: player.loan > 0,
             bonusAmount,
             currentLoan: player.loan
-          });*/
+          });
           player.money += bonusAmount;
           passedStart = true;
           
@@ -449,7 +448,7 @@ io.on('connection', socket => {
 
     // Find shortest paths if landed on Stone Paper Scissors
     if (finalTile?.name === 'Stone Paper Scissors') {
-      //console.log('\nLanded on Stone Paper Scissors! Finding shortest paths to other players...');
+      console.log('\nLanded on Stone Paper Scissors! Finding shortest paths to other players...');
       const pathInfo = engine.findShortestPathsToPlayers(finalTileId);
       
       // Now handle multiple closest players
@@ -487,7 +486,7 @@ io.on('connection', socket => {
         p.properties.includes(finalTile.id)
       );
 
-      /*console.log('[DEBUG] Property ownership check:', {
+      console.log('[DEBUG] Property ownership check:', {
         tileId: finalTile.id,
         tileName: finalTile.name,
         isOwnedByCurrentPlayer,
@@ -497,7 +496,7 @@ io.on('connection', socket => {
         ownerMoney: propertyOwner?.money,
         currentPlayerProperties: currentPlayer.properties,
         ownerProperties: propertyOwner?.properties
-      });*/
+      });
 
       if (propertyOwner && !isOwnedByCurrentPlayer) {
         // Calculate rent with multiplier
@@ -632,7 +631,7 @@ io.on('connection', socket => {
       }
     }
 
-    //console.log('Emitting movementDone for', socket.id);
+    console.log('Emitting movementDone for', socket.id);
     const rollingPlayer = engine.getPlayer(socket.id);
     if (rollingPlayer) {
       rollingPlayer.hasMoved = true;
@@ -651,7 +650,7 @@ io.on('connection', socket => {
   });
 
   socket.on('branchChoice', idx => {
-    //console.log('[branchChoice] idx:', idx);
+    console.log('[branchChoice] idx:', idx);
     const fn = branchResolvers[socket.id];
     if (fn) { fn(idx); delete branchResolvers[socket.id]; }
   });
@@ -672,22 +671,22 @@ io.on('connection', socket => {
 
   // BUY PROPERTY handler
   socket.on('buyProperty', async () => {
-    //console.log('[buyProperty] received from', socket.id);
+    console.log('[buyProperty] received from', socket.id);
     
     try {
     const playerObj = engine.getPlayer(socket.id);
       if (!playerObj) {
-        //console.log('purchaseFailed: playerNotFound');
+        console.log('purchaseFailed: playerNotFound');
         return socket.emit('purchaseFailed', { reason: 'playerNotFound' });
       }
     console.log('PlayerObj:', playerObj);
 
     const { tiles } = require('./data/tiles.cjs');
       const tile = tiles.find(t => t.id === playerObj.tileId);
-    //console.log('Tile metadata:', tile);
+    console.log('Tile metadata:', tile);
 
     if (!tile || tile.type !== 'property') {
-      //console.log('purchaseFailed: notProperty');
+      console.log('purchaseFailed: notProperty');
       return socket.emit('purchaseFailed', { reason: 'notProperty' });
     }
 

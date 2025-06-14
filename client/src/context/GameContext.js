@@ -72,45 +72,24 @@ export function GameProvider({ children }) {
 
   // Auto-rejoin on refresh/reconnect
   useEffect(() => {
-    console.log('[GameContext] Setting up reconnect handler');
-    
-    const handleReconnect = async () => {
-      console.log('[GameContext] Socket reconnected, checking saved player');
-      
+    const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
-      console.log('[GameContext] Saved player data:', savedPlayer);
-      
       if (savedPlayer) {
-        try {
-          const playerData = JSON.parse(savedPlayer);
-          console.log('[GameContext] Attempting to rejoin with:', {
-            name: playerData.name,
-            piece: playerData.piece,
-            money: playerData.money,
-            properties: playerData.properties
-          });
-          
-          socket.emit('joinLobby', { 
-            name: playerData.name,
-            piece: playerData.piece,
-            wasConnected: true // Add flag to indicate reconnection
-          });
-        } catch (err) {
-          console.error('[GameContext] Error rejoining:', err);
-        }
-      } else {
-        console.log('[GameContext] No saved player data found');
+        const playerData = JSON.parse(savedPlayer);
+        console.log('[GameContext] Reconnecting with data:', {
+          name: playerData.name,
+          piece: playerData.piece,
+          savedState: savedPlayer
+        });
+        
+        socket.emit('joinLobby', { 
+          name: playerData.name,
+          piece: playerData.piece 
+        });
       }
     };
 
-    // Run on initial mount and reconnects
-    if (socket.connected) {
-      console.log('[GameContext] Socket already connected, running handleReconnect');
-      handleReconnect();
-    }
-
     socket.on('connect', handleReconnect);
-    
     return () => socket.off('connect', handleReconnect);
   }, [socket]);
 
@@ -150,7 +129,7 @@ export function GameProvider({ children }) {
   // Update player whenever players array changes
   useEffect(() => {
     if (socket?.id && players.length > 0) {
-      const me = players.find(p => p.socket.id === socket.id);
+      const me = players.find(p => p.socketId === socket.id);
       if (me) {
         console.log('[GameContext] Updating player from players array:', {
           playerId: me.socketId,
