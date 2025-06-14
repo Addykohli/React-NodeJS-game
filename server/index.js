@@ -420,27 +420,31 @@ io.on('connection', socket => {
 
     // Handle rent payment AFTER all movement is complete
     const finalTileId = currentPlayer.tileId;
+
+    // Update prevTile based on final position
+    if (finalTileId <= 30) {
+      currentPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
+      
+      // Update player in database
+      try {
+        await Player.findOneAndUpdate(
+          { socketId: socket.id },
+          { prevTile: currentPlayer.prevTile }
+        );
+      } catch (err) {
+        console.error('Error updating prevTile:', err);
+      }
+    }
+
     const { tiles } = require('./data/tiles.cjs');
     const finalTile = tiles.find(t => t.id === finalTileId);
     
-    console.log('Final position check:', { 
+    console.log('Final position for rent check:', { 
       playerId: socket.id,
       tileId: finalTileId,
       tileName: finalTile?.name,
       tileType: finalTile?.type
     });
-
-    // Add road event check
-    if (finalTileId === 22) {
-      console.log('Player landed on Road tile');
-      currentPlayer.hasMoved = true;
-      await Player.update(
-        { hasMoved: true },
-        { where: { socketId: socket.id } }
-      );
-      socket.emit('movementDone');
-      return;
-    }
 
     // Find shortest paths if landed on Stone Paper Scissors
     if (finalTile?.name === 'Stone Paper Scissors') {
@@ -629,9 +633,7 @@ io.on('connection', socket => {
 
     console.log('Emitting movementDone for', socket.id);
     const rollingPlayer = engine.getPlayer(socket.id);
-    if (rollingPlayer) {
-      rollingPlayer.hasMoved = true;
-    }
+    rollingPlayer.hasMoved = true;
     socket.emit('movementDone');
 
     // After all movement is complete, mark player as moved and persist it
@@ -1193,22 +1195,23 @@ io.on('connection', socket => {
 
       // First handle the players that landing player won against
       if (currentGame.winners.length > 0) {
-        // Calculate total money from winners that landing player gets
-        const totalWinnersMoney = currentGame.winners.reduce((sum, player) => sum + player.money, 0);
+        // Store money amounts in temp variables
+        const moneyAmounts = currentGame.winners.map(p => p.money);
+        const sumRest = moneyAmounts.reduce((sum, amount) => sum + Math.max(0, amount), 0);
+        const toDistribute = currentGame.landingPlayer.money;
 
-        // Store landing player's original money
-        const landingPlayerOriginalMoney = currentGame.landingPlayer.money;
+        // Update landing player's money to sum of losers
+        currentGame.landingPlayer.money = sumRest;
 
-        // Update landing player's money (they get all the winners' money)
-        currentGame.landingPlayer.money += totalWinnersMoney;
-
-        // Set winners' money to landingPlayer's original money divided equally
-        const shareAmount = Math.floor(landingPlayerOriginalMoney / currentGame.winners.length);
+        // Distribute landing player's money equally among losers
+        const shareAmount = Math.floor(toDistribute / currentGame.winners.length);
         currentGame.winners.forEach(player => {
           player.money = shareAmount;
         });
 
+        // Update database and engine for all affected players
         try {
+          // Start a transaction
           const transaction = await sequelize.transaction();
 
           try {
@@ -1244,17 +1247,6 @@ io.on('connection', socket => {
               return p;
             });
 
-            // Update game session if exists
-            if (currentSessionId) {
-              await GameSession.update(
-                { players: engine.session.players },
-                { 
-                  where: { id: currentSessionId },
-                  transaction
-                }
-              );
-            }
-
             // Commit transaction
             await transaction.commit();
 
@@ -1262,13 +1254,6 @@ io.on('connection', socket => {
             io.emit('playersStateUpdate', {
               players: engine.session.players
             });
-
-            // Broadcast game event for money exchange
-            const landingPlayerName = currentGame.landingPlayer.name;
-            const winnersNames = currentGame.winners.map(w => w.name).join(', ');
-            broadcastGameEvent(
-              `${landingPlayerName} won and received $${totalWinnersMoney} from ${winnersNames}.`
-            );
 
           } catch (err) {
             await transaction.rollback();
