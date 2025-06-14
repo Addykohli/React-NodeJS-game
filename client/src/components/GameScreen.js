@@ -1047,7 +1047,8 @@ export default function GameScreen() {
                     backgroundColor: 'rgba(0, 0, 0, 0.33)',
                     padding: '20px',
                     borderRadius: '8px',
-                    marginTop: '70px'
+                    marginTop: '70px',
+                    border: '3px outset rgb(80, 80, 170)',
                   }}>
                     <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
                     <div style={{
@@ -1069,6 +1070,7 @@ export default function GameScreen() {
                           border: 'none',
                           color: 'white',
                           borderRadius: '4px',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         -
@@ -1079,7 +1081,8 @@ export default function GameScreen() {
                         borderRadius: '4px',
                         minWidth: '100px',
                         textAlign: 'center',
-                        fontSize: '1.7em'
+                        fontSize: '1.7em',
+                        border: '1px inset rgb(80, 80, 170)',
                       }}>
                         ${borrowAmount}
                       </div>
@@ -1092,7 +1095,8 @@ export default function GameScreen() {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           border: 'none',
                           color: 'white',
-                          borderRadius: '4px'
+                          borderRadius: '4px',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         +
@@ -1114,7 +1118,8 @@ export default function GameScreen() {
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '1.1em',
-                        transition: 'background-color 0.2s'
+                        transition: 'background-color 0.2s',
+                        border: '1px inset rgb(80, 80, 170)',
                       }}
                     >
                       Borrow
@@ -1127,6 +1132,7 @@ export default function GameScreen() {
                     padding: '20px',
                     borderRadius: '8px',
                     marginTop: '20px',
+                    border: '3px outset rgb(80, 80, 170)',
                   }}>
                     <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
                     <div style={{
@@ -1148,7 +1154,8 @@ export default function GameScreen() {
                           border: 'none',
                           color: 'white',
                           borderRadius: '4px',
-                          fontSize: '1.7em'
+                          fontSize: '1.7em',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         -
@@ -1159,7 +1166,8 @@ export default function GameScreen() {
                         borderRadius: '4px',
                         minWidth: '100px',
                         textAlign: 'center',
-                        fontSize: '1.7em'
+                        fontSize: '1.7em',
+                        border: '1px inset rgb(80, 80, 170)',
                       }}>
                         ${Math.min(payoffAmount, player?.loan || 0)}
                       </div>
@@ -1173,7 +1181,8 @@ export default function GameScreen() {
                           backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
                           border: 'none',
                           color: 'white',
-                          borderRadius: '4px'
+                          borderRadius: '4px',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         +
@@ -1198,7 +1207,8 @@ export default function GameScreen() {
                         borderRadius: '4px',
                         cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
                         fontSize: '1.1em',
-                        transition: 'background-color 0.2s'
+                        transition: 'background-color 0.2s',
+                        border: '1px inset rgb(80, 80, 170)',
                       }}
                     >
                       Pay Off
@@ -1221,6 +1231,7 @@ export default function GameScreen() {
                     padding: '20px',
                     backgroundColor: 'rgba(0, 0, 0, 0.33)',
                     borderRadius: '8px',
+                    border: '3px outset rgb(80, 80, 170)',
                   }}>
                     <h4>Current Status</h4>
                     <div style={{ 
