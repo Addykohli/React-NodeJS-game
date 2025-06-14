@@ -2094,6 +2094,10 @@ io.on('connection', socket => {
     }
   });
 
+  socket.on("log", (VarName, value) => {
+    console.log(`[Log] ${VarName}:`, value);
+  });
+
 });
 
 

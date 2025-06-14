@@ -1299,7 +1299,7 @@ export default function GameScreen() {
             <Board />
             <PlayerStats />
             {/* Road Cash UI here */}
-            console.log('[DEBUG****] Rendering RoadCash UI', "isMyTurn :" isMyTurn, "hasMoved :" player.hasMoved, "tileMeta id:" tileMeta?.id);
+            
             {isMyTurn && tileMeta?.id === 22 && player.hasMoved (
               <div style={{
                 position: 'absolute',
@@ -1472,7 +1472,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%) !important'  ,
+            Color: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%)'  ,
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
@@ -1544,11 +1544,12 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%) !important',
+            Color: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
             display: 'block',
+            zIndex: 1000,
           }} />
 
           {/* Events Section */}
