@@ -1306,67 +1306,86 @@ io.on('connection', socket => {
     tiedPlayer.money -= amount;
 
     try {
-      // Update both players in database
-      await Player.findOneAndUpdate(
-        { socketId: landingPlayer.socketId },
-        { money: landingPlayer.money }
-      );
-      await Player.findOneAndUpdate(
-        { socketId: tiedPlayer.socketId },
-        { money: tiedPlayer.money }
-      );
+      // Start a transaction
+      const transaction = await sequelize.transaction();
 
-      // Update engine's player data
-      engine.session.players = engine.session.players.map(p => {
-        if (p.socketId === landingPlayer.socketId) {
-          return { ...p, money: landingPlayer.money };
-        }
-        if (p.socketId === tiedPlayer.socketId) {
-          return { ...p, money: tiedPlayer.money };
-        }
-        return p;
-      });
+      try {
+        // Update both players in database using Sequelize update
+        await Player.update(
+          { money: landingPlayer.money },
+          { 
+            where: { socketId: landingPlayer.socketId },
+            transaction
+          }
+        );
 
-      // Remove this tied player from the game's ties array
-      currentGame.ties = currentGame.ties.filter(p => p.socketId !== tiedPlayerId);
+        await Player.update(
+          { money: tiedPlayer.money },
+          { 
+            where: { socketId: tiedPlayer.socketId },
+            transaction
+          }
+        );
 
-      // If this was the last tie to resolve, emit final result
-      if (currentGame.ties.length === 0) {
-        io.emit('stonePaperScissorsResult', {
-          landingPlayer: {
-            ...currentGame.landingPlayer,
-            choice: currentGame.choices.landingPlayer,
-            money: currentGame.landingPlayer.money
-          },
-          winners: currentGame.winners.map(p => ({
-            ...p,
-            choice: currentGame.choices[p.socketId],
-            money: p.money
-          })),
-          losers: currentGame.losers.map(p => ({
-            ...p,
-            choice: currentGame.choices[p.socketId],
-            money: p.money
-          })),
-          ties: []
+        // Update engine's player data
+        engine.session.players = engine.session.players.map(p => {
+          if (p.socketId === landingPlayer.socketId) {
+            return { ...p, money: landingPlayer.money };
+          }
+          if (p.socketId === tiedPlayer.socketId) {
+            return { ...p, money: tiedPlayer.money };
+          }
+          return p;
         });
 
-        // Clean up the game
-        delete activeRPSGames[gameId];
-      } else {
-        // Emit intermediate tie resolution
-      io.emit('stonePaperScissorsTieResolved', {
-        landingPlayer: {
-          ...landingPlayer,
-          money: landingPlayer.money
-        },
-          tiedPlayer: {
-            ...tiedPlayer,
-            money: tiedPlayer.money
-          },
-          amount,
-          remainingTies: currentGame.ties.length
-        });
+        // Remove this tied player from the game's ties array
+        currentGame.ties = currentGame.ties.filter(p => p.socketId !== tiedPlayerId);
+
+        // Commit transaction
+        await transaction.commit();
+
+        // If this was the last tie to resolve, emit final result
+        if (currentGame.ties.length === 0) {
+          io.emit('stonePaperScissorsResult', {
+            landingPlayer: {
+              ...currentGame.landingPlayer,
+              choice: currentGame.choices.landingPlayer,
+              money: currentGame.landingPlayer.money
+            },
+            winners: currentGame.winners.map(p => ({
+              ...p,
+              choice: currentGame.choices[p.socketId],
+              money: p.money
+            })),
+            losers: currentGame.losers.map(p => ({
+              ...p,
+              choice: currentGame.choices[p.socketId],
+              money: p.money
+            })),
+            ties: []
+          });
+
+          // Clean up the game
+          delete activeRPSGames[gameId];
+        } else {
+          // Emit intermediate tie resolution
+          io.emit('stonePaperScissorsTieResolved', {
+            landingPlayer: {
+              ...landingPlayer,
+              money: landingPlayer.money
+            },
+            tiedPlayer: {
+              ...tiedPlayer,
+              money: tiedPlayer.money
+            },
+            amount,
+            remainingTies: currentGame.ties.length
+          });
+        }
+      } catch (err) {
+        // Rollback transaction on error
+        await transaction.rollback();
+        throw err;
       }
     } catch (err) {
       console.error('Error in tie resolution:', err);
