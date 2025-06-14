@@ -455,7 +455,7 @@ io.on('connection', socket => {
       if (pathInfo.closestPlayers.length > 0) {
         const gameId = Date.now();
         const closestPlayers = pathInfo.closestPlayers.map(playerName => {
-          return players.find(p => p.name === playerName);
+          return Player.find(p => p.name === playerName);
         }).filter(Boolean);
         
         // Initialize the game state with multiple players
@@ -965,7 +965,8 @@ io.on('connection', socket => {
                   loan: currentPlayer.loan,
                   tileId: currentPlayer.tileId,
                   prevTile: currentPlayer.prevTile,
-                  hasMoved: currentPlayer.hasMoved
+                  hasMoved: currentPlayer.hasMoved,
+                  piece: currentPlayer.piece
                 },
                 { 
                   where: { socketId: socket.id },
