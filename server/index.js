@@ -1154,22 +1154,62 @@ io.on('connection', socket => {
     const currentPlayer = engine.getPlayer(socket.id);
     if (!currentPlayer) return;
 
-    // Update player position
-    currentPlayer.prevTile = prevTile;
-    currentPlayer.tileId = toTile;
+    try {
+      // Start a transaction
+      const transaction = await sequelize.transaction();
 
-    // Notify all clients about the move
-    io.emit('playerMoved', { playerId: socket.id, tileId: toTile });
+      try {
+        // Update player position
+        currentPlayer.prevTile = prevTile;
+        currentPlayer.tileId = toTile;
+        currentPlayer.hasMoved = true;  // Mark as moved after teleport
 
-    // Update game session
-    if (currentSessionId) {
-      await GameSession.findByIdAndUpdate(currentSessionId, {
-        $push: { moves: { playerSocketId: socket.id, type: 'teleport', fromTile: prevTile, toTile } }
-      });
+        // Update player in database
+        await Player.update(
+          { 
+            prevTile: prevTile,
+            tileId: toTile,
+            hasMoved: true
+          },
+          { 
+            where: { socketId: socket.id },
+            transaction
+          }
+        );
+
+        // Update game session
+        if (currentSessionId) {
+          await GameSession.update(
+            { 
+              players: engine.session.players,
+              moves: [
+                ...engine.session.moves || [],
+                { playerSocketId: socket.id, type: 'teleport', fromTile: prevTile, toTile }
+              ]
+            },
+            { 
+              where: { id: currentSessionId },
+              transaction 
+            }
+          );
+        }
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Notify all clients about the move
+        io.emit('playerMoved', { playerId: socket.id, tileId: toTile });
+
+        // Emit movementDone to trigger any post-movement actions
+        socket.emit('movementDone');
+
+      } catch (err) {
+        await transaction.rollback();
+        console.error('Error processing teleport:', err);
+      }
+    } catch (err) {
+      console.error('Error starting teleport transaction:', err);
     }
-
-    // Emit movementDone to trigger any post-movement actions
-    socket.emit('movementDone');
   });
 
   // Handle Stone Paper Scissors choice
@@ -1346,25 +1386,31 @@ io.on('connection', socket => {
       return;
     }
 
-    // Find the specific tied player
-    const tiedPlayer = currentGame.ties.find(p => p.socketId === tiedPlayerId);
-    if (!tiedPlayer) {
-      console.log('Tied player not found:', tiedPlayerId);
-      return;
-    }
-
-    // Transfer the amount between landing player and this tied player
-    const landingPlayer = currentGame.landingPlayer;
-    landingPlayer.money += amount;
-    tiedPlayer.money -= amount;
-
     try {
       const transaction = await sequelize.transaction();
 
       try {
+        // Find the specific tied player
+        const tiedPlayer = currentGame.ties.find(p => p.socketId === tiedPlayerId);
+        if (!tiedPlayer) {
+          throw new Error('Tied player not found: ' + tiedPlayerId);
+        }
+
+        // Transfer the amount between landing player and this tied player
+        const landingPlayer = currentGame.landingPlayer;
+        landingPlayer.money += amount;
+        tiedPlayer.money -= amount;
+
+        // Mark both players as having moved after RPS resolution
+        landingPlayer.hasMoved = true;
+        tiedPlayer.hasMoved = true;
+
         // Update both players in database
         await Player.update(
-          { money: landingPlayer.money },
+          { 
+            money: landingPlayer.money,
+            hasMoved: true
+          },
           { 
             where: { socketId: landingPlayer.socketId },
             transaction
@@ -1372,7 +1418,10 @@ io.on('connection', socket => {
         );
 
         await Player.update(
-          { money: tiedPlayer.money },
+          { 
+            money: tiedPlayer.money,
+            hasMoved: true
+          },
           { 
             where: { socketId: tiedPlayer.socketId },
             transaction
@@ -1382,66 +1431,51 @@ io.on('connection', socket => {
         // Update engine's player data
         engine.session.players = engine.session.players.map(p => {
           if (p.socketId === landingPlayer.socketId) {
-            return { ...p, money: landingPlayer.money };
+            return { ...p, money: landingPlayer.money, hasMoved: true };
           }
           if (p.socketId === tiedPlayer.socketId) {
-            return { ...p, money: tiedPlayer.money };
+            return { ...p, money: tiedPlayer.money, hasMoved: true };
           }
           return p;
         });
 
+        // Update game session
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { 
+              where: { id: currentSessionId },
+              transaction
+            }
+          );
+        }
+
         // Commit transaction
         await transaction.commit();
 
-        // Broadcast the updated state to all clients
+        // Remove the tied player from the list of ties
+        currentGame.ties = currentGame.ties.filter(p => p.socketId !== tiedPlayerId);
+
+        // Broadcast updates
         io.emit('playersStateUpdate', {
           players: engine.session.players
         });
 
-        // If this was the last tie to resolve, emit final result
-        if (currentGame.ties.length === 0) {
-          io.emit('stonePaperScissorsResult', {
-            landingPlayer: {
-              ...currentGame.landingPlayer,
-              choice: currentGame.choices.landingPlayer,
-              money: currentGame.landingPlayer.money
-            },
-            winners: currentGame.winners.map(p => ({
-              ...p,
-              choice: currentGame.choices[p.socketId],
-              money: p.money
-            })),
-            losers: currentGame.losers.map(p => ({
-              ...p,
-              choice: currentGame.choices[p.socketId],
-              money: p.money
-            })),
-            ties: []
-          });
+        // Emit movementDone to both players
+        io.to(landingPlayer.socketId).emit('movementDone');
+        io.to(tiedPlayer.socketId).emit('movementDone');
 
-          // Clean up the game
+        // If this was the last tie to resolve, clean up the game
+        if (currentGame.ties.length === 0) {
           delete activeRPSGames[gameId];
-        } else {
-          // Emit intermediate tie resolution
-          io.emit('stonePaperScissorsTieResolved', {
-            landingPlayer: {
-              ...landingPlayer,
-              money: landingPlayer.money
-            },
-            tiedPlayer: {
-              ...tiedPlayer,
-              money: tiedPlayer.money
-            },
-            amount,
-            remainingTies: currentGame.ties.length
-          });
         }
+
       } catch (err) {
         await transaction.rollback();
-        throw err;
+        console.error('Error in RPS tie resolution:', err);
       }
     } catch (err) {
-      console.error('Error in tie resolution:', err);
+      console.error('Error starting RPS tie transaction:', err);
     }
   });
 
