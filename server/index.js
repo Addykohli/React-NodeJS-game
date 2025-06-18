@@ -386,20 +386,34 @@ io.on('connection', socket => {
           
           // Update player in database
           try {
-            await Player.findOneAndUpdate(
-              { socketId: socket.id },
-              { money: player.money }
-            );
-
-            // Notify clients about the bonus
-            io.emit('startBonus', {
-              playerSocketId: socket.id,
-              newMoney: player.money,
-              amount: bonusAmount,
-              reason: 'passing through'
-            });
+            const transaction = await sequelize.transaction();
+            try {
+              await Player.update(
+                { money: player.money },
+                { where: { socketId: socket.id }, transaction }
+              );
+              
+              if (currentSessionId) {
+                await GameSession.update(
+                  { players: engine.session.players },
+                  { where: { id: currentSessionId }, transaction }
+                );
+              }
+              await transaction.commit();
+              
+              // Notify clients about the bonus
+              io.emit('startBonus', {
+                playerSocketId: socket.id,
+                newMoney: player.money,
+                amount: bonusAmount,
+                reason: 'passing through'
+              });
+            } catch (err) {
+              await transaction.rollback();
+              console.error('Error processing start bonus:', err);
+            }
           } catch (err) {
-            console.error('Error processing start bonus:', err);
+            console.error('Error starting transaction:', err);
           }
         }
 
@@ -427,12 +441,26 @@ io.on('connection', socket => {
       
       // Update player in database
       try {
-        await Player.findOneAndUpdate(
-          { socketId: socket.id },
-          { prevTile: currentPlayer.prevTile }
+        const transaction = await sequelize.transaction();
+        await Player.update(
+          { prevTile: currentPlayer.prevTile },
+          { 
+            where: { socketId: socket.id },
+            transaction
+          }
         );
+
+        // If updating game session as well, include in same transaction
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { where: { id: currentSessionId }, transaction }
+          );
+        }
+
+        await transaction.commit();
       } catch (err) {
-        console.error('Error updating prevTile:', err);
+        console.error('Error updating player state:', err);
       }
     }
 
@@ -1227,10 +1255,14 @@ io.on('connection', socket => {
             // Update all winners
             for (const player of currentGame.winners) {
               await Player.update(
-                { money: player.money },
                 { 
-                  where: { socketId: player.socketId },
-                  transaction
+                  money: player.money,
+                  loan: player.money < 0 ? 
+                    (player.loan || 0) + Math.abs(player.money) : 
+                    (player.loan || 0)
+                },
+                {
+                  where: { socketId: player.socketId }
                 }
               );
             }
@@ -1669,58 +1701,73 @@ io.on('connection', socket => {
     
     // Update database for all affected players
     try {
-      // Update landing player
-      await Player.findOneAndUpdate(
-        { socketId: result.landingPlayer.socketId },
-        { 
-          money: result.landingPlayer.money < 0 ? 0 : result.landingPlayer.money,
-          loan: result.landingPlayer.money < 0 ? 
-            (result.landingPlayer.loan || 0) + Math.abs(result.landingPlayer.money) : 
-            (result.landingPlayer.loan || 0)
+      const transaction = await sequelize.transaction();
+
+      try {
+        // Update landing player
+        await Player.update(
+          { 
+            money: result.landingPlayer.money < 0 ? 0 : result.landingPlayer.money,
+            loan: result.landingPlayer.money < 0 ? 
+              (result.landingPlayer.loan || 0) + Math.abs(result.landingPlayer.money) : 
+              (result.landingPlayer.loan || 0)
+          },
+          {
+            where: { socketId: result.landingPlayer.socketId },
+            transaction
+          }
+        );
+
+        // Update winners
+        for (const winner of result.winners) {
+          await Player.update(
+            { 
+              money: winner.money < 0 ? 0 : winner.money,
+              loan: winner.money < 0 ? 
+                (winner.loan || 0) + Math.abs(winner.money) : 
+                (winner.loan || 0)
+            },
+            {
+              where: { socketId: winner.socketId },
+              transaction
+            }
+          );
         }
-      );
 
-      // Update winners
-      for (const winner of result.winners) {
-        await Player.findOneAndUpdate(
-          { socketId: winner.socketId },
-          { 
-            money: winner.money < 0 ? 0 : winner.money,
-            loan: winner.money < 0 ? 
-              (winner.loan || 0) + Math.abs(winner.money) : 
-              (winner.loan || 0)
-          }
-        );
-      }
+        // Update losers
+        for (const loser of result.losers) {
+          await Player.update(
+            { 
+              money: loser.money < 0 ? 0 : loser.money,
+              loan: loser.money < 0 ? 
+                (loser.loan || 0) + Math.abs(loser.money) : 
+                (loser.loan || 0)
+            },
+            {
+              where: { socketId: loser.socketId },
+              transaction
+            }
+          );
+        }
 
-      // Update losers
-      for (const loser of result.losers) {
-        await Player.findOneAndUpdate(
-          { socketId: loser.socketId },
-          { 
-            money: loser.money < 0 ? 0 : loser.money,
-            loan: loser.money < 0 ? 
-              (loser.loan || 0) + Math.abs(loser.money) : 
-              (loser.loan || 0)
-          }
-        );
-      }
+        // Update game session if exists
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { 
+              where: { id: currentSessionId },
+              transaction 
+            }
+          );
+        }
 
-      // Update engine's player data
-      engine.session.players = engine.session.players.map(p => {
-        const updatedPlayer = updatedPlayers.find(up => up.socketId === p.socketId);
-        return updatedPlayer || p;
-      });
-
-      // Update game session if exists
-      if (currentSessionId) {
-        await GameSession.findByIdAndUpdate(
-          currentSessionId,
-          { players: engine.session.players }
-        );
+        await transaction.commit();
+      } catch (err) {
+        await transaction.rollback();
+        console.error('Error updating player money and loans after RPS:', err);
       }
     } catch (err) {
-      console.error('Error updating player money and loans after RPS:', err);
+      console.error('Error starting transaction:', err);
     }
   });
 
@@ -1786,7 +1833,7 @@ io.on('connection', socket => {
     
     const askParts = [];
     if (request.ask.money > 0) askParts.push(`$${request.ask.money}`);
-    if (askProperties) askParts.push(askProperties);
+    if (askProperties) askParts.push(askedProperties);
     message += askParts.join(' and ');
 
     broadcastGameEvent(message);
