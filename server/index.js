@@ -918,50 +918,85 @@ io.on('connection', socket => {
     const player = engine.getPlayer(socket.id);
     if (!player) return;
 
-    // Start a transaction
-    const transaction = await sequelize.transaction();
-
     try {
-    // Add the amount to player's money
-    player.money += amount;
+      // Start a transaction
+      const transaction = await sequelize.transaction();
 
-      // Update player in database within transaction
-      await Player.update(
-        { money: player.money },
-        { where: { socketId: socket.id }, transaction }
-      );
+      try {
+        // Add the amount to player's money and mark as moved
+        player.money += amount;
+        player.hasMoved = true;
 
-      // Update the engine's player data
-      engine.session.players = engine.session.players.map(p =>
-        p.socketId === socket.id ? { ...p, money: player.money } : p
-      );
-
-      // Update game session if exists
-      if (currentSessionId) {
-        await GameSession.update(
-          { players: engine.session.players },
-          { where: { id: currentSessionId }, transaction }
+        // Update player in database within transaction
+        await Player.update(
+          { 
+            money: player.money,
+            hasMoved: true
+          },
+          { 
+            where: { socketId: socket.id },
+            transaction
+          }
         );
+
+        // Update the engine's player data
+        engine.session.players = engine.session.players.map(p =>
+          p.socketId === socket.id ? { ...p, money: player.money, hasMoved: true } : p
+        );
+
+        // Update game session if exists
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { where: { id: currentSessionId }, transaction }
+          );
+        }
+
+        // Commit transaction
+        await transaction.commit();
+
+        // Notify all clients about the result and state updates
+        io.emit('playersStateUpdate', {
+          players: engine.session.players
+        });
+
+        io.emit('roadCashResult', {
+          playerSocketId: socket.id,
+          newMoney: player.money,
+          amount: amount,
+          hasMoved: true
+        });
+
+        // Broadcast game event for road cash
+        broadcastGameEvent(`${player.name} won $${amount} on the road!`);
+
+        // Emit movementDone to trigger client state update
+        socket.emit('movementDone');
+
+      } catch (err) {
+        // Rollback transaction on error
+        await transaction.rollback();
+        console.error('Error processing road cash:', err);
       }
-
-      // Commit transaction
-      await transaction.commit();
-
-      // Notify all clients about the result
-      io.emit('roadCashResult', {
-        playerSocketId: socket.id,
-        newMoney: player.money,
-        amount: amount
-      });
-
-      // Broadcast game event for road cash
-      broadcastGameEvent(`${player.name} won $${amount} on the road!`);
-
     } catch (err) {
-      // Rollback transaction on error
-      await transaction.rollback();
-      console.error('Error processing road cash:', err);
+      console.error('Error starting road cash transaction:', err);
     }
+  });
+
+  // When landing on Road tile (ID 22)
+  socket.on('landOnRoad', () => {
+    console.log('[landOnRoad] Player landed on Road tile');
+    const player = engine.getPlayer(socket.id);
+    if (!player) return;
+
+    // Generate random amounts for selection
+    const amounts = [1000, 2000, 3000, 4000, 5000]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+
+    socket.emit('roadCashOptions', {
+      amounts
+    });
   });
 
   socket.on('disconnect', async () => {
