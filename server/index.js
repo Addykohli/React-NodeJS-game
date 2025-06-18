@@ -911,10 +911,9 @@ io.on('connection', socket => {
     }
   });
 
-  // Handle road cash selection
-  socket.on('roadCashSelected', async ({ amount }) => {
-    console.log('[roadCashSelected]', { amount });
-    
+  // When landing on Road tile (ID 22)
+  socket.on('landOnRoad', async () => {
+    console.log('[landOnRoad] Player landed on Road tile');
     const player = engine.getPlayer(socket.id);
     if (!player) return;
 
@@ -923,11 +922,72 @@ io.on('connection', socket => {
       const transaction = await sequelize.transaction();
 
       try {
+        // Update player state to track that we're in road event
+        await Player.update(
+          { 
+            hasMoved: false  // Reset hasMoved to ensure we can complete the road event
+          },
+          { 
+            where: { socketId: socket.id },
+            transaction
+          }
+        );
+
+        // Update engine state
+        player.hasMoved = false;
+
+        // Update game session
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { 
+              where: { id: currentSessionId },
+              transaction
+            }
+          );
+        }
+
+        await transaction.commit();
+
+        // Generate random amounts for selection
+        const amounts = [1000, 2000, 3000, 4000, 5000]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+
+        // Emit road cash options after state is properly updated
+        socket.emit('roadCashOptions', {
+          amounts,
+          playerState: {
+            hasMoved: false,
+            currentTile: player.tileId
+          }
+        });
+
+      } catch (err) {
+        await transaction.rollback();
+        console.error('Error preparing road tile event:', err);
+      }
+    } catch (err) {
+      console.error('Error starting road tile transaction:', err);
+    }
+  });
+
+  // Handle road cash selection
+  socket.on('roadCashSelected', async ({ amount }) => {
+    console.log('[roadCashSelected]', { amount });
+    
+    const player = engine.getPlayer(socket.id);
+    if (!player) return;
+
+    try {
+      const transaction = await sequelize.transaction();
+
+      try {
         // Add the amount to player's money and mark as moved
         player.money += amount;
         player.hasMoved = true;
 
-        // Update player in database within transaction
+        // Update player in database
         await Player.update(
           { 
             money: player.money,
@@ -939,23 +999,25 @@ io.on('connection', socket => {
           }
         );
 
-        // Update the engine's player data
+        // Update engine state
         engine.session.players = engine.session.players.map(p =>
           p.socketId === socket.id ? { ...p, money: player.money, hasMoved: true } : p
         );
 
-        // Update game session if exists
+        // Update game session
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { where: { id: currentSessionId }, transaction }
+            { 
+              where: { id: currentSessionId },
+              transaction
+            }
           );
         }
 
-        // Commit transaction
         await transaction.commit();
 
-        // Notify all clients about the result and state updates
+        // Notify all clients about updates
         io.emit('playersStateUpdate', {
           players: engine.session.players
         });
@@ -967,36 +1029,21 @@ io.on('connection', socket => {
           hasMoved: true
         });
 
-        // Broadcast game event for road cash
-        broadcastGameEvent(`${player.name} won $${amount} on the road!`);
+        broadcastGameEvent(`${player.name} collected $${amount} from the road!`);
 
-        // Emit movementDone to trigger client state update
-        socket.emit('movementDone');
+        // Explicitly notify about movement completion
+        socket.emit('movementDone', {
+          playerId: socket.id,
+          hasMoved: true
+        });
 
       } catch (err) {
-        // Rollback transaction on error
         await transaction.rollback();
         console.error('Error processing road cash:', err);
       }
     } catch (err) {
-      console.error('Error starting road cash transaction:', err);
+      console.error('Error in road cash transaction:', err);
     }
-  });
-
-  // When landing on Road tile (ID 22)
-  socket.on('landOnRoad', () => {
-    console.log('[landOnRoad] Player landed on Road tile');
-    const player = engine.getPlayer(socket.id);
-    if (!player) return;
-
-    // Generate random amounts for selection
-    const amounts = [1000, 2000, 3000, 4000, 5000]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    socket.emit('roadCashOptions', {
-      amounts
-    });
   });
 
   socket.on('disconnect', async () => {
