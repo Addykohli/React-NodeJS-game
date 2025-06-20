@@ -954,6 +954,13 @@ io.on('connection', socket => {
 
         await transaction.commit();
 
+        // Emit playerMoved event with hasMoved property
+        io.emit('playerMoved', {
+          playerId: socket.id,
+          tileId: player.tileId,
+          hasMoved: player.hasMoved
+        });
+
         // Generate random amounts for selection
         const amounts = [1000, 2000, 3000, 4000, 5000]
           .sort(() => Math.random() - 0.5)
