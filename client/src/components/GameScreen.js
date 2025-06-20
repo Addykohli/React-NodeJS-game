@@ -852,7 +852,7 @@ export default function GameScreen() {
       console.log('[DEBUG***] RoadCash Overlay Check:', {
         isMyTurn,
         isTile22: tileMeta?.id === 22,
-        pickedRoadCash: player?.pickedRoadCash
+        pickedRoadCash: pickedRoadCash
       });
     }
   }, [tileMeta, isMyTurn, player?.hasMoved]);
@@ -1484,7 +1484,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)'  ,
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)'  ,
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
@@ -1556,7 +1556,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)',
+            background: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
