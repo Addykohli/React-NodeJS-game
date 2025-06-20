@@ -183,7 +183,7 @@ io.on('connection', socket => {
           socket.emit('playerMoved', {
             playerId: socket.id,
             tileId: currentPlayer.tileId,
-            hasMoved: currentPlayer.hasMoved // <-- add this
+            hasMoved: currentPlayer.hasMoved 
           });
           
           // Only emit movementDone if it's not their turn or if they had already moved
@@ -280,6 +280,8 @@ io.on('connection', socket => {
       console.log('Player has already moved this turn');
       return;
     }
+
+    currentPlayer.pickedRoadCash = false;
 
     let roll;
     if (testRoll) {
@@ -998,7 +1000,8 @@ io.on('connection', socket => {
         const updatedPlayerState = {
           ...player,
           money: player.money + amount,
-          hasMoved: true
+          hasMoved: true,
+          pickedRoadCash: true
         };
 
         // Update database

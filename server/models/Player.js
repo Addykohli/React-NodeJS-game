@@ -43,7 +43,12 @@ const Player = sequelize.define('Player', {
   hasMoved: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
-  }
+  },
+  pickedRoadCash: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+
 }, {
   timestamps: true
 });
