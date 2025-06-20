@@ -182,7 +182,8 @@ io.on('connection', socket => {
         if (currentPlayer) {
           socket.emit('playerMoved', {
             playerId: socket.id,
-            tileId: currentPlayer.tileId
+            tileId: currentPlayer.tileId,
+            hasMoved: currentPlayer.hasMoved // <-- add this
           });
           
           // Only emit movementDone if it's not their turn or if they had already moved
@@ -309,7 +310,7 @@ io.on('connection', socket => {
         const idx = await new Promise(res => branchResolvers[socket.id] = res);
         console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
-        io.emit('playerMoved', { playerId: socket.id, tileId: to });
+        io.emit('playerMoved', { playerId: socket.id, tileId: to, hasMoved: currentPlayer.hasMoved });
       } else {
         const player = engine.getPlayer(socket.id);
         const newTile = player.tileId;
@@ -417,7 +418,7 @@ io.on('connection', socket => {
           }
         }
 
-        io.emit('playerMoved', { playerId: socket.id, tileId: newTile });
+        io.emit('playerMoved', { playerId: socket.id, tileId: newTile, hasMoved: currentPlayer.hasMoved });
       }
 
       if (currentSessionId) {
@@ -1292,7 +1293,7 @@ io.on('connection', socket => {
         await transaction.commit();
 
         // Notify all clients about the move
-        io.emit('playerMoved', { playerId: socket.id, tileId: toTile });
+        io.emit('playerMoved', { playerId: socket.id, tileId: toTile, hasMoved: currentPlayer.hasMoved });
 
         // Emit movementDone to trigger any post-movement actions
         socket.emit('movementDone');
