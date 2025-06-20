@@ -5,15 +5,6 @@ import { GameContext } from '../context/GameContext';
 const PropertyCard = ({ property, isExpanded, isLastProperty, socket, playerId, player }) => {
   const { player: currentPlayer } = useContext(GameContext);
   
-  // Debug logs
-  console.log('PropertyCard render:', {
-    propertyName: property.name,
-    isExpanded,
-    playerId,
-    currentPlayerId: currentPlayer?.socketId,
-    isCurrentPlayer: playerId === currentPlayer?.socketId,
-    playerProperties: player?.properties
-  });
 
   const handleSell = (e) => {
     e.stopPropagation(); // Prevent card expansion when clicking sell button
@@ -34,13 +25,6 @@ const PropertyCard = ({ property, isExpanded, isLastProperty, socket, playerId, 
     const ownedProperties = tiles.filter(tile => player.properties.includes(tile.id));
     const divisionProperties = ownedProperties.filter(tile => tile.division === property.division);
     const count = divisionProperties.length;
-
-    console.log('Multiplier calculation:', {
-      propertyName: property.name,
-      division: property.division,
-      ownedInDivision: count,
-      properties: divisionProperties.map(p => p.name)
-    });
 
     if (property.division === 'tech') {
       if (count >= 6) return 5;
@@ -165,14 +149,6 @@ const PropertyDisplayLeft = ({ player, position }) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Debug log for left display
-  console.log('PropertyDisplayLeft:', {
-    playerName: player?.name,
-    currentPlayerName: currentPlayer?.name,
-    isCurrentPlayer: player?.socketId === currentPlayer?.socketId,
-    expandedIndex,
-    ownedProperties: ownedProperties.map(p => p.name)
-  });
 
   // Reduced dimensions (70% of original) - matching TopPropertyDisplay
   const cardWidth = 196; // 70% of 280 
@@ -266,15 +242,6 @@ const PropertyDisplayRight = ({ player, position }) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Debug log for right display
-  console.log('PropertyDisplayRight:', {
-    playerName: player?.name,
-    currentPlayerName: currentPlayer?.name,
-    isCurrentPlayer: player?.socketId === currentPlayer?.socketId,
-    expandedIndex,
-    ownedProperties: ownedProperties.map(p => p.name)
-  });
-
   // Reduced dimensions (70% of original) - matching TopPropertyDisplay
   const cardWidth = 196; // 70% of 280 (swapped)
   const cardHeight = 147; // 70% of 210 (swapped)
@@ -310,13 +277,7 @@ const PropertyDisplayRight = ({ player, position }) => {
           expandedOffset = expandOffset;
         }
         const finalPosition = basePosition + expandedOffset;
-        
-        // Debug log for each property card
-        console.log(`Property card ${property.name}:`, {
-          isExpanded,
-          isLastProperty,
-          isCurrentPlayer: player.socketId === currentPlayer?.socketId
-        });
+      
 
         return (
           <div

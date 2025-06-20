@@ -93,11 +93,7 @@ const Board = () => {
 
         {/* Player pieces */}
         {players.map((p, i) => {
-          console.log('[Board] Rendering piece for player:', {
-            name: p.name,
-            piece: p.piece,
-            socketId: p.socketId
-          });
+        
           
           if (!p) {
             console.log(`[Board] Missing player at index ${i}`);

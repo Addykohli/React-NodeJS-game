@@ -282,6 +282,7 @@ io.on('connection', socket => {
     }
 
     currentPlayer.pickedRoadCash = false;
+    console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
 
     let roll;
     if (testRoll) {

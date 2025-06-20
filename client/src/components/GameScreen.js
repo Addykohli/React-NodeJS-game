@@ -849,10 +849,10 @@ export default function GameScreen() {
   // Print booleans when player lands on tile 22
   useEffect(() => {
     if (tileMeta?.id === 22) {
-      console.log('[DEBUG] RoadCash Overlay Check:', {
+      console.log('[DEBUG***] RoadCash Overlay Check:', {
         isMyTurn,
         isTile22: tileMeta?.id === 22,
-        hasMoved: player?.hasMoved
+        pickedRoadCash: player?.pickedRoadCash
       });
     }
   }, [tileMeta, isMyTurn, player?.hasMoved]);
@@ -1484,8 +1484,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            //color: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)'  ,
-            backgroundColor: 'red',
+            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)'  ,
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
@@ -1557,7 +1556,7 @@ export default function GameScreen() {
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
             width: '2px',
-            color: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)',
+            backgroundColor: 'linear-gradient(to bottom, transparent 0%, rgba(52,52,52,0.8) 20%, rgba(90,90,90,0.9) 50%, rgba(52,52,52,0.8) 80%, transparent 100%)',
             alignSelf: 'stretch',
             margin: '0 0',
             opacity: 1,
