@@ -692,6 +692,7 @@ io.on('connection', socket => {
     const endingPlayer = engine.getPlayer(socket.id);
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
+      endingPlayer.pickedRoadCash = true; 
     }
     const next = engine.endTurn();
     console.log('Next player:', next);

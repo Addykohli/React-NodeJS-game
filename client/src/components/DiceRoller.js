@@ -94,6 +94,14 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
+  useEffect(() => {
+    console.log('[DEBUG***] RoadCash Overlay Check:', {
+      isMyTurn,
+      die1,
+      done
+      });
+  }, [isMyTurn, die1, done]);
+
   return (
     <div
       style={{
