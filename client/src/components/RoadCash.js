@@ -50,13 +50,13 @@ const RoadCash = ({ isMyTurn, socket }) => {
     setRevealedAmount(amount);
     socket.emit('roadCashSelected', { amount });
 
-    // After 3 seconds, show all cards and start exit animation
+    // After 3 seconds, show all cards
     setTimeout(() => {
       setShowAll(true);
       // After another 3 seconds, trigger exit animations
       setTimeout(() => {
         setIsExiting(true);
-        // Finally remove from DOM after animations complete
+        // Remove from DOM after exit animation completes (1s)
         setTimeout(() => {
           setIsActive(false);
         }, 1000);
@@ -98,7 +98,7 @@ const RoadCash = ({ isMyTurn, socket }) => {
             alt={`Cash ${card.amount}`}
             onClick={() => handleCashClick(index)}
             style={{
-              cursor: isMyTurn && !selectedIndex ? 'pointer' : 'default',
+              cursor: isMyTurn && selectedIndex === null ? 'pointer' : 'default',
               transform: `translateY(${hasEntered ? '0' : '-100vh'}) 
                          ${isExiting ? `translateY(${isSelected ? '100vh' : '-100vh'})` : ''}`,
               transition: 'transform 1s ease',
@@ -114,4 +114,4 @@ const RoadCash = ({ isMyTurn, socket }) => {
   );
 };
 
-export default RoadCash; 
+export default RoadCash;
