@@ -59,7 +59,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     const onCasinoResult = ({ playerId }) => {
       if (playerId === player?.socketId) {
         setCasinoPlayed(true);
-        setDone(true);
+        //setDone(true);
       }
     };
 
