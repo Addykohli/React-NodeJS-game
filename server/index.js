@@ -281,9 +281,6 @@ io.on('connection', socket => {
       return;
     }
 
-    currentPlayer.pickedRoadCash = false;
-    console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
-
     let roll;
     if (testRoll) {
       roll = { die1: Math.ceil(testRoll/2), die2: Math.floor(testRoll/2), total: testRoll };
@@ -419,6 +416,11 @@ io.on('connection', socket => {
           } catch (err) {
             console.error('Error starting transaction:', err);
           }
+        }
+
+        else if (newTile === 16) {
+          currentPlayer.pickedRoadCash = false;
+          console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
         }
 
         io.emit('playerMoved', { playerId: socket.id, tileId: newTile, hasMoved: currentPlayer.hasMoved });
@@ -713,7 +715,7 @@ io.on('connection', socket => {
 
     const { tiles } = require('./data/tiles.cjs');
       const tile = tiles.find(t => t.id === playerObj.tileId);
-    console.log('Tile metadata:', tile);
+    //console.log('Tile metadata:', tile);
 
     if (!tile || tile.type !== 'property') {
       console.log('purchaseFailed: notProperty');

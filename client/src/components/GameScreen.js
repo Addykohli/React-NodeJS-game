@@ -270,7 +270,8 @@ export default function GameScreen() {
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
-  const pickedRoadCash = player?.pickedRoadCash ?? true;
+  // Use the pickedRoadCash value from the players array for the current player
+  const pickedRoadCash = players.find(p => p.socketId === player?.socketId)?.pickedRoadCash ?? player?.pickedRoadCash ?? false;
   const [error, setError] = useState(null);
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
@@ -1994,7 +1995,7 @@ export default function GameScreen() {
             .footer-sections {
               flex-direction: row !important;
               gap: 0 !important;
-              align-items: stretch !important;
+                           align-items: stretch !important;
               flex-wrap: nowrap !important;
               height: 190px !important;
               justify-content: space-between !important;
