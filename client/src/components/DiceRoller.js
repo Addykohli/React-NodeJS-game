@@ -24,6 +24,15 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setCasinoPlayed(hasCasinoPlayed);
   }, [hasCasinoPlayed]);
 
+  // Debug logging for RoadCash overlay check
+  useEffect(() => {
+    console.log('[DEBUG***] Casino turn Check:', {
+      isMyTurn,
+      die1,
+      done
+    });
+  }, [isMyTurn, die1, done]);
+
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
@@ -32,14 +41,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         setDone(false);
       }
     };
-
-  useEffect(() => {
-    console.log('[DEBUG***] RoadCash Overlay Check:', {
-      isMyTurn,
-      die1,
-      done
-      });
-  }, [isMyTurn, die1, done]);
 
     const onBranchChoices = ({ options }) => setBranchOptions(options);
     const onMovementDone = () => setDone(true);
@@ -102,8 +103,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
-
-  
 
   return (
     <div
@@ -236,3 +235,4 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     </div>
   );
 }
+
