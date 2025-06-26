@@ -1001,7 +1001,6 @@ io.on('connection', socket => {
           ...player,
           money: player.money + amount,
           hasMoved: true,
-          pickedRoadCash: true
         };
 
         // Update database
