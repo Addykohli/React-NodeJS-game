@@ -418,10 +418,9 @@ io.on('connection', socket => {
           }
         }
 
-        else if (newTile === 16) {
-          currentPlayer.pickedRoadCash = false;
-          console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
-        }
+        currentPlayer.pickedRoadCash = false;
+        console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
+        
 
         io.emit('playerMoved', { playerId: socket.id, tileId: newTile, hasMoved: currentPlayer.hasMoved });
       }
