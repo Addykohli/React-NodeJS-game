@@ -34,6 +34,16 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   }, [isMyTurn, die1, done]);
 
   useEffect(() => {
+    console.log('[DEBUG***] rps tie done Check:', {
+      isMyTurn,
+      rpsGame,
+      done,
+      isOnCasino,
+      casinoPlayed
+    });
+  }, [isMyTurn, rpsGame, done, isOnCasino, casinoPlayed]);
+
+  useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
         setDie1(die1);
