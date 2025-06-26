@@ -11,6 +11,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [die2, setDie2] = useState(null);
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
+  const [hasMoved, setHasMoved] = useState(false);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 

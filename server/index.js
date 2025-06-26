@@ -943,9 +943,6 @@ io.on('connection', socket => {
           }
         );
 
-        // Update engine state
-        player.hasMoved = false;
-
         // Update game session
         if (currentSessionId) {
           await GameSession.update(

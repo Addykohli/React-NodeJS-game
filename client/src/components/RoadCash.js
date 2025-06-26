@@ -42,6 +42,7 @@ const RoadCash = ({ isMyTurn, socket }) => {
     }, 100);
   }, []);
 
+  // Fix: Only set isActive after exit animation, and fix transform logic for smooth animation
   const handleCashClick = (index) => {
     if (!isMyTurn || selectedIndex !== null) return;
 
@@ -50,19 +51,23 @@ const RoadCash = ({ isMyTurn, socket }) => {
     setRevealedAmount(amount);
     socket.emit('roadCashSelected', { amount });
 
-    // After 3 seconds, show all cards
+    // Show all cards after 3s
     setTimeout(() => {
       setShowAll(true);
-      // After another 3 seconds, trigger exit animations
+      // Start exit animation after another 3s
       setTimeout(() => {
         setIsExiting(true);
-        // Remove from DOM after exit animation completes (1s)
-        setTimeout(() => {
-          setIsActive(false);
-        }, 1000);
       }, 3000);
     }, 3000);
   };
+
+  // Remove from DOM only after exit animation completes
+  useEffect(() => {
+    if (isExiting) {
+      const timer = setTimeout(() => setIsActive(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isExiting]);
 
   if (!isActive) return null;
 
@@ -99,9 +104,13 @@ const RoadCash = ({ isMyTurn, socket }) => {
             onClick={() => handleCashClick(index)}
             style={{
               cursor: isMyTurn && selectedIndex === null ? 'pointer' : 'default',
-              transform: `translateY(${hasEntered ? '0' : '-100vh'}) 
-                         ${isExiting ? `translateY(${isSelected ? '100vh' : '-100vh'})` : ''}`,
-              transition: 'transform 1s ease',
+              // Animation: entrance, then exit (selected goes down, others go up)
+              transform: hasEntered
+                ? isExiting
+                  ? `translateY(${isSelected ? '100vh' : '-100vh'})`
+                  : 'translateY(0)'
+                : 'translateY(-100vh)',
+              transition: 'transform 1s cubic-bezier(0.4,0,0.2,1)',
               position: 'relative',
               width: cashDimensions.width ? `${cashDimensions.width}px` : 'auto',
               height: cashDimensions.height ? `${cashDimensions.height}px` : 'auto',
