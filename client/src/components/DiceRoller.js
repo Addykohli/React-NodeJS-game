@@ -4,7 +4,7 @@ import { tiles } from '../data/tiles';
 import Dicebox from '../assets/diceBoard.png';
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
-  const { player, currentPlayerId, socket, movementDone } = useContext(GameContext);
+  const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
   const isMyTurn = player?.socketId === currentPlayerId;
   const [rolling, setRolling] = useState(false);
   const [die1, setDie1] = useState(null);
@@ -114,9 +114,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
-
-  const {players} = useContext(GameContext);
-
+  
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
 
