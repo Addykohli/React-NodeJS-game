@@ -15,6 +15,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
+
   // Get current tile to check if we're on casino
   const tileMeta = tiles.find(t => t.id === player?.tileId);
   const isOnCasino = tileMeta?.id === 16;
@@ -113,6 +114,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
+
+  const {players} = useContext(GameContext);
 
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
