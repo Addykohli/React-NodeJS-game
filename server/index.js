@@ -291,6 +291,24 @@ io.on('connection', socket => {
 
     currentPlayer.hasRolled = true;
 
+    // Ensure hasRolled is updated in all relevant arrays
+    engine.session.players = engine.session.players.map(p =>
+      p.socketId === socket.id ? { ...p, hasRolled: true } : p
+    );
+    lobbyPlayers = lobbyPlayers.map(p =>
+      p.socketId === socket.id ? { ...p, hasRolled: true } : p
+    );
+
+    // Optionally, persist to DB
+    try {
+      await Player.update(
+        { hasRolled: true },
+        { where: { socketId: socket.id } }
+      );
+    } catch (err) {
+      console.error('Error updating hasRolled state:', err);
+    }
+
     // Emit dice result to all players
     io.emit('diceResult', {
       playerId: socket.id,

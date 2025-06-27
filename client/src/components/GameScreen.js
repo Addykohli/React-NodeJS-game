@@ -1553,7 +1553,17 @@ export default function GameScreen() {
               }}
             >
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
-              has rolled {player?.hasRolled ? 'true' : 'false'}
+              
+            </div>
+            <div style={{
+                fontSize: '1em',
+                color: 'white',
+                textAlign: 'center',
+                marginTop: '4px',
+                wordBreak: 'break-word',
+              }}
+            >
+                has rolled {player?.hasRolled ? 'true' : 'false'}
             </div>
           </div>
 
