@@ -114,6 +114,9 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
+  const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
+
+
   return (
     <div
       style={{
@@ -130,7 +133,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       }}
     >
       {/* Roll button */}
-      {!die1 && !done && !branchOptions && (
+      {!die1 && !hasRolled && !branchOptions && (
         <button
           onClick={handleRoll}
           style={{ 

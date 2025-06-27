@@ -289,6 +289,8 @@ io.on('connection', socket => {
     }
     console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
+    currentPlayer.hasRolled = true;
+
     // Emit dice result to all players
     io.emit('diceResult', {
       playerId: socket.id,
@@ -689,9 +691,14 @@ io.on('connection', socket => {
   socket.on('endTurn', async () => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
+    endingPlayer.hasRolled = false; 
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
       endingPlayer.pickedRoadCash = true; 
+      console.log("pickedRoadCash:", endingPlayer.pickedRoadCash);
+    }
+    else {
+      console.log('Player not found for endTurn:', socket.id);
     }
     const next = engine.endTurn();
     console.log('Next player:', next);

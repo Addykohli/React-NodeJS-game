@@ -272,6 +272,7 @@ export default function GameScreen() {
   const isMyTurn = player?.socketId === currentPlayerId;
   // Use the pickedRoadCash value from the players array for the current player
   const pickedRoadCash = players.find(p => p.socketId === player?.socketId)?.pickedRoadCash ?? player?.pickedRoadCash ?? false;
+  const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
   const [error, setError] = useState(null);
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
@@ -1313,7 +1314,7 @@ export default function GameScreen() {
             <PlayerStats />
             {/* Road Cash UI here */}
             
-            {isMyTurn && tileMeta?.id === 22 && !pickedRoadCash && (
+            {isMyTurn && tileMeta?.id === 22 && !pickedRoadCash && hasRolled &&(
               <div style={{
                 position: 'absolute',
                 top: '50%',

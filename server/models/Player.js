@@ -48,6 +48,10 @@ const Player = sequelize.define('Player', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   },
+  hasRolled: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
 
 }, {
   timestamps: true
