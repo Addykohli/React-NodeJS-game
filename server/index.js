@@ -289,25 +289,36 @@ io.on('connection', socket => {
     }
     console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
-    currentPlayer.hasRolled = true;
-
-    // Ensure hasRolled is updated in all relevant arrays
-    engine.session.players = engine.session.players.map(p =>
-      p.socketId === socket.id ? { ...p, hasRolled: true } : p
-    );
-    lobbyPlayers = lobbyPlayers.map(p =>
-      p.socketId === socket.id ? { ...p, hasRolled: true } : p
-    );
-
-    // Optionally, persist to DB
+    // --- Begin transaction for hasRolled update ---
+    const transaction = await sequelize.transaction();
     try {
+      // Set hasRolled to true in memory and DB
+      currentPlayer.hasRolled = true;
       await Player.update(
         { hasRolled: true },
-        { where: { socketId: socket.id } }
+        { where: { socketId: socket.id }, transaction }
       );
+
+      // Update engine's player data
+      engine.session.players = engine.session.players.map(p =>
+        p.socketId === socket.id ? { ...p, hasRolled: true } : p
+      );
+
+      // Update game session if exists
+      if (currentSessionId) {
+        await GameSession.update(
+          { players: engine.session.players },
+          { where: { id: currentSessionId }, transaction }
+        );
+      }
+
+      await transaction.commit();
     } catch (err) {
+      await transaction.rollback();
       console.error('Error updating hasRolled state:', err);
+      return;
     }
+    // --- End transaction for hasRolled update ---
 
     // Emit dice result to all players
     io.emit('diceResult', {
@@ -574,7 +585,7 @@ io.on('connection', socket => {
 
           // Update both players in database within transaction
           await Player.update(
-            { money: currentPlayer.money, loan: currentPlayer.loan },
+            { money: currentPlayer.money, loan: currentPlayer.loan, hasRolled: true },
             { where: { socketId: currentPlayer.socketId }, transaction }
           );
 
@@ -586,7 +597,7 @@ io.on('connection', socket => {
           // Update the engine's player data
           engine.session.players = engine.session.players.map(p => {
             if (p.socketId === currentPlayer.socketId) {
-              return { ...p, money: currentPlayer.money, loan: currentPlayer.loan };
+              return { ...p, money: currentPlayer.money, loan: currentPlayer.loan, hasRolled: true };
             }
             if (p.socketId === propertyOwner.socketId) {
               return { ...p, money: propertyOwner.money };
@@ -644,13 +655,13 @@ io.on('connection', socket => {
 
           // Update player in database within transaction
           await Player.update(
-            { money: currentPlayer.money },
+            { money: currentPlayer.money, hasRolled: true },
             { where: { socketId: currentPlayer.socketId }, transaction }
           );
 
           // Update the engine's player data
           engine.session.players = engine.session.players.map(p =>
-            p.socketId === currentPlayer.socketId ? { ...p, money: currentPlayer.money } : p
+            p.socketId === currentPlayer.socketId ? { ...p, money: currentPlayer.money, hasRolled: true } : p
           );
 
           // Update game session if exists
@@ -687,17 +698,29 @@ io.on('connection', socket => {
     console.log('Emitting movementDone for', socket.id);
     const rollingPlayer = engine.getPlayer(socket.id);
     rollingPlayer.hasMoved = true;
-    socket.emit('movementDone');
-
-    // After all movement is complete, mark player as moved and persist it
+    // --- Update hasMoved in DB as well ---
     try {
+      const transaction = await sequelize.transaction();
       await Player.update(
         { hasMoved: true },
-        { where: { socketId: socket.id } }
+        { where: { socketId: socket.id }, transaction }
       );
+      // Also update engine state
+      engine.session.players = engine.session.players.map(p =>
+        p.socketId === socket.id ? { ...p, hasMoved: true } : p
+      );
+      // Update game session if exists
+      if (currentSessionId) {
+        await GameSession.update(
+          { players: engine.session.players },
+          { where: { id: currentSessionId }, transaction }
+        );
+      }
+      await transaction.commit();
     } catch (err) {
       console.error('Error updating hasMoved state:', err);
     }
+    socket.emit('movementDone');
   });
 
   socket.on('branchChoice', idx => {
