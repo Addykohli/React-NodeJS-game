@@ -854,7 +854,8 @@ export default function GameScreen() {
       console.log('[DEBUG***] RoadCash Overlay Check:', {
         isMyTurn,
         isTile22: tileMeta?.id === 22,
-        pickedRoadCash: pickedRoadCash
+        pickedRoadCash: pickedRoadCash,
+        hasRolled: hasRolled,
       });
     }
   }, [tileMeta, isMyTurn, player?.hasMoved]);
@@ -1552,6 +1553,7 @@ export default function GameScreen() {
               }}
             >
               {tiles.find(t => t.id === player?.tileId)?.name || 'Unknown Location'}
+              has rolled {player?.hasRolled ? 'true' : 'false'}
             </div>
           </div>
 

@@ -114,7 +114,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
-  
+
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
 
@@ -228,7 +228,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       )}
 
       {/* Done button - Only show if not on casino or if casino has been played */}
-      {done && (!isOnCasino || casinoPlayed) && !rpsGame && (
+      {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
         <button
           onClick={handleDone}
           style={{ 
