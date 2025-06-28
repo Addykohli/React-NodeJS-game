@@ -334,13 +334,16 @@ io.on('connection', socket => {
       const step = engine.moveOneStep(socket.id, roll.total);
       if (!step) break;
 
+      // Always re-fetch the player after moveOneStep to get the latest tileId
+      const player = engine.getPlayer(socket.id);
+
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
         socket.emit('branchChoices', { options: step.branchChoices.map(c => c.to) });
         const idx = await new Promise(res => branchResolvers[socket.id] = res);
         console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
-        io.emit('playerMoved', { playerId: socket.id, tileId: to, hasMoved: currentPlayer.hasMoved });
+        io.emit('playerMoved', { playerId: socket.id, tileId: step.branchChoices[0]?.to ?? player.tileId, hasMoved: player.hasMoved });
       } else {
         const player = engine.getPlayer(socket.id);
         const newTile = player.tileId;
@@ -452,7 +455,7 @@ io.on('connection', socket => {
         console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
         
 
-        io.emit('playerMoved', { playerId: socket.id, tileId: newTile, hasMoved: currentPlayer.hasMoved });
+        io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: currentPlayer.hasMoved });
       }
 
       if (currentSessionId) {
@@ -467,19 +470,19 @@ io.on('connection', socket => {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    // --- FIX: Always re-fetch the player after movement loop ---
-    const updatedPlayer = engine.getPlayer(socket.id);
-    const finalTileId = updatedPlayer.tileId;
+    // Always re-fetch the player after movement loop for accurate tileId
+    const finalPlayer = engine.getPlayer(socket.id);
+    const finalTileId = finalPlayer.tileId;
 
     // Update prevTile based on final position
     if (finalTileId <= 30) {
-      updatedPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
+      finalPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
       
       // Update player in database
       try {
         const transaction = await sequelize.transaction();
         await Player.update(
-          { prevTile: updatedPlayer.prevTile },
+          { prevTile: finalPlayer.prevTile },
           { 
             where: { socketId: socket.id },
             transaction

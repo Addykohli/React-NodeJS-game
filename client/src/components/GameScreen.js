@@ -1563,7 +1563,7 @@ export default function GameScreen() {
                 wordBreak: 'break-word',
               }}
             >
-                has rolled {player?.hasRolled ? 'true' : 'false'}
+                rps exists: {rpsGame ? 'Yes' : 'No'}
             </div>
           </div>
 
