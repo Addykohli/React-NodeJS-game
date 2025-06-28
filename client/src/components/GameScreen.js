@@ -1250,7 +1250,7 @@ export default function GameScreen() {
         style={{
           position: 'fixed',
           bottom: '30px',
-          right: sidePanelVisible ? (activeSidePanel ? '700px' : '230px') : '30px',
+          right: sidePanelVisible ? (activeSidePanel ? '690px' : '220px') : '20px',
           zIndex: 2001,
           background: '#000',
           color: '#fff',

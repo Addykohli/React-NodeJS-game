@@ -156,7 +156,8 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
               style={{
                 cursor: !selectedIndex ? 'pointer' : 'default',
                 width: '150px',
-                height: 'auto',
+                height: '220px', // Set a fixed height for all cards
+                objectFit: 'contain',
                 transform: `translateY(${hasEntered ? '0' : '-100vh'}) 
                            ${isExiting ? `translateY(${isSelected ? '100vh' : '-100vh'})` : ''}`,
                 transition: 'transform 1s ease',
@@ -170,4 +171,4 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
   );
 };
 
-export default RPSTieResolver; 
+export default RPSTieResolver;

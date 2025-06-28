@@ -116,13 +116,38 @@ const Board = () => {
               left: 0,
               width: '100%',
               height: '100%',
-              pointerEvents: 'none', // allow board interaction except for buttons
+              pointerEvents: 'none',
               zIndex: 20
             }}
           >
+            <style>
+              {`
+                .branch-arrow-btn {
+                  background: transparent;
+                  border: none;
+                  padding: 0;
+                  cursor: pointer;
+                  pointer-events: auto;
+                  outline: none;
+                  animation: branchArrowBounce 1.2s infinite alternate;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+                @keyframes branchArrowBounce {
+                  0% { transform: translateY(-8px); }
+                  100% { transform: translateY(8px); }
+                }
+                .branch-arrow-svg {
+                  display: block;
+                  width: 48px;
+                  height: 48px;
+                  opacity: 0.6;
+                }
+              `}
+            </style>
             {branchOptions.map((toTileId, i) => {
               const tile = tiles.find((t) => t.id === toTileId);
-              const label = tile ? tile.name : `Tile ${toTileId}`;
               const position = tile ? tile.position : { x: 0, y: 0 };
               return (
                 <div
@@ -132,25 +157,28 @@ const Board = () => {
                     top: position.y,
                     left: position.x,
                     transform: 'translate(-50%, -50%)',
-                    pointerEvents: 'auto' // enable button clicks
+                    pointerEvents: 'auto'
                   }}
                 >
                   <button
+                    className="branch-arrow-btn"
                     onClick={() => chooseBranch(i)}
-                    style={{
-                      padding: '15px 25px',
-                      fontSize: '1.3em',
-                      backgroundColor: '#2196F3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                      transition: 'transform 0.2s'
-                    }}
+                    aria-label="Choose branch"
                   >
-                    {label}
+                    <svg
+                      className="branch-arrow-svg"
+                      viewBox="0 0 48 48"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <polygon
+                        points="24,38 8,20 16,20 16,10 32,10 32,20 40,20"
+                        fill="rgba(80,80,80,0.6)"
+                        stroke="rgba(80,80,80,0.8)"
+                        strokeWidth="4"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
                   </button>
                 </div>
               );

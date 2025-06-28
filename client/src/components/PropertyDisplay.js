@@ -203,7 +203,7 @@ const PropertyDisplayLeft = ({ player, position }) => {
               flexDirection: 'column',
               padding: '10px',
               boxSizing: 'border-box',
-              backgroundColor: 'rgb(173, 216, 230)',
+              backgroundColor: 'rgb(200, 240, 264)',
               cursor: isLastProperty ? 'default' : 'pointer'
             }}
           >
@@ -296,7 +296,7 @@ const PropertyDisplayRight = ({ player, position }) => {
               flexDirection: 'column',
               padding: '10px',
               boxSizing: 'border-box',
-              backgroundColor: 'rgb(173, 216, 230)',
+              backgroundColor: 'rgb(200, 240, 264)',
               cursor: isLastProperty ? 'default' : 'pointer'
             }}
           >
@@ -554,7 +554,7 @@ const PropertyDisplay = () => {
                 flexDirection: 'column',
                 padding: '5px',
                 boxSizing: 'border-box',
-                backgroundColor: 'rgb(173, 216, 230)',
+                backgroundColor: 'rgb(200, 240, 264)',
                 cursor: isLastProperty ? 'default' : 'pointer'
               }}
             >
