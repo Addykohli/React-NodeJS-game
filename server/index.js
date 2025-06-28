@@ -467,18 +467,19 @@ io.on('connection', socket => {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    // Handle rent payment AFTER all movement is complete
-    const finalTileId = currentPlayer.tileId;
+    // --- FIX: Always re-fetch the player after movement loop ---
+    const updatedPlayer = engine.getPlayer(socket.id);
+    const finalTileId = updatedPlayer.tileId;
 
     // Update prevTile based on final position
     if (finalTileId <= 30) {
-      currentPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
+      updatedPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
       
       // Update player in database
       try {
         const transaction = await sequelize.transaction();
         await Player.update(
-          { prevTile: currentPlayer.prevTile },
+          { prevTile: updatedPlayer.prevTile },
           { 
             where: { socketId: socket.id },
             transaction

@@ -1315,7 +1315,7 @@ export default function GameScreen() {
             <PlayerStats />
             {/* Road Cash UI here */}
             
-            {isMyTurn && tileMeta?.id === 22 && !pickedRoadCash && hasRolled &&(
+            {isMyTurn && tileMeta?.id === 22 && hasRolled &&(
               <div style={{
                 position: 'absolute',
                 top: '50%',
