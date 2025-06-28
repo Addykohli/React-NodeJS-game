@@ -146,14 +146,18 @@ const Board = () => {
         })}
 
         {/* Branch options buttons centered at their tile.position */}
-        {branchOptions && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
+        {branchOptions && Array.isArray(branchOptions) && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
           const tile = tiles.find(t => t.id === toTileId);
           if (!tile) return null;
-          const label = tile.name;
+          const label = tile.name || `Tile ${toTileId}`;
           return (
             <button
               key={i}
-              onClick={() => chooseBranchFn && chooseBranchFn(i)}
+              onClick={() => {
+                if (chooseBranchFn) chooseBranchFn(i);
+                setBranchOptions(null); // Hide buttons after click
+                setChooseBranchFn(null);
+              }}
               style={{
                 position: 'absolute',
                 top: tile.position.y,
