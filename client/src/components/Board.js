@@ -19,9 +19,8 @@ const Board = () => {
   const { players } = useContext(GameContext);
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
-  // Add state for branch options and handler
   const [branchOptions, setBranchOptions] = useState(null);
-  const [chooseBranchFn, setChooseBranchFn] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     const img = new window.Image();
@@ -55,15 +54,37 @@ const Board = () => {
     calculateScales();
   }, []);
 
-  // Listen for branchOptionsUpdate event from DiceRoller
+  // Get socket from any player (all have same context)
   useEffect(() => {
-    const handler = (e) => {
-      setBranchOptions(e.detail.branchOptions);
-      setChooseBranchFn(() => e.detail.chooseBranch);
+    if (players && players.length > 0 && players[0].socket) {
+      setSocket(players[0].socket);
+    }
+  }, [players]);
+
+  // Listen for branchChoices event from socket
+  useEffect(() => {
+    if (!window._gameSocket) {
+      // Try to get socket from context (GameContext)
+      if (players && players.length > 0 && players[0].socket) {
+        window._gameSocket = players[0].socket;
+      }
+    }
+    const sock = window._gameSocket || socket;
+    if (!sock) return;
+    const handler = ({ options }) => setBranchOptions(options);
+    sock.on && sock.on('branchChoices', handler);
+    return () => {
+      sock.off && sock.off('branchChoices', handler);
     };
-    window.addEventListener('branchOptionsUpdate', handler);
-    return () => window.removeEventListener('branchOptionsUpdate', handler);
-  }, []);
+  }, [socket, players]);
+
+  const handleBranchChoice = (idx) => {
+    const sock = window._gameSocket || socket;
+    if (sock) {
+      sock.emit('branchChoice', idx);
+    }
+    setBranchOptions(null);
+  };
 
   return (
     <div style={{
@@ -146,18 +167,14 @@ const Board = () => {
         })}
 
         {/* Branch options buttons centered at their tile.position */}
-        {branchOptions && Array.isArray(branchOptions) && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
+        {branchOptions && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
           const tile = tiles.find(t => t.id === toTileId);
           if (!tile) return null;
           const label = tile.name || `Tile ${toTileId}`;
           return (
             <button
               key={i}
-              onClick={() => {
-                if (chooseBranchFn) chooseBranchFn(i);
-                setBranchOptions(null); // Hide buttons after click
-                setChooseBranchFn(null);
-              }}
+              onClick={() => handleBranchChoice(i)}
               style={{
                 position: 'absolute',
                 top: tile.position.y,

@@ -12,6 +12,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [hasMoved, setHasMoved] = useState(false);
+  const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
 
@@ -52,23 +53,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       }
     };
 
-    // REMOVE: const onBranchChoices = ({ options }) => setBranchOptions(options);
-    // Instead, emit event for Board to listen
-    const onBranchChoices = ({ options }) => {
-      window.dispatchEvent(new CustomEvent('branchOptionsUpdate', {
-        detail: {
-          branchOptions: options,
-          chooseBranch: (idx) => {
-            socket.emit('branchChoice', idx);
-            // Also emit an event to clear branchOptions in Board
-            window.dispatchEvent(new CustomEvent('branchOptionsUpdate', {
-              detail: { branchOptions: null, chooseBranch: null }
-            }));
-          }
-        }
-      }));
-    };
-
+    const onBranchChoices = ({ options }) => setBranchOptions(options);
     const onMovementDone = () => setDone(true);
 
     // Add casino result handler
@@ -125,6 +110,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
+  const chooseBranch = (idx) => {
+    socket.emit('branchChoice', idx);
+    setBranchOptions(null);
+  };
+
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
 
@@ -144,7 +134,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       }}
     >
       {/* Roll button */}
-      {!die1 && !hasRolled && (
+      {!die1 && !hasRolled && !branchOptions && (
         <button
           onClick={handleRoll}
           style={{ 
@@ -195,6 +185,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
           />
         </div>
       )}
+
+      
 
       {/* Done button - Only show if not on casino or if casino has been played */}
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
