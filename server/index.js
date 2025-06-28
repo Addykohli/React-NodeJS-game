@@ -307,13 +307,17 @@ io.on('connection', socket => {
       console.error('Error updating hasRolled state:', err);
     }
 
+    // Emit updated player state to all clients for frontend sync
+    io.emit('playersStateUpdate', {
+      players: engine.session.players
+    });
+
     // Emit dice result and hasRolled state to all players
     io.emit('diceResult', {
       playerId: socket.id,
       die1: roll.die1,
       die2: roll.die2,
-      total: roll.total,
-      hasRolled: true // <-- ensure frontend gets this
+      total: roll.total
     });
     // Also emit updated player state for immediate sync
     io.emit('playerMoved', {
@@ -714,11 +718,8 @@ io.on('connection', socket => {
       console.error('Error updating hasMoved state:', err);
     }
     // Emit updated player state again for frontend sync
-    io.emit('playerMoved', {
-      playerId: socket.id,
-      tileId: rollingPlayer.tileId,
-      hasMoved: true,
-      hasRolled: true
+    io.emit('playersStateUpdate', {
+      players: engine.session.players
     });
     socket.emit('movementDone');
   });
