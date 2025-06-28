@@ -289,43 +289,38 @@ io.on('connection', socket => {
     }
     console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
-    // --- Begin transaction for hasRolled update ---
-    const transaction = await sequelize.transaction();
+    // Set hasRolled true in memory
+    currentPlayer.hasRolled = true;
+    // Update engine state
+    engine.session.players = engine.session.players.map(p =>
+      p.socketId === socket.id ? { ...p, hasRolled: true } : p
+    );
+
+    // Update in DB and broadcast to all clients
     try {
-      // Set hasRolled to true in memory and DB
-      currentPlayer.hasRolled = true;
+      const transaction = await sequelize.transaction();
       await Player.update(
         { hasRolled: true },
         { where: { socketId: socket.id }, transaction }
       );
-
-      // Update engine's player data
-      engine.session.players = engine.session.players.map(p =>
-        p.socketId === socket.id ? { ...p, hasRolled: true } : p
-      );
-
-      // Update game session if exists
       if (currentSessionId) {
         await GameSession.update(
           { players: engine.session.players },
           { where: { id: currentSessionId }, transaction }
         );
       }
-
       await transaction.commit();
     } catch (err) {
-      await transaction.rollback();
       console.error('Error updating hasRolled state:', err);
-      return;
     }
-    // --- End transaction for hasRolled update ---
 
-    // Emit dice result to all players
+    // Emit dice result to all players, include hasRolled
     io.emit('diceResult', {
       playerId: socket.id,
       die1: roll.die1,
       die2: roll.die2,
-      total: roll.total
+      total: roll.total,
+      hasRolled: true
     });
 
     let remaining = roll.total;
@@ -695,21 +690,19 @@ io.on('connection', socket => {
       }
     }
 
-    console.log('Emitting movementDone for', socket.id);
+    // At the end, after all movement and rent/bonus logic:
+    // Mark hasMoved true in memory and DB, and emit player state to all clients
     const rollingPlayer = engine.getPlayer(socket.id);
     rollingPlayer.hasMoved = true;
-    // --- Update hasMoved in DB as well ---
+    engine.session.players = engine.session.players.map(p =>
+      p.socketId === socket.id ? { ...p, hasMoved: true } : p
+    );
     try {
       const transaction = await sequelize.transaction();
       await Player.update(
         { hasMoved: true },
         { where: { socketId: socket.id }, transaction }
       );
-      // Also update engine state
-      engine.session.players = engine.session.players.map(p =>
-        p.socketId === socket.id ? { ...p, hasMoved: true } : p
-      );
-      // Update game session if exists
       if (currentSessionId) {
         await GameSession.update(
           { players: engine.session.players },
@@ -720,6 +713,13 @@ io.on('connection', socket => {
     } catch (err) {
       console.error('Error updating hasMoved state:', err);
     }
+    // Emit updated player state to all clients
+    io.emit('playerMoved', {
+      playerId: socket.id,
+      tileId: rollingPlayer.tileId,
+      hasMoved: true,
+      hasRolled: true
+    });
     socket.emit('movementDone');
   });
 
