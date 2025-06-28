@@ -79,7 +79,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     });
 
     socket.on('stonePaperScissorsTieResolved', () => {
-      setRpsGame(null);
+      setRpsGame(null); // <-- This is correct, but only triggers if this event is emitted!
     });
 
     return () => {

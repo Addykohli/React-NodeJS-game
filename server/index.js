@@ -1622,11 +1622,18 @@ io.on('connection', socket => {
         io.to(landingPlayer.socketId).emit('movementDone');
         io.to(tiedPlayer.socketId).emit('movementDone');
 
+        // Emit tie resolved event to all clients so DiceRoller can clear rpsGame
+        io.emit('stonePaperScissorsTieResolved', {
+          landingPlayer,
+          tiedPlayer,
+          drawnAmount: amount,
+          remainingTies: currentGame.ties.length
+        });
+
         // If this was the last tie to resolve, clean up the game
         if (currentGame.ties.length === 0) {
           delete activeRPSGames[gameId];
         }
-
       } catch (err) {
         await transaction.rollback();
         console.error('Error in RPS tie resolution:', err);
