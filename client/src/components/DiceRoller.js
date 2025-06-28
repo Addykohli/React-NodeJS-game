@@ -186,46 +186,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </div>
       )}
 
-      {/* Branch options */}
-      {branchOptions && (
-        <div
-          style={{
-            display: 'flex',
-            gap: '15px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            padding: '20px'
-          }}
-        >
-          {branchOptions.map((toTileId, i) => {
-            const tile = tiles.find((t) => t.id === toTileId);
-            const label = tile ? tile.name : `Tile ${toTileId}`;
-            return (
-              <button
-                key={i}
-                onClick={() => chooseBranch(i)}
-                style={{ 
-                  padding: '15px 25px',
-                  fontSize: '1.3em',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                  transition: 'transform 0.2s',
-                  ':hover': {
-                    transform: 'scale(1.05)'
-                  }
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      
 
       {/* Done button - Only show if not on casino or if casino has been played */}
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(

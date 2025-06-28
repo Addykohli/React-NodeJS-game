@@ -2031,7 +2031,7 @@ io.on('connection', socket => {
     
     const askParts = [];
     if (request.ask.money > 0) askParts.push(`$${request.ask.money}`);
-    if (askProperties) askParts.push(askedProperties);
+    if (askProperties) askParts.push(askProperties);
     message += askParts.join(' and ');
 
     broadcastGameEvent(message);
@@ -2201,7 +2201,7 @@ io.on('connection', socket => {
             return property ? property.name : 'Unknown';
           }).join(', ');
           
-          const askedProps = offer.ask.properties.map(propId => {
+          const askProperties = offer.ask.properties.map(propId => {
             const { tiles } = require('./data/tiles.cjs');
             const property = tiles.find(t => t.id === propId);
             return property ? property.name : 'Unknown';
@@ -2218,7 +2218,7 @@ io.on('connection', socket => {
           
           const askedParts = [];
           if (offer.ask.money > 0) askedParts.push(`$${offer.ask.money}`);
-          if (askedProps) askedParts.push(askedProps);
+          if (askProperties) askedParts.push(askProperties);
           message += askedParts.join(' and ');
 
           broadcastGameEvent(message);
@@ -2349,6 +2349,7 @@ io.on('connection', socket => {
 function determineRPSWinner(choice1, choice2) {
   if (choice1 === choice2) return 'tie';
   
+   
   if (
     (choice1 === 'rock' && choice2 === 'scissors') ||
     (choice1 === 'paper' && choice2 === 'rock') ||

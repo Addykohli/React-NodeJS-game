@@ -19,6 +19,9 @@ const Board = () => {
   const { players } = useContext(GameContext);
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
+  // Add state for branch options and handler
+  const [branchOptions, setBranchOptions] = useState(null);
+  const [chooseBranchFn, setChooseBranchFn] = useState(null);
 
   useEffect(() => {
     const img = new window.Image();
@@ -50,6 +53,16 @@ const Board = () => {
     };
 
     calculateScales();
+  }, []);
+
+  // Listen for branchOptionsUpdate event from DiceRoller
+  useEffect(() => {
+    const handler = (e) => {
+      setBranchOptions(e.detail.branchOptions);
+      setChooseBranchFn(() => e.detail.chooseBranch);
+    };
+    window.addEventListener('branchOptionsUpdate', handler);
+    return () => window.removeEventListener('branchOptionsUpdate', handler);
   }, []);
 
   return (
@@ -129,6 +142,38 @@ const Board = () => {
                 zIndex: 10,
               }}
             />
+          );
+        })}
+
+        {/* Branch options buttons centered at their tile.position */}
+        {branchOptions && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
+          const tile = tiles.find(t => t.id === toTileId);
+          if (!tile) return null;
+          const label = tile.name;
+          return (
+            <button
+              key={i}
+              onClick={() => chooseBranchFn && chooseBranchFn(i)}
+              style={{
+                position: 'absolute',
+                top: tile.position.y,
+                left: tile.position.x,
+                transform: 'translate(-50%, -50%)',
+                padding: '15px 25px',
+                fontSize: '1.3em',
+                backgroundColor: '#2196F3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                transition: 'transform 0.2s',
+                zIndex: 1001
+              }}
+            >
+              {label}
+            </button>
           );
         })}
       </div>

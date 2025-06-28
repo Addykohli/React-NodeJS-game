@@ -1252,21 +1252,20 @@ export default function GameScreen() {
           bottom: '30px',
           right: sidePanelVisible ? (activeSidePanel ? '700px' : '230px') : '30px',
           zIndex: 2001,
-          background: '#222',
+          background: '#000',
           color: '#fff',
-          border: '2px solid #888',
-          borderRadius: '50%',
+          border: '2px solid rgb(52, 52, 52)',
           width: '56px',
-          height: '56px',
+          height: '200px',
           fontSize: '2em',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          boxShadow: '0 2px 8px rgba(30, 30, 30, 0.42)',
           cursor: 'pointer',
           transition: 'right 0.3s, background 0.2s'
         }}
         aria-label={sidePanelVisible ? "Hide Side Panel" : "Show Side Panel"}
         title={sidePanelVisible ? "Hide Side Panel" : "Show Side Panel"}
       >
-        {sidePanelVisible ? '→' : '←'}
+        {sidePanelVisible ? '>' : '<'}
       </button>
 
       {/* Board and Player Stats */}
