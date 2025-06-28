@@ -16,11 +16,12 @@ for (let i = 1; i <= 8; i++) {
 const REFERENCE_HEIGHT = 165;
 
 const Board = () => {
-  const { players } = useContext(GameContext);
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
+  const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
-  const [socket, setSocket] = useState(null);
+
+
 
   useEffect(() => {
     const img = new window.Image();
@@ -53,36 +54,17 @@ const Board = () => {
 
     calculateScales();
   }, []);
-
-  // Get socket from any player (all have same context)
   useEffect(() => {
-    if (players && players.length > 0 && players[0].socket) {
-      setSocket(players[0].socket);
-    }
-  }, [players]);
+    const onBranchChoices = ({ options }) => setBranchOptions(options);
+    socket.on('branchChoices', onBranchChoices);
 
-  // Listen for branchChoices event from socket
-  useEffect(() => {
-    if (!window._gameSocket) {
-      // Try to get socket from context (GameContext)
-      if (players && players.length > 0 && players[0].socket) {
-        window._gameSocket = players[0].socket;
-      }
-    }
-    const sock = window._gameSocket || socket;
-    if (!sock) return;
-    const handler = ({ options }) => setBranchOptions(options);
-    sock.on && sock.on('branchChoices', handler);
     return () => {
-      sock.off && sock.off('branchChoices', handler);
+      socket.off('branchChoices', onBranchChoices);
     };
-  }, [socket, players]);
+  }, [player, socket]);
 
-  const handleBranchChoice = (idx) => {
-    const sock = window._gameSocket || socket;
-    if (sock) {
-      sock.emit('branchChoice', idx);
-    }
+  const chooseBranch = (idx) => {
+    socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
 
@@ -125,6 +107,50 @@ const Board = () => {
           }}
         />
 
+      {/* Branch options */}
+      {branchOptions && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '15px',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            padding: '20px'
+          }}
+        >
+          {branchOptions.map((toTileId, i) => {
+            const tile = tiles.find((t) => t.id === toTileId);
+            const label = tile ? tile.name : `Tile ${toTileId}`;
+            const position = tile ? tile.position : { x: 0, y: 0 };
+            return (
+              <button
+                key={i}
+                onClick={() => chooseBranch(i)}
+                style={{ 
+                  padding: '15px 25px',
+                  fontSize: '1.3em',
+                  top: position.y,
+                  left: position.x,
+                  backgroundColor: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                  transition: 'transform 0.2s',
+                  ':hover': {
+                    transform: 'scale(1.05)'
+                  }
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
         {/* Player pieces */}
         {players.map((p, i) => {
         
@@ -163,38 +189,6 @@ const Board = () => {
                 zIndex: 10,
               }}
             />
-          );
-        })}
-
-        {/* Branch options buttons centered at their tile.position */}
-        {branchOptions && branchOptions.length > 0 && branchOptions.map((toTileId, i) => {
-          const tile = tiles.find(t => t.id === toTileId);
-          if (!tile) return null;
-          const label = tile.name || `Tile ${toTileId}`;
-          return (
-            <button
-              key={i}
-              onClick={() => handleBranchChoice(i)}
-              style={{
-                position: 'absolute',
-                top: tile.position.y,
-                left: tile.position.x,
-                transform: 'translate(-50%, -50%)',
-                padding: '15px 25px',
-                fontSize: '1.3em',
-                backgroundColor: '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                transition: 'transform 0.2s',
-                zIndex: 1001
-              }}
-            >
-              {label}
-            </button>
           );
         })}
       </div>

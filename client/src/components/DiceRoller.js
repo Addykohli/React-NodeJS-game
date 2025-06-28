@@ -186,7 +186,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </div>
       )}
 
-      
 
       {/* Done button - Only show if not on casino or if casino has been played */}
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
