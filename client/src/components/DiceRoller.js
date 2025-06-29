@@ -101,9 +101,13 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   // [***DEBUG CHANCE***] Print hasRolled, die1, done, movementDone, branchOptions
   console.log('[***DEBUG CHANCE***] hasRolled:', hasRolled, 'die1:', die1, 'done:', done, 'movementDone:', movementDone, 'branchOptions:', branchOptions);
 
-  if (!player || player.socketId !== currentPlayerId) {
-    // [***DEBUG CHANCE***] Not my turn or player missing
-    console.log('[***DEBUG CHANCE***] Not my turn or player missing, hiding DiceRoller');
+  // Instead of:
+  // if (!player || player.socketId !== currentPlayerId) {
+  // Use:
+  const currentPlayer = players.find(p => p.socketId === currentPlayerId);
+  if (!player || !currentPlayer || player.name !== currentPlayer.name) {
+    // [***DEBUG CHANCE***] Not my turn or player missing (name check)
+    console.log('[***DEBUG CHANCE***] Not my turn or player missing (name check), hiding DiceRoller');
     return null;
   }
 
