@@ -3,6 +3,13 @@ import { GameContext } from '../context/GameContext';
 import Dicebox from '../assets/diceBoard.png';
 import { tiles } from '../data/tiles';
 
+// Import piece images
+const pieceImages = {};
+for (let i = 1; i <= 8; i++) {
+  pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
+}
+const PIECE_DISPLAY_WIDTH = 40; // px, constant width for stats box piece
+
 const PlayerStats = () => {
   const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);
   const [diceRolls, setDiceRolls] = useState({});
@@ -108,6 +115,36 @@ const PlayerStats = () => {
 
   const positions = getPositions(others.length);
 
+  // Helper to get piece dimensions preserving aspect ratio
+  const getPieceDims = (piece, pieceScales) => {
+    if (!piece || !pieceScales[piece]) {
+      return { width: PIECE_DISPLAY_WIDTH, height: PIECE_DISPLAY_WIDTH };
+    }
+    const scale = pieceScales[piece];
+    const aspect = scale.width / scale.height;
+    return {
+      width: PIECE_DISPLAY_WIDTH,
+      height: PIECE_DISPLAY_WIDTH / aspect
+    };
+  };
+
+  // Calculate piece scales once for all pieces
+  const [pieceScales, setPieceScales] = useState({});
+  useEffect(() => {
+    const calculateScales = async () => {
+      const scales = {};
+      for (let i = 1; i <= 8; i++) {
+        const img = new window.Image();
+        img.src = pieceImages[`piece${i}.png`];
+        await new Promise(resolve => img.onload = resolve);
+        scales[`piece${i}.png`] = { width: img.width, height: img.height };
+      }
+      setPieceScales(scales);
+    };
+    calculateScales();
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <>
       {others.map((p, idx) => {
@@ -128,7 +165,10 @@ const PlayerStats = () => {
           width: '260px',
           borderRadius: '12px',
           boxShadow: '0 3px 6px rgba(0,0,0,0.2)',
-          zIndex: 1
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center'
         };
 
         // Apply position based on placement
@@ -146,41 +186,80 @@ const PlayerStats = () => {
           style.transform = 'translate(-50%, 0)';
         }
 
+        // Piece image and dimensions
+        let pieceImg = null;
+        let pieceDims = { width: PIECE_DISPLAY_WIDTH, height: PIECE_DISPLAY_WIDTH };
+        if (p.piece && pieceImages[p.piece]) {
+          pieceImg = pieceImages[p.piece];
+          pieceDims = getPieceDims(p.piece, pieceScales);
+        }
+
         return (
           <div key={p.socketId} style={style}>
-            <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{p.name}</div>
-            <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
-              Money: ${p.money?.toLocaleString() || 0}
-            </div>
-            {p.loan > 0 && (
-              <div style={{ fontSize: '1.2rem', marginBottom: '4px', color: '#ff6b6b' }}>
-                Loan: ${p.loan?.toLocaleString()}
+            {/* Stats content */}
+            <div style={{ flex: 1 }}>
+              <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{p.name}</div>
+              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+                Money: ${p.money?.toLocaleString() || 0}
               </div>
-            )}
-            <div style={{ fontSize: '1.2rem' }}>
-              At: {currentTile}
-            </div>
-            {playerDice && (
-              <div style={{ 
-                marginTop: '8px',
-                display: 'flex',
-                gap: '8px',
-                justifyContent: 'center'
-              }}>
-                <img 
-                  src={`/dice/dice${playerDice.die1}.png`}
-                  alt={`Die ${playerDice.die1}`}
-                  width={40}
-                  height={40}
-                />
-                <img 
-                  src={`/dice/dice${playerDice.die2}.png`}
-                  alt={`Die ${playerDice.die2}`}
-                  width={40}
-                  height={40}
-                />
+              {p.loan > 0 && (
+                <div style={{ fontSize: '1.2rem', marginBottom: '4px', color: '#ff6b6b' }}>
+                  Loan: ${p.loan?.toLocaleString()}
+                </div>
+              )}
+              <div style={{ fontSize: '1.2rem' }}>
+                At: {currentTile}
               </div>
-            )}
+              {playerDice && (
+                <div style={{
+                  marginTop: '8px',
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center'
+                }}>
+                  <img
+                    src={`/dice/dice${playerDice.die1}.png`}
+                    alt={`Die ${playerDice.die1}`}
+                    width={40}
+                    height={40}
+                  />
+                  <img
+                    src={`/dice/dice${playerDice.die2}.png`}
+                    alt={`Die ${playerDice.die2}`}
+                    width={40}
+                    height={40}
+                  />
+                </div>
+              )}
+            </div>
+            {/* Vertical line */}
+            <div style={{
+              width: '2px',
+              height: '60px',
+              background: 'linear-gradient(to bottom, #aaa 0%, #fff 100%)',
+              margin: '0 12px'
+            }} />
+            {/* Player piece */}
+            <div style={{
+              width: PIECE_DISPLAY_WIDTH,
+              height: pieceDims.height,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {pieceImg && (
+                <img
+                  src={pieceImg}
+                  alt="Piece"
+                  style={{
+                    width: PIECE_DISPLAY_WIDTH,
+                    height: pieceDims.height,
+                    objectFit: 'contain',
+                    display: 'block'
+                  }}
+                />
+              )}
+            </div>
           </div>
         );
       })}

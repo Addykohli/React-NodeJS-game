@@ -328,7 +328,7 @@ io.on('connection', socket => {
     });
 
     let remaining = roll.total;
-    let passedStart = false; // Track if passed start during movement
+    let passedStart = false; // Track if passed through start during movement
 
     while (remaining > 0) {
       const step = engine.moveOneStep(socket.id, roll.total);
@@ -1187,9 +1187,13 @@ io.on('connection', socket => {
           console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
           // Only advance turn if they had already moved
           const currentPlayer = engine.getPlayer(socket.id);
-          if (currentPlayer && currentPlayer.hasMoved) {
-            console.log(`Player had already moved, advancing turn`);
-            
+          // --- BEGIN: Auto-advance turn if player has rolled (move is stuck) ---
+          if (currentPlayer && (currentPlayer.hasMoved || currentPlayer.hasRolled)) {
+            console.log(`[disconnect] Player had already moved or rolled, auto-advancing turn`);
+            // Reset player state for next turn
+            currentPlayer.hasRolled = false;
+            currentPlayer.hasMoved = false;
+            currentPlayer.pickedRoadCash = true;
             // Advance to next player
             const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
             engine.session.currentPlayerIndex = nextPlayerIndex;
@@ -1211,8 +1215,9 @@ io.on('connection', socket => {
             io.emit('turnEnded', { nextPlayerId });
             console.log('Turn advanced to next player:', nextPlayerId);
           } else {
-            console.log(`Player had not moved yet, keeping their turn`);
+            console.log(`[disconnect] Player had not moved or rolled yet, keeping their turn`);
           }
+          // --- END: Auto-advance turn if player has rolled (move is stuck) ---
         }
       }
     } else if (!hasStarted) {
