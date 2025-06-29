@@ -129,7 +129,7 @@ const Board = () => {
                   cursor: pointer;
                   pointer-events: auto;
                   outline: none;
-                  animation: branchArrowBounce 1.2s infinite alternate;
+                  animation: branchArrowBounce 0.8s infinite alternate;
                   display: flex;
                   align-items: center;
                   justify-content: center;
@@ -140,9 +140,9 @@ const Board = () => {
                 }
                 .branch-arrow-svg {
                   display: block;
-                  width: 100px;
-                  height: 100px;
-                  opacity: 0.6;
+                  width: 200px;
+                  height: 250px;
+                  opacity: 0.9;
                 }
               `}
             </style>
@@ -167,15 +167,15 @@ const Board = () => {
                   >
                     <svg
                       className="branch-arrow-svg"
-                      viewBox="0 0 48 48"
+                      viewBox="0 0 200 250"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <polygon
-                        points="24,38 8,20 16,20 16,10 32,10 32,20 40,20"
-                        fill="rgba(80,80,80,0.6)"
-                        stroke="rgba(80,80,80,0.8)"
-                        strokeWidth="4"
+                        points="100,210 40,120 75,120 75,40 125,40 125,120 160,120"
+                        fill="rgba(45, 225, 60, 0.88)"
+                        stroke="rgba(195, 195, 195, 0.45)"
+                        strokeWidth="12"
                         strokeLinejoin="round"
                       />
                     </svg>

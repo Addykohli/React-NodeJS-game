@@ -1254,13 +1254,17 @@ export default function GameScreen() {
           zIndex: 2001,
           background: '#000',
           color: '#fff',
-          border: '2px solid rgb(52, 52, 52)',
+          border: '3px solid rgb(52, 52, 52)',
           width: '56px',
           height: '200px',
           fontSize: '2em',
           boxShadow: '0 2px 8px rgba(30, 30, 30, 0.42)',
           cursor: 'pointer',
-          transition: 'right 0.3s, background 0.2s'
+          transition: 'right 0.3s, background 0.2s',
+          borderTopRightRadius: '0px',
+          borderBottomRightRadius: '0px',
+          borderTopLeftRadius: '40px',
+          borderBottomLeftRadius: '40px', 
         }}
         aria-label={sidePanelVisible ? "Hide Side Panel" : "Show Side Panel"}
         title={sidePanelVisible ? "Hide Side Panel" : "Show Side Panel"}
@@ -1314,7 +1318,7 @@ export default function GameScreen() {
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
                 borderRadius: '12px',
                 border: '2px solid rgba(255, 255, 255, 0.1)',
-                zIndex: 1000
+                zIndex: 999
               }}>
                 <RoadCash isMyTurn={isMyTurn} socket={socket} />
               </div>

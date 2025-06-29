@@ -204,7 +204,8 @@ const PropertyDisplayLeft = ({ player, position }) => {
               padding: '10px',
               boxSizing: 'border-box',
               backgroundColor: 'rgb(200, 240, 264)',
-              cursor: isLastProperty ? 'default' : 'pointer'
+              cursor: isLastProperty ? 'default' : 'pointer',
+              boxShadow: 'rgba(30, 30, 30, 0.5) 0px 2px 8px'
             }}
           >
             <PropertyCard
@@ -297,7 +298,8 @@ const PropertyDisplayRight = ({ player, position }) => {
               padding: '10px',
               boxSizing: 'border-box',
               backgroundColor: 'rgb(200, 240, 264)',
-              cursor: isLastProperty ? 'default' : 'pointer'
+              cursor: isLastProperty ? 'default' : 'pointer',
+              boxShadow: 'rgba(30, 30, 30, 0.5) 0px 2px 8px'
             }}
           >
             <PropertyCard
@@ -555,7 +557,8 @@ const PropertyDisplay = () => {
                 padding: '5px',
                 boxSizing: 'border-box',
                 backgroundColor: 'rgb(200, 240, 264)',
-                cursor: isLastProperty ? 'default' : 'pointer'
+                cursor: isLastProperty ? 'default' : 'pointer',
+                boxShadow: 'rgba(30, 30, 30, 0.5) 0px 2px 8px'
               }}
             >
               <div style={{
