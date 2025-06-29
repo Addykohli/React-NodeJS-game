@@ -1294,11 +1294,11 @@ export default function GameScreen() {
         }}>
           <div style={{ 
             position: 'relative',
-            margin: '200px'
+            margin: '300px'
           }}>
             <Board />
             <PlayerStats />
-            {/* Road Cash UI here */}
+            {/* Road Cash Ui */}
             
             {isMyTurn && tileMeta?.id === 22 && hasRolled &&(
               <div style={{
@@ -1326,7 +1326,7 @@ export default function GameScreen() {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                zIndex: 2000
+                zIndex: 999
               }}>
                 <RPSTieResolver
                   maxAmount={rpsTieAmount.maxAmount}

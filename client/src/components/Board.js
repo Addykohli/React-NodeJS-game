@@ -140,8 +140,8 @@ const Board = () => {
                 }
                 .branch-arrow-svg {
                   display: block;
-                  width: 48px;
-                  height: 48px;
+                  width: 100px;
+                  height: 100px;
                   opacity: 0.6;
                 }
               `}
