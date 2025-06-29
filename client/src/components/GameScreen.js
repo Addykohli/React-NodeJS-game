@@ -270,9 +270,15 @@ export default function GameScreen() {
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
+  // [***DEBUG CHANCE***] Print player, currentPlayerId, isMyTurn
+  console.log('[***DEBUG CHANCE***] player:', player, 'currentPlayerId:', currentPlayerId, 'isMyTurn:', isMyTurn);
+
   // Use the pickedRoadCash value from the players array for the current player
   const pickedRoadCash = players.find(p => p.socketId === player?.socketId)?.pickedRoadCash ?? player?.pickedRoadCash ?? false;
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
+  // [***DEBUG CHANCE***] Print hasRolled, pickedRoadCash, movementDone
+  console.log('[***DEBUG CHANCE***] hasRolled:', hasRolled, 'pickedRoadCash:', pickedRoadCash, 'movementDone:', movementDone);
+
   const [error, setError] = useState(null);
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
@@ -286,11 +292,9 @@ export default function GameScreen() {
   const [activeSidePanel, setActiveSidePanel] = useState(null);
   // Add new state for toggling side panel visibility
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
-  const [borrowAmount, setBorrowAmount] = useState(1000);
-  const [payoffAmount, setPayoffAmount] = useState(1000);
+  const [borrowAmount, setBorrowAmount] = useState(500);
+  const [payoffAmount, setPayoffAmount] = useState(500);
   const [gameEvents, setGameEvents] = useState([]);
-
-
 
   // Add socket event listener for borrow response
   useEffect(() => {
@@ -356,6 +360,8 @@ export default function GameScreen() {
 
   // Determine metadata for the current tile
   const tileMeta = tiles.find(t => t.id === player?.tileId);
+  // [***DEBUG CHANCE***] Print tileMeta
+  console.log('[***DEBUG CHANCE***] tileMeta:', tileMeta);
 
   // Reset hasChosenCorner when turn ends or tile changes
   useEffect(() => {
@@ -399,18 +405,9 @@ export default function GameScreen() {
 
   // Debug logging to trace condition
   useEffect(() => {
-    console.log('[GameScreen] Debug:', {
-      isMyTurn,
-      movementDone,
-      tileMeta,
-      "player.tileId": player?.tileId,
-      "tileMeta.type": tileMeta?.type,
-      "tileMeta.cost": tileMeta?.cost,
-      "player.money": player?.money,
-      testRollMode,
-      testRollInput
-    });
-  }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput]);
+    // [***DEBUG CHANCE***] Print all relevant state for turn/roll logic
+    console.log('[***DEBUG CHANCE***] EFFECT: isMyTurn:', isMyTurn, 'movementDone:', movementDone, 'tileMeta:', tileMeta, 'player:', player, 'hasRolled:', hasRolled);
+  }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput, hasRolled]);
 
   // Listen for purchase events
   useEffect(() => {
@@ -970,7 +967,7 @@ export default function GameScreen() {
                   flexDirection: 'column'
                 }}
               >
-                <h2 style={{ marginBottom: '20px' }}>{config.title}</h2>
+                <h1 style={{ marginBottom: '20px' }}>{config.title}</h1>
                 {/* Panel specific content */}
                 {panelId === 'info' && (
                   <div style={{
@@ -1922,8 +1919,10 @@ export default function GameScreen() {
 
               // Show error message if any
               if (error) {
+                // Show green for bonus or Start! messages, else tomato
+                const isGreen = typeof error === 'string' && (error.includes('bonus') || error.includes('Start!'));
                 return (
-                  <p style={{ color: 'tomato', margin: 0 }}>{error}</p>
+                  <p style={{ color: isGreen ? '#4CAF50' : 'tomato', margin: 0 }}>{error}</p>
                 );
               }
 

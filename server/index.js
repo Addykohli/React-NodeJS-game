@@ -2343,6 +2343,12 @@ io.on('connection', socket => {
     console.log(`[Log] ${VarName}:`, value);
   });
 
+  // Handle client ping to keep connection alive
+  socket.on('clientPing', () => {
+    // No-op, just to keep the connection active
+    // Optionally, you could log or update a timestamp here
+  });
+
 });
 
 

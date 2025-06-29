@@ -192,7 +192,7 @@ const TopPropertyDisplay = () => {
                     boxSizing: 'border-box',
                     backgroundColor: 'rgb(200, 240, 264)',
                     cursor: isLastProperty ? 'default' : 'pointer',
-                    boxShadow: 'rgba(30, 30, 30, 0.5) 0px 2px 8px'
+                    boxShadow: 'rgba(50, 50, 50, 0.5) 0px 2px 4px'
                   }}
                 >
                   <div style={{

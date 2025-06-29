@@ -6,18 +6,22 @@ import Dicebox from '../assets/diceBoard.png';
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
   const isMyTurn = player?.socketId === currentPlayerId;
-  const [rolling, setRolling] = useState(false);
+  // [***DEBUG CHANCE***] Print player, currentPlayerId, isMyTurn
+  console.log('[***DEBUG CHANCE***] player:', player, 'currentPlayerId:', currentPlayerId, 'isMyTurn:', isMyTurn);
+
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
-  const [hasMoved, setHasMoved] = useState(false);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
 
   // Get current tile to check if we're on casino
   const tileMeta = tiles.find(t => t.id === player?.tileId);
+  // [***DEBUG CHANCE***] Print tileMeta
+  console.log('[***DEBUG CHANCE***] tileMeta:', tileMeta);
+
   const isOnCasino = tileMeta?.id === 16;
 
   // Update casinoPlayed when prop changes
@@ -93,7 +97,15 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     };
   }, [player, socket]);
 
-  if (!player || player.socketId !== currentPlayerId) return null;
+  const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
+  // [***DEBUG CHANCE***] Print hasRolled, die1, done, movementDone, branchOptions
+  console.log('[***DEBUG CHANCE***] hasRolled:', hasRolled, 'die1:', die1, 'done:', done, 'movementDone:', movementDone, 'branchOptions:', branchOptions);
+
+  if (!player || player.socketId !== currentPlayerId) {
+    // [***DEBUG CHANCE***] Not my turn or player missing
+    console.log('[***DEBUG CHANCE***] Not my turn or player missing, hiding DiceRoller');
+    return null;
+  }
 
   const handleRoll = () => {
     if (!testRollMode) {
@@ -109,13 +121,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setDone(false);
     setBranchOptions(null);
   };
-
-  const chooseBranch = (idx) => {
-    socket.emit('branchChoice', idx);
-    setBranchOptions(null);
-  };
-
-  const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
 
   return (

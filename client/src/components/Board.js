@@ -154,7 +154,7 @@ const Board = () => {
                   key={i}
                   style={{
                     position: 'absolute',
-                    top: position.y,
+                    top: position.y - 40,
                     left: position.x,
                     transform: 'translate(-50%, -50%)',
                     pointerEvents: 'auto'

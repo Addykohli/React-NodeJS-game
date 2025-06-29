@@ -51,4 +51,11 @@ socket.on('reconnect_failed', () => {
     console.error('Failed to reconnect after all attempts');
 });
 
+// Periodic ping to server to avoid inactivity disconnects
+setInterval(() => {
+    if (socket.connected) {
+        socket.emit('clientPing');
+    }
+}, 20000);
+
 export default socket;
