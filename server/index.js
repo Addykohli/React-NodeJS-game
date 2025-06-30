@@ -1200,16 +1200,33 @@ io.on('connection', socket => {
             engine.session.currentPlayerIndex = nextPlayerIndex;
             const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
 
-            // Update game session if exists
-            if (currentSessionId) {
+            // Update player and game session in DB
+            try {
+              const transaction = await sequelize.transaction();
               try {
-                await GameSession.update(
-                  { currentPlayerIndex: nextPlayerIndex },
-                  { where: { id: currentSessionId } }
+                // Update current player's state in DB
+                await Player.update(
+                  {
+                    hasRolled: false,
+                    hasMoved: false,
+                    pickedRoadCash: true
+                  },
+                  { where: { socketId: socket.id }, transaction }
                 );
+                // Update GameSession's currentPlayerIndex
+                if (currentSessionId) {
+                  await GameSession.update(
+                    { currentPlayerIndex: nextPlayerIndex },
+                    { where: { id: currentSessionId }, transaction }
+                  );
+                }
+                await transaction.commit();
               } catch (err) {
-                console.error('Error updating game session after turn advance:', err);
+                await transaction.rollback();
+                console.error('Error updating DB on disconnect turn advance:', err);
               }
+            } catch (err) {
+              console.error('Error starting transaction for disconnect turn advance:', err);
             }
 
             // Notify all clients about turn change
