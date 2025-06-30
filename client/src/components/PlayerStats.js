@@ -8,7 +8,7 @@ const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
-const PIECE_DISPLAY_WIDTH = 40; // px, constant width for stats box piece
+const PIECE_DISPLAY_WIDTH = 70; // px
 
 const PlayerStats = () => {
   const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);

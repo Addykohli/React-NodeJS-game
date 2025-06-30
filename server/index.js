@@ -1194,6 +1194,7 @@ io.on('connection', socket => {
             currentPlayer.hasRolled = false;
             currentPlayer.hasMoved = false;
             currentPlayer.pickedRoadCash = true;
+            io.emit('endturn');
             // Advance to next player
             const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
             engine.session.currentPlayerIndex = nextPlayerIndex;
