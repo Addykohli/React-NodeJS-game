@@ -1194,29 +1194,34 @@ io.on('connection', socket => {
             currentPlayer.hasRolled = false;
             currentPlayer.hasMoved = false;
             currentPlayer.pickedRoadCash = true;
-            io.emit('endturn');
+
             // Advance to next player
             const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
             engine.session.currentPlayerIndex = nextPlayerIndex;
             const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
 
-            // Update player and game session in DB
+            // Set every player's hasRolled = false in memory
+            engine.session.players = engine.session.players.map(p => ({
+              ...p,
+              hasRolled: false
+            }));
+
+            // Update all players' hasRolled = false in DB and update GameSession's currentPlayerIndex
             try {
               const transaction = await sequelize.transaction();
               try {
-                // Update current player's state in DB
+                // Update all players in DB
                 await Player.update(
-                  {
-                    hasRolled: false,
-                    hasMoved: false,
-                    pickedRoadCash: true
-                  },
-                  { where: { socketId: socket.id }, transaction }
+                  { hasRolled: false },
+                  { where: {}, transaction }
                 );
-                // Update GameSession's currentPlayerIndex
+                // Update GameSession's currentPlayerIndex and players array
                 if (currentSessionId) {
                   await GameSession.update(
-                    { currentPlayerIndex: nextPlayerIndex },
+                    { 
+                      currentPlayerIndex: nextPlayerIndex,
+                      players: engine.session.players
+                    },
                     { where: { id: currentSessionId }, transaction }
                   );
                 }
@@ -2234,7 +2239,7 @@ io.on('connection', socket => {
           
           const offeredParts = [];
           if (offer.offer.money > 0) offeredParts.push(`$${offer.offer.money}`);
-          if (offeredProps) offeredParts.push(offeredProps);
+          if (offeredProps) offeredParts.push(offerProps);
           message += offeredParts.join(' and ');
           
           message += ' in exchange for ';

@@ -179,8 +179,9 @@ const Lobby = () => {
               <input
                 type="text"
                 value={name}
-                onChange={e => setName(e.target.value)}
+                onChange={e => setName(e.target.value.slice(0, 12))}
                 placeholder="Enter your name"
+                maxLength={12}
                 style={{
                   padding: '20px',
                   fontSize: '1.5rem',

@@ -198,7 +198,12 @@ const PlayerStats = () => {
           <div key={p.socketId} style={style}>
             {/* Stats content */}
             <div style={{ flex: 1 }}>
-              <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{p.name}</div>
+              <div style={{ 
+                marginBottom: '8px', 
+                fontWeight: 'bold',
+                wordBreak: 'break-word',
+                whiteSpace: 'normal'
+              }}>{p.name}</div>
               <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
                 Money: ${p.money?.toLocaleString() || 0}
               </div>
