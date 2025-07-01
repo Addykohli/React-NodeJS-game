@@ -31,7 +31,7 @@ function FullScreenLoading({ debugMsg }) {
 }
 
 function App() {
-  const { socket, players, player, gameState } = useContext(GameContext);
+  const { socket, players, player } = useContext(GameContext);
   const [socketConnected, setSocketConnected] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
   const [appReady, setAppReady] = useState(false);
@@ -62,19 +62,14 @@ function App() {
     if (!socket) return;
 
     const handleLobbyUpdate = (data) => {
-      // Accept both array and object (array for lobby, object for game)
-      // Accept empty array as "loaded" for lobby
-      if (Array.isArray(data)) {
-        setPlayersLoaded(true);
-      } else if (data && data.players) {
+      if ((Array.isArray(data) && data.length > 0) ||
+          (data && data.players && data.players.length > 0)) {
         setPlayersLoaded(true);
       }
     };
     const handlePlayersStateUpdate = (data) => {
       if (data && data.players && data.players.length > 0) {
         setPlayersLoaded(true);
-      } else {
-        setPlayersLoaded(false);
       }
     };
 
@@ -82,26 +77,22 @@ function App() {
     socket.on('playersStateUpdate', handlePlayersStateUpdate);
 
     // If already loaded in context, set immediately
-    if (gameState === 'lobby') {
-      setPlayersLoaded(Array.isArray(players));
-    } else {
-      setPlayersLoaded(players && players.length > 0);
+    if ((players && players.length > 0) || (player && player.name)) {
+      setPlayersLoaded(true);
     }
 
     return () => {
       socket.off('lobbyUpdate', handleLobbyUpdate);
       socket.off('playersStateUpdate', handlePlayersStateUpdate);
     };
-  }, [socket, players, player, gameState]);
+  }, [socket, players, player]);
 
   // Fallback: If players/player are already present in context, set loaded
   useEffect(() => {
-    if (gameState === 'lobby') {
-      setPlayersLoaded(Array.isArray(players));
-    } else {
-      setPlayersLoaded(players && players.length > 0);
+    if ((players && players.length > 0) || (player && player.name)) {
+      setPlayersLoaded(true);
     }
-  }, [players, player, gameState]);
+  }, [players, player]);
 
   // Track what is missing and print to console
   useEffect(() => {
@@ -122,19 +113,11 @@ function App() {
     return <FullScreenLoading debugMsg={waitingFor.length ? `Waiting for: ${waitingFor.join(', ')}` : ''} />;
   }
 
-  // Main app rendering
   return (
-    <div>
-      {gameState === 'lobby' ? <Lobby /> : <GameScreen />}
-    </div>
+    <>
+      {gameState === 'playing' ? <GameScreen /> : <Lobby />}
+    </>
   );
-}
-
-export default App;
-      {/* {gameState === 'lobby' ? <Lobby /> : <GameScreen />} */}
-      App is ready!
-    </div>
-  );
-}
+};
 
 export default App;
