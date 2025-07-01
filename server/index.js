@@ -24,7 +24,7 @@ const allowedOrigins = [
 // CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin 
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
@@ -130,6 +130,7 @@ io.on('connection', socket => {
             await Player.update(
               { 
                 socketId: socket.id,
+                hasRolled: false
                 // Don't update other fields - keep them as is in database
               },
               { where: { socketId: oldSocketId } }
@@ -189,6 +190,9 @@ io.on('connection', socket => {
           // Only emit movementDone if it's not their turn or if they had already moved
           if (!isCurrentPlayer || currentPlayer.hasMoved) {
             socket.emit('movementDone');
+          }
+          else {
+            currentPlayer.hasRolled = false
           }
         }
         return;

@@ -201,9 +201,25 @@ const PlayerStats = () => {
               <div style={{ 
                 marginBottom: '8px', 
                 fontWeight: 'bold',
+                display: 'inline-block',
+                maxWidth: '180px',
                 wordBreak: 'break-word',
-                whiteSpace: 'normal'
-              }}>{p.name}</div>
+                whiteSpace: 'pre-line',
+                overflowWrap: 'break-word'
+              }}>
+                {/* Insert a line break after 8 characters if name is longer */}
+                {p.name && p.name.length > 8
+                  ? (
+                      <>
+                        {p.name.slice(0, 8)}
+                        <wbr />
+                        {'\n'}
+                        {p.name.slice(8)}
+                      </>
+                    )
+                  : p.name
+                }
+              </div>
               <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
                 Money: ${p.money?.toLocaleString() || 0}
               </div>
