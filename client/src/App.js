@@ -62,14 +62,20 @@ function App() {
     if (!socket) return;
 
     const handleLobbyUpdate = (data) => {
+      // Accept both array and object (array for lobby, object for game)
       if ((Array.isArray(data) && data.length > 0) ||
           (data && data.players && data.players.length > 0)) {
         setPlayersLoaded(true);
+      } else {
+        // If lobby is empty, mark as not loaded
+        setPlayersLoaded(false);
       }
     };
     const handlePlayersStateUpdate = (data) => {
       if (data && data.players && data.players.length > 0) {
         setPlayersLoaded(true);
+      } else {
+        setPlayersLoaded(false);
       }
     };
 
@@ -79,6 +85,8 @@ function App() {
     // If already loaded in context, set immediately
     if ((players && players.length > 0) || (player && player.name)) {
       setPlayersLoaded(true);
+    } else {
+      setPlayersLoaded(false);
     }
 
     return () => {
@@ -91,6 +99,8 @@ function App() {
   useEffect(() => {
     if ((players && players.length > 0) || (player && player.name)) {
       setPlayersLoaded(true);
+    } else {
+      setPlayersLoaded(false);
     }
   }, [players, player]);
 
