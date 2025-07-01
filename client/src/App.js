@@ -63,12 +63,11 @@ function App() {
 
     const handleLobbyUpdate = (data) => {
       // Accept both array and object (array for lobby, object for game)
-      if ((Array.isArray(data) && data.length > 0) ||
-          (data && data.players && data.players.length > 0)) {
+      // Accept empty array as "loaded" for lobby
+      if (Array.isArray(data)) {
         setPlayersLoaded(true);
-      } else {
-        // If lobby is empty, mark as not loaded
-        setPlayersLoaded(false);
+      } else if (data && data.players) {
+        setPlayersLoaded(true);
       }
     };
     const handlePlayersStateUpdate = (data) => {
@@ -83,26 +82,26 @@ function App() {
     socket.on('playersStateUpdate', handlePlayersStateUpdate);
 
     // If already loaded in context, set immediately
-    if ((players && players.length > 0) || (player && player.name)) {
-      setPlayersLoaded(true);
+    if (gameState === 'lobby') {
+      setPlayersLoaded(Array.isArray(players));
     } else {
-      setPlayersLoaded(false);
+      setPlayersLoaded(players && players.length > 0);
     }
 
     return () => {
       socket.off('lobbyUpdate', handleLobbyUpdate);
       socket.off('playersStateUpdate', handlePlayersStateUpdate);
     };
-  }, [socket, players, player]);
+  }, [socket, players, player, gameState]);
 
   // Fallback: If players/player are already present in context, set loaded
   useEffect(() => {
-    if ((players && players.length > 0) || (player && player.name)) {
-      setPlayersLoaded(true);
+    if (gameState === 'lobby') {
+      setPlayersLoaded(Array.isArray(players));
     } else {
-      setPlayersLoaded(false);
+      setPlayersLoaded(players && players.length > 0);
     }
-  }, [players, player]);
+  }, [players, player, gameState]);
 
   // Track what is missing and print to console
   useEffect(() => {
@@ -123,14 +122,15 @@ function App() {
     return <FullScreenLoading debugMsg={waitingFor.length ? `Waiting for: ${waitingFor.join(', ')}` : ''} />;
   }
 
-  // Example main app rendering (replace with your actual routing or main component)
-  // You may have something like:
-  // return <Router>...</Router>;
-  // For demonstration, just render a placeholder:
+  // Main app rendering
   return (
     <div>
-      {/* ...your main app goes here... */}
-      {/* For example: */}
+      {gameState === 'lobby' ? <Lobby /> : <GameScreen />}
+    </div>
+  );
+}
+
+export default App;
       {/* {gameState === 'lobby' ? <Lobby /> : <GameScreen />} */}
       App is ready!
     </div>
