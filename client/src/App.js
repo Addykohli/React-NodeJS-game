@@ -76,9 +76,23 @@ const App = () => {
 
   useEffect(() => {
     setAppReady(socketConnected && playersLoaded);
-  }, [socketConnected, playersLoaded]);
+    if (!(socketConnected && playersLoaded)) {
+      // Print readiness state if not ready
+      console.log('[App] Not ready:', {
+        socketConnected,
+        playersLoaded,
+        player
+      });
+    }
+  }, [socketConnected, playersLoaded, player]);
 
   if (!appReady) {
+    // Print again in render for extra visibility
+    console.log('[App] Still not ready:', {
+      socketConnected,
+      playersLoaded,
+      player
+    });
     return <FullScreenLoading />;
   }
 
