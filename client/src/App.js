@@ -25,7 +25,7 @@ function FullScreenLoading() {
 }
 
 const App = () => {
-  const { socket, players, player } = useContext(GameContext);
+  const { socket, players, player, gameState } = useContext(GameContext);
   const [socketConnected, setSocketConnected] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
   const [appReady, setAppReady] = useState(false);

@@ -13,6 +13,7 @@ const PIECE_DISPLAY_WIDTH = 70; // px
 const PlayerStats = () => {
   const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);
   const [diceRolls, setDiceRolls] = useState({});
+  const [pieceScales, setPieceScales] = useState({});
 
   // Listen for all money and property changing events
   useEffect(() => {
@@ -58,8 +59,26 @@ const PlayerStats = () => {
     }
   }, [diceRoll]);
 
+  // Calculate piece scales once for all pieces
+  useEffect(() => {
+    const calculateScales = async () => {
+      const scales = {};
+      for (let i = 1; i <= 8; i++) {
+        const img = new window.Image();
+        img.src = pieceImages[`piece${i}.png`];
+        await new Promise(resolve => img.onload = resolve);
+        scales[`piece${i}.png`] = { width: img.width, height: img.height };
+      }
+      setPieceScales(scales);
+    };
+    calculateScales();
+    // eslint-disable-next-line
+  }, []);
+
   // Filter out current player and get others
-  const others = players.filter(p => p && p.socketId !== player?.socketId);
+  const others = players && player
+    ? players.filter(p => p && p.socketId !== player?.socketId)
+    : [];
 
   // Wait for players and player to be loaded before rendering
   if (!players || players.length === 0 || !player) {
@@ -141,23 +160,6 @@ const PlayerStats = () => {
       height: PIECE_DISPLAY_WIDTH / aspect
     };
   };
-
-  // Calculate piece scales once for all pieces
-  const [pieceScales, setPieceScales] = useState({});
-  useEffect(() => {
-    const calculateScales = async () => {
-      const scales = {};
-      for (let i = 1; i <= 8; i++) {
-        const img = new window.Image();
-        img.src = pieceImages[`piece${i}.png`];
-        await new Promise(resolve => img.onload = resolve);
-        scales[`piece${i}.png`] = { width: img.width, height: img.height };
-      }
-      setPieceScales(scales);
-    };
-    calculateScales();
-    // eslint-disable-next-line
-  }, []);
 
   return (
     <>
