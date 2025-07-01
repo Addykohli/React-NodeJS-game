@@ -94,204 +94,194 @@ const TopPropertyDisplay = () => {
   const expandOffset = 108; // 70% of 154
   const stackWidth = cardWidth + (cardOverlap * 4);
 
-  if (!topPlayers || topPlayers.length === 0) {
-    return (
-      <div style={{
-        color: '#fff',
-        fontSize: '1.2em',
-        textAlign: 'center',
-        padding: '10px'
-      }}>
-        Loading top properties...
-      </div>
-    );
-  }
   return (
-    <div style={{
-      position: 'absolute',
-      top: '-190px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      height: cardHeight + 'px',
-      display: 'flex',
-      alignItems: 'flex-start',
-      overflow: 'visible',
-      width: '1000px',
-      justifyContent: 'space-around',
-      zIndex: 1
-    }}>
-      {topPlayers.map((player, playerIndex) => {
-        // Get player's properties and sort by division
-        const ownedProperties = tiles
-          .filter(tile => tile.type === 'property')
-          .filter(tile => player?.properties?.includes(tile.id))
-          .sort((a, b) => {
-            if (a.division === b.division) {
-              return a.name.localeCompare(b.name); // Sort by name within same division
-            }
-            return a.division.localeCompare(b.division); // Sort by division
-          });
-
-        const position = positions[playerIndex];
-        const playerExpandedIndex = expandedStates[player.socketId];
-
-        return (
-          <div key={player.socketId} style={{
-            position: 'absolute',
-            left: position.left,
-            transform: 'translateX(-50%)',
-            width: stackWidth + 'px',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'flex-start'
-          }}>
-            {/* Player name label */}
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              color: '#fff',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              whiteSpace: 'nowrap',
-              fontSize: '0.9rem',
-              fontWeight: 'bold',
-              zIndex: 4,
-              marginTop: '4px'
-            }}>
-              {player.name}
-            </div>
-
-            {ownedProperties.map((property, index) => {
-              const isLastProperty = index === ownedProperties.length - 1;
-              const isExpanded = isLastProperty || playerExpandedIndex === index;
-              const multiplier = getRentMultiplier(player, property);
-              
-              // Calculate base position (never changes)
-              const basePosition = index * cardOverlap;
-              
-              // Calculate additional offset based on expanded state
-              let expandedOffset = 0;
-              
-              if (playerExpandedIndex !== null && playerExpandedIndex !== undefined) {
-                // If there's an expanded card
-                if (index > playerExpandedIndex) {
-                  expandedOffset = expandOffset;
-                }
+    (!topPlayers || topPlayers.length === 0)
+      ? null
+      : <div style={{
+          position: 'absolute',
+          top: '-190px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          height: cardHeight + 'px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          overflow: 'visible',
+          width: '1000px',
+          justifyContent: 'space-around',
+          zIndex: 1
+        }}>
+        {topPlayers.map((player, playerIndex) => {
+          // Get player's properties and sort by division
+          const ownedProperties = tiles
+            .filter(tile => tile.type === 'property')
+            .filter(tile => player?.properties?.includes(tile.id))
+            .sort((a, b) => {
+              if (a.division === b.division) {
+                return a.name.localeCompare(b.name); // Sort by name within same division
               }
+              return a.division.localeCompare(b.division); // Sort by division
+            });
 
-              // Calculate final position
-              const finalPosition = basePosition + expandedOffset;
-              
-              return (
-                <div
-                  key={property.id}
-                  onClick={() => !isLastProperty && handlePropertyClick(player.socketId, index)}
-                  style={{
-                    width: cardWidth + 'px',
-                    height: cardHeight + 'px',
-                    border: '2px solid #666',
-                    borderRadius: '8px',
-                    position: 'absolute',
-                    left: finalPosition,
-                    transition: 'all 0.3s ease',
-                    zIndex: isExpanded ? ownedProperties.length : index,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    padding: '10px',
-                    boxSizing: 'border-box',
-                    backgroundColor: 'rgb(200, 240, 264)',
-                    cursor: isLastProperty ? 'default' : 'pointer',
-                    boxShadow: 'rgba(50, 50, 50, 0.5) 0px 2px 4px'
-                  }}
-                >
-                  <div style={{
-                    transform: 'rotate(-90deg)',
-                    transformOrigin: 'left center',
-                    position: 'absolute',
-                    width: cardHeight + 'px',
-                    height: cardWidth + 'px',
-                    top: cardHeight / 2 + 'px',
-                    left: cardWidth / 2 + 'px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    color: '#333',
-                    fontSize: '1.2rem',
-                    fontWeight: 'bold',
-                    padding: '10px'
-                  }}>
-                    <div style={{
-                      fontSize: '1.4rem',
-                      marginBottom: '10px',
-                      textAlign: 'left',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      maxWidth: '176px',
-                      width: '100%'
-                    }}>
-                      {property.name}
-                    </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      textAlign: 'left',
-                      marginBottom: '8px'
-                    }}>
-                      Cost: ${property.cost}
-                    </div>
-                    <div style={{
-                      fontSize: '1rem',
-                      textAlign: 'left',
+          const position = positions[playerIndex];
+          const playerExpandedIndex = expandedStates[player.socketId];
+
+          return (
+            <div key={player.socketId} style={{
+              position: 'absolute',
+              left: position.left,
+              transform: 'translateX(-50%)',
+              width: stackWidth + 'px',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'flex-start'
+            }}>
+              {/* Player name label */}
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: '#fff',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                whiteSpace: 'nowrap',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                zIndex: 4,
+                marginTop: '4px'
+              }}>
+                {player.name}
+              </div>
+
+              {ownedProperties.map((property, index) => {
+                const isLastProperty = index === ownedProperties.length - 1;
+                const isExpanded = isLastProperty || playerExpandedIndex === index;
+                const multiplier = getRentMultiplier(player, property);
+                
+                // Calculate base position (never changes)
+                const basePosition = index * cardOverlap;
+                
+                // Calculate additional offset based on expanded state
+                let expandedOffset = 0;
+                
+                if (playerExpandedIndex !== null && playerExpandedIndex !== undefined) {
+                  // If there's an expanded card
+                  if (index > playerExpandedIndex) {
+                    expandedOffset = expandOffset;
+                  }
+                }
+
+                // Calculate final position
+                const finalPosition = basePosition + expandedOffset;
+                
+                return (
+                  <div
+                    key={property.id}
+                    onClick={() => !isLastProperty && handlePropertyClick(player.socketId, index)}
+                    style={{
+                      width: cardWidth + 'px',
+                      height: cardHeight + 'px',
+                      border: '2px solid #666',
+                      borderRadius: '8px',
+                      position: 'absolute',
+                      left: finalPosition,
+                      transition: 'all 0.3s ease',
+                      zIndex: isExpanded ? ownedProperties.length : index,
                       display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '8px'
+                      flexDirection: 'column',
+                      padding: '10px',
+                      boxSizing: 'border-box',
+                      backgroundColor: 'rgb(200, 240, 264)',
+                      cursor: isLastProperty ? 'default' : 'pointer',
+                      boxShadow: 'rgba(50, 50, 50, 0.5) 0px 2px 4px'
+                    }}
+                  >
+                    <div style={{
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: 'left center',
+                      position: 'absolute',
+                      width: cardHeight + 'px',
+                      height: cardWidth + 'px',
+                      top: cardHeight / 2 + 'px',
+                      left: cardWidth / 2 + 'px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      justifyContent: 'flex-start',
+                      color: '#333',
+                      fontSize: '1.2rem',
+                      fontWeight: 'bold',
+                      padding: '10px'
                     }}>
-                      Rent: ${property.rent}
-                      {multiplier > 1 && (
-                        <span style={{ 
-                          color: '#FFA500', 
-                          fontSize: '1.3em', 
-                          fontWeight: 'bold'
+                      <div style={{
+                        fontSize: '1.4rem',
+                        marginBottom: '10px',
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '176px',
+                        width: '100%'
+                      }}>
+                        {property.name}
+                      </div>
+                      <div style={{
+                        fontSize: '1rem',
+                        textAlign: 'left',
+                        marginBottom: '8px'
+                      }}>
+                        Cost: ${property.cost}
+                      </div>
+                      <div style={{
+                        fontSize: '1rem',
+                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '8px'
+                      }}>
+                        Rent: ${property.rent}
+                        {multiplier > 1 && (
+                          <span style={{ 
+                            color: '#FFA500', 
+                            fontSize: '1.3em', 
+                            fontWeight: 'bold'
+                          }}>
+                            X{multiplier}
+                          </span>
+                        )}
+                      </div>
+                      {player.socketId === currentPlayer?.socketId && (
+                        <div style={{
+                          width: '100%',
+                          textAlign: 'left'
                         }}>
-                          X{multiplier}
-                        </span>
+                          <button
+                            onClick={(e) => handleSell(e, player, property)}
+                            style={{
+                              backgroundColor: '#ff4444',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              padding: '4px 8px',
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            Sell
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {player.socketId === currentPlayer?.socketId && (
-                      <div style={{
-                        width: '100%',
-                        textAlign: 'left'
-                      }}>
-                        <button
-                          onClick={(e) => handleSell(e, player, property)}
-                          style={{
-                            backgroundColor: '#ff4444',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem',
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          Sell
-                        </button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-      </div>
+                );
+              })}
+            </div>
+          );
+        })}
+        </div>
   );
 };
 
