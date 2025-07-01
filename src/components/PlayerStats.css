@@ -1,0 +1,10 @@
+.playerstats {
+    /* ...existing code... */
+    width: fit-content;
+    min-width: 200px; /* Optional: set a sensible minimum */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    box-sizing: border-box;
+    /* ...existing code... */
+}

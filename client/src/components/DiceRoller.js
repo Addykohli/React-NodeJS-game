@@ -105,24 +105,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   // if (!player || player.socketId !== currentPlayerId) {
   // Use:
   const currentPlayer = players.find(p => p.socketId === currentPlayerId);
-
-  // Wait for player and players to be loaded before rendering
-  if (!player || !players || players.length === 0 || !currentPlayer) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        color: '#fff',
-        fontSize: '1.5em'
-      }}>
-        Loading game state...
-      </div>
-    );
-  }
-  if (player.name !== currentPlayer.name) {
-    // [***DEBUG CHANCE***] Not my turn or player missing (name check), hiding DiceRoller
+  if (!player || !currentPlayer || player.name !== currentPlayer.name) {
+    // [***DEBUG CHANCE***] Not my turn or player missing (name check)
     console.log('[***DEBUG CHANCE***] Not my turn or player missing (name check), hiding DiceRoller');
     return null;
   }

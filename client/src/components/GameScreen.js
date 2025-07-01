@@ -295,13 +295,6 @@ export default function GameScreen() {
   const [borrowAmount, setBorrowAmount] = useState(500);
   const [payoffAmount, setPayoffAmount] = useState(500);
   const [gameEvents, setGameEvents] = useState([]);
-  // Add new state for toggling button press effect
-  const [borrowBtnPressed, setBorrowBtnPressed] = useState(false);
-  const [payoffBtnPressed, setPayoffBtnPressed] = useState(false);
-  const [borrowMinusPressed, setBorrowMinusPressed] = useState(false);
-  const [borrowPlusPressed, setBorrowPlusPressed] = useState(false);
-  const [payoffMinusPressed, setPayoffMinusPressed] = useState(false);
-  const [payoffPlusPressed, setPayoffPlusPressed] = useState(false);
 
   // Add socket event listener for borrow response
   useEffect(() => {
@@ -1040,19 +1033,16 @@ export default function GameScreen() {
                         alignItems: 'center'
                       }}>
                         <button
-                          onClick={() => {
-                            setBorrowMinusPressed(true);
-                            setTimeout(() => setBorrowMinusPressed(false), 120);
-                            setBorrowAmount(Math.max(500, borrowAmount - 500));
-                          }}
+                          onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
                             cursor: 'pointer',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: borrowMinusPressed ? '1px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
+                            border: '1px inset rgb(80, 80, 170)',
                           }}
                         >
                           -
@@ -1069,19 +1059,16 @@ export default function GameScreen() {
                           ${borrowAmount}
                         </div>
                         <button
-                          onClick={() => {
-                            setBorrowPlusPressed(true);
-                            setTimeout(() => setBorrowPlusPressed(false), 120);
-                            setBorrowAmount(Math.min(100000, borrowAmount + 500));
-                          }}
+                          onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
                             cursor: 'pointer',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: borrowPlusPressed ? '1px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
+                            border: '1px inset rgb(80, 80, 170)',
                           }}
                         >
                           +
@@ -1089,8 +1076,6 @@ export default function GameScreen() {
                       </div>
                       <button
                         onClick={() => {
-                          setBorrowBtnPressed(true);
-                          setTimeout(() => setBorrowBtnPressed(false), 120);
                           if (socket) {
                             socket.emit('borrowMoney', { amount: borrowAmount });
                             setBorrowAmount(500); // Reset to default
@@ -1100,12 +1085,13 @@ export default function GameScreen() {
                           width: '100%',
                           padding: '12px',
                           backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                          border: borrowBtnPressed ? '2px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                          border: 'none',
                           color: 'white',
                           borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '1.1em',
                           transition: 'background-color 0.2s',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         Borrow
@@ -1130,21 +1116,18 @@ export default function GameScreen() {
                         fontSize: '1em'
                       }}>
                         <button
-                          onClick={() => {
-                            setPayoffMinusPressed(true);
-                            setTimeout(() => setPayoffMinusPressed(false), 120);
-                            setPayoffAmount(Math.max(500, payoffAmount - 500));
-                          }}
+                          onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
                           disabled={!player?.loan}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.2em',
                             cursor: player?.loan ? 'pointer' : 'not-allowed',
                             backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                            border: payoffMinusPressed ? '1px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
                             fontSize: '1.7em',
+                            border: '1px inset rgb(80, 80, 170)',
                           }}
                         >
                           -
@@ -1161,20 +1144,17 @@ export default function GameScreen() {
                           ${Math.min(payoffAmount, player?.loan || 0)}
                         </div>
                         <button
-                          onClick={() => {
-                            setPayoffPlusPressed(true);
-                            setTimeout(() => setPayoffPlusPressed(false), 120);
-                            setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500));
-                          }}
+                          onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
                           disabled={!player?.loan}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
                             cursor: player?.loan ? 'pointer' : 'not-allowed',
                             backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                            border: payoffPlusPressed ? '1px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
+                            border: '1px inset rgb(80, 80, 170)',
                           }}
                         >
                           +
@@ -1182,8 +1162,6 @@ export default function GameScreen() {
                       </div>
                       <button
                         onClick={() => {
-                          setPayoffBtnPressed(true);
-                          setTimeout(() => setPayoffBtnPressed(false), 120);
                           if (socket && player?.loan && player?.money >= payoffAmount) {
                             socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
                             setPayoffAmount(1000); // Reset to default
@@ -1196,12 +1174,13 @@ export default function GameScreen() {
                           backgroundColor: player?.loan && player?.money >= payoffAmount 
                             ? 'rgba(255, 255, 255, 0.3)' 
                             : 'rgba(255, 255, 255, 0.1)',
-                          border: payoffBtnPressed ? '2px inset rgb(80, 80, 170)' : '3px outset rgb(80, 80, 170)',
+                          border: 'none',
                           color: 'white',
                           borderRadius: '4px',
                           cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
                           fontSize: '1.1em',
                           transition: 'background-color 0.2s',
+                          border: '1px inset rgb(80, 80, 170)',
                         }}
                       >
                         Pay Off
