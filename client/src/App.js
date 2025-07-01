@@ -68,11 +68,11 @@ const App = () => {
 
   // --- Fallback: If players/player are already present in context, set loaded ---
   useEffect(() => {
-    // For lobby, player is enough to consider loaded
-    if (player) {
+    // For lobby, if socket is connected, set loaded even if player is null (so Lobby can render join form)
+    if (socketConnected) {
       setPlayersLoaded(true);
     }
-  }, [players, player]);
+  }, [socketConnected]);
 
   useEffect(() => {
     setAppReady(socketConnected && playersLoaded);
