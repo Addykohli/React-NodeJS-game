@@ -411,6 +411,20 @@ const PropertyDisplay = () => {
   // Get left-side and right-side players (based on PlayerStats logic)
   const otherPlayers = players.filter(p => p && p.socketId !== player?.socketId);
   
+  // Wait for players and player to be loaded before rendering
+  if (!players || players.length === 0 || !player) {
+    return (
+      <div style={{
+        color: '#fff',
+        fontSize: '1.2em',
+        textAlign: 'center',
+        padding: '10px'
+      }}>
+        Loading properties...
+      </div>
+    );
+  }
+
   // Get positions based on number of players (matching PlayerStats logic)
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
@@ -663,4 +677,4 @@ const PropertyDisplay = () => {
   );
 };
 
-export default PropertyDisplay; 
+export default PropertyDisplay;

@@ -131,6 +131,20 @@ const Lobby = () => {
     );
   }
 
+  // Wait for players to be loaded before rendering
+  if (!players) {
+    return (
+      <div style={{
+        color: '#fff',
+        fontSize: '1.5em',
+        textAlign: 'center',
+        padding: '40px'
+      }}>
+        Loading lobby...
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: 'flex',

@@ -94,6 +94,18 @@ const TopPropertyDisplay = () => {
   const expandOffset = 108; // 70% of 154
   const stackWidth = cardWidth + (cardOverlap * 4);
 
+  if (!topPlayers || topPlayers.length === 0) {
+    return (
+      <div style={{
+        color: '#fff',
+        fontSize: '1.2em',
+        textAlign: 'center',
+        padding: '10px'
+      }}>
+        Loading top properties...
+      </div>
+    );
+  }
   return (
     <div style={{
       position: 'absolute',
@@ -279,8 +291,8 @@ const TopPropertyDisplay = () => {
           </div>
         );
       })}
-    </div>
+      </div>
   );
 };
 
-export default TopPropertyDisplay; 
+export default TopPropertyDisplay;

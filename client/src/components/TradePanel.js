@@ -23,6 +23,13 @@ const TradePanel = () => {
   // Incoming offers state
   const [incomingOffers, setIncomingOffers] = useState([]);
 
+  // Add pressed state for offer, ask, request trade, and both properties buttons
+  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
+  const [askBtnPressed, setAskBtnPressed] = useState(false);
+  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
+  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
+  const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
+
   // Effect to listen for trade requests
   React.useEffect(() => {
     if (!socket) return;
@@ -144,12 +151,16 @@ const TradePanel = () => {
         alignItems: 'center'
       }}>
         <button 
-          onClick={() => setIsOfferExpanded(!isOfferExpanded)}
+          onClick={() => {
+            setOfferBtnPressed(true);
+            setTimeout(() => setOfferBtnPressed(false), 120);
+            setIsOfferExpanded(!isOfferExpanded);
+          }}
           style={{
             width: '100%',
             padding: '10px',
             backgroundColor: 'rgb(175, 76, 80)',
-            border: 'none',
+            border: offerBtnPressed ? '4px inset rgb(90, 40, 40)' : '4px outset rgb(90, 40, 40)',
             borderRadius: '5px',
             color: 'white',
             marginBottom: '10px',
@@ -159,7 +170,6 @@ const TradePanel = () => {
         >
           Offer
         </button>
-        
         {isOfferExpanded && (
           <div style={{ 
             marginBottom: '10px',
@@ -208,12 +218,16 @@ const TradePanel = () => {
 
             {/* Properties Selection */}
             <button 
-              onClick={() => setIsOfferPropertiesExpanded(!isOfferPropertiesExpanded)}
+              onClick={() => {
+                setOfferPropertiesBtnPressed(true);
+                setTimeout(() => setOfferPropertiesBtnPressed(false), 120);
+                setIsOfferPropertiesExpanded(!isOfferPropertiesExpanded);
+              }}
               style={{
                 width: '100%',
                 padding: '8px',
                 backgroundColor: '#2196F3',
-                border: 'none',
+                border: offerPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
                 borderRadius: '5px',
                 color: 'white',
                 cursor: 'pointer',
@@ -270,12 +284,16 @@ const TradePanel = () => {
         alignItems: 'center'
       }}>
         <button 
-          onClick={() => setIsAskExpanded(!isAskExpanded)}
+          onClick={() => {
+            setAskBtnPressed(true);
+            setTimeout(() => setAskBtnPressed(false), 120);
+            setIsAskExpanded(!isAskExpanded);
+          }}
           style={{
             width: '100%',
             padding: '10px',
             backgroundColor: 'rgb(103, 213, 132)',
-            border: 'none',
+            border: askBtnPressed ? '4px inset rgb(40, 90, 40)' : '4px outset rgb(40, 90, 40)',
             borderRadius: '5px',
             color: 'white',
             marginBottom: '10px',
@@ -375,12 +393,16 @@ const TradePanel = () => {
                 alignItems: 'center'
               }}>
                 <button 
-                  onClick={() => setIsAskPropertiesExpanded(!isAskPropertiesExpanded)}
+                  onClick={() => {
+                    setAskPropertiesBtnPressed(true);
+                    setTimeout(() => setAskPropertiesBtnPressed(false), 120);
+                    setIsAskPropertiesExpanded(!isAskPropertiesExpanded);
+                  }}
                   style={{
                     width: '100%',
                     padding: '8px',
                     backgroundColor: '#2196F3',
-                    border: 'none',
+                    border: askPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
                     borderRadius: '5px',
                     color: 'white',
                     cursor: 'pointer',
@@ -442,13 +464,17 @@ const TradePanel = () => {
         width: '100%'
       }}>
         <button
-          onClick={handleTradeRequest}
+          onClick={() => {
+            setRequestTradeBtnPressed(true);
+            setTimeout(() => setRequestTradeBtnPressed(false), 120);
+            handleTradeRequest();
+          }}
           disabled={!offerReady || !askReady || !selectedPlayer}
           style={{
             width: '100%',
             padding: '12px',
             backgroundColor: offerReady && askReady && selectedPlayer ? '#4CAF50' : '#666',
-            border: 'none',
+            border: requestTradeBtnPressed ? '4px inset rgb(40, 40, 40)' : '4px outset rgb(40, 40, 40)',
             borderRadius: '5px',
             color: 'white',
             fontSize: '1.2em',
@@ -513,4 +539,4 @@ const TradePanel = () => {
   );
 };
 
-export default TradePanel; 
+export default TradePanel;

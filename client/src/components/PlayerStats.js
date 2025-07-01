@@ -61,6 +61,20 @@ const PlayerStats = () => {
   // Filter out current player and get others
   const others = players.filter(p => p && p.socketId !== player?.socketId);
 
+  // Wait for players and player to be loaded before rendering
+  if (!players || players.length === 0 || !player) {
+    return (
+      <div style={{
+        color: '#fff',
+        fontSize: '1.2em',
+        textAlign: 'center',
+        padding: '20px'
+      }}>
+        Loading player stats...
+      </div>
+    );
+  }
+
   // Get positions based on number of players
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
@@ -220,15 +234,33 @@ const PlayerStats = () => {
                   : p.name
                 }
               </div>
-              <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+              <div style={{ 
+                fontSize: '1.2rem', 
+                marginBottom: '4px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
                 Money: ${p.money?.toLocaleString() || 0}
               </div>
               {p.loan > 0 && (
-                <div style={{ fontSize: '1.2rem', marginBottom: '4px', color: '#ff6b6b' }}>
+                <div style={{ 
+                  fontSize: '1.2rem', 
+                  marginBottom: '4px', 
+                  color: '#ff6b6b',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
                   Loan: ${p.loan?.toLocaleString()}
                 </div>
               )}
-              <div style={{ fontSize: '1.2rem' }}>
+              <div style={{ 
+                fontSize: '1.2rem',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              }}>
                 At: {currentTile}
               </div>
               {playerDice && (

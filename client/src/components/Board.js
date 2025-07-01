@@ -187,9 +187,19 @@ const Board = () => {
         )}
 
         {/* Player pieces */}
-        {players.map((p, i) => {
-        
-          
+        {(!players || players.length === 0 || Object.keys(pieceScales).length === 0) ? (
+          <div style={{
+            width: boardSize.width,
+            height: boardSize.height,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontSize: '1.5em'
+          }}>
+            Loading board...
+          </div>
+        ) : players.map((p, i) => {
           if (!p) {
             console.log(`[Board] Missing player at index ${i}`);
             return null;
