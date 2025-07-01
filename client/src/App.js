@@ -30,29 +30,45 @@ const App = () => {
   const [playersLoaded, setPlayersLoaded] = useState(false);
   const [appReady, setAppReady] = useState(false);
 
+  // --- NEW: Listen for playersStateUpdate and lobbyUpdate to know when players are ready ---
   useEffect(() => {
     if (!socket) return;
+
     const handleConnect = () => setSocketConnected(true);
     const handleDisconnect = () => setSocketConnected(false);
 
+    // Listen for player state updates from server
+    const handlePlayersStateUpdate = (data) => {
+      if (data && data.players && data.players.length > 0) {
+        setPlayersLoaded(true);
+      }
+    };
+    // Listen for lobby updates (for lobby screen)
+    const handleLobbyUpdate = (data) => {
+      if (data && data.length > 0) {
+        setPlayersLoaded(true);
+      }
+    };
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
+    socket.on('playersStateUpdate', handlePlayersStateUpdate);
+    socket.on('lobbyUpdate', handleLobbyUpdate);
 
-    // If already connected
     if (socket.connected) setSocketConnected(true);
 
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
+      socket.off('playersStateUpdate', handlePlayersStateUpdate);
+      socket.off('lobbyUpdate', handleLobbyUpdate);
     };
   }, [socket]);
 
+  // --- Fallback: If players/player are already present in context, set loaded ---
   useEffect(() => {
-    // Wait for players and player to be loaded
     if (players && players.length > 0 && player) {
       setPlayersLoaded(true);
-    } else {
-      setPlayersLoaded(false);
     }
   }, [players, player]);
 
