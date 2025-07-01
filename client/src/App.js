@@ -31,7 +31,7 @@ function FullScreenLoading({ debugMsg }) {
 }
 
 function App() {
-  const { socket, players, player } = useContext(GameContext);
+  const { socket, players, player, gameState } = useContext(GameContext);
   const [socketConnected, setSocketConnected] = useState(false);
   const [playersLoaded, setPlayersLoaded] = useState(false);
   const [appReady, setAppReady] = useState(false);
@@ -113,11 +113,18 @@ function App() {
     return <FullScreenLoading debugMsg={waitingFor.length ? `Waiting for: ${waitingFor.join(', ')}` : ''} />;
   }
 
+  // Example main app rendering (replace with your actual routing or main component)
+  // You may have something like:
+  // return <Router>...</Router>;
+  // For demonstration, just render a placeholder:
   return (
-    <>
-      {gameState === 'playing' ? <GameScreen /> : <Lobby />}
-    </>
+    <div>
+      {/* ...your main app goes here... */}
+      {/* For example: */}
+      {/* {gameState === 'lobby' ? <Lobby /> : <GameScreen />} */}
+      App is ready!
+    </div>
   );
-};
+}
 
 export default App;
