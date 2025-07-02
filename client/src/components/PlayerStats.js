@@ -164,13 +164,14 @@ const PlayerStats = () => {
           background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.61)' : 'rgba(80, 80, 80, 0.61)',
           fontSize: '1.5rem',
           color: 'white',
-          width: '260px',
+          width: '340px', 
           borderRadius: '12px',
           boxShadow: '0 3px 6px rgba(0,0,0,0.2)',
           zIndex: 1,
           display: 'flex',
           flexDirection: 'row',
-          alignItems: 'center'
+          alignItems: 'center',
+          overflow: 'visible' 
         };
 
         // Apply position based on placement
@@ -273,13 +274,7 @@ const PlayerStats = () => {
                 </div>
               )}
             </div>
-            {/* Vertical line */}
-            <div style={{
-              width: '2px',
-              height: '60px',
-              background: 'linear-gradient(to bottom, #aaa 0%, #fff 100%)',
-              margin: '0 12px'
-            }} />
+          
             {/* Player piece */}
             <div style={{
               width: PIECE_DISPLAY_WIDTH,

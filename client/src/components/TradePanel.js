@@ -244,28 +244,52 @@ const TradePanel = () => {
               }}>
                 {player.properties.map(propId => {
                   const property = tiles.find(t => t.id === propId);
+                  const checked = selectedOfferProperties.includes(propId);
                   return (
-                    <div key={propId} style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px',
-                      marginBottom: '5px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: '5px',
-                      minHeight: '40px'
-                    }}>
-                      <span style={{ fontSize: '1.1em' }}>{property.name}</span>
-                      <input
-                        type="checkbox"
-                        checked={selectedOfferProperties.includes(propId)}
-                        onChange={() => handlePropertyToggle('offer', propId)}
+                    <div
+                      key={propId}
+                      onClick={() => handlePropertyToggle('offer', propId)}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '8px',
+                        marginBottom: '5px',
+                        backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '5px',
+                        minHeight: '40px',
+                        cursor: 'pointer',
+                        border: checked ? '2px solid #2196F3' : '2px solid transparent',
+                        transition: 'background 0.15s, border 0.15s'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
+                      <span
                         style={{
-                          width: '20px',
-                          height: '20px',
-                          cursor: 'pointer'
+                          width: '22px',
+                          height: '22px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '4px',
+                          background: checked ? '#2196F3' : 'transparent',
+                          border: '2px solid #2196F3',
+                          transition: 'background 0.15s'
                         }}
-                      />
+                      >
+                        {checked && (
+                          <svg width="16" height="16" viewBox="0 0 16 16">
+                            <polyline
+                              points="3,8 7,12 13,4"
+                              style={{
+                                fill: 'none',
+                                stroke: 'white',
+                                strokeWidth: 2
+                              }}
+                            />
+                          </svg>
+                        )}
+                      </span>
                     </div>
                   );
                 })}
@@ -421,28 +445,52 @@ const TradePanel = () => {
                       .find(p => p.socketId === selectedPlayer)
                       ?.properties.map(propId => {
                         const property = tiles.find(t => t.id === propId);
+                        const checked = selectedAskProperties.includes(propId);
                         return (
-                          <div key={propId} style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px',
-                            marginBottom: '5px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            borderRadius: '5px',
-                            minHeight: '40px'
-                          }}>
-                            <span style={{ fontSize: '1.1em' }}>{property.name}</span>
-                            <input
-                              type="checkbox"
-                              checked={selectedAskProperties.includes(propId)}
-                              onChange={() => handlePropertyToggle('ask', propId)}
+                          <div
+                            key={propId}
+                            onClick={() => handlePropertyToggle('ask', propId)}
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '8px',
+                              marginBottom: '5px',
+                              backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                              borderRadius: '5px',
+                              minHeight: '40px',
+                              cursor: 'pointer',
+                              border: checked ? '2px solid #2196F3' : '2px solid transparent',
+                              transition: 'background 0.15s, border 0.15s'
+                            }}
+                          >
+                            <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
+                            <span
                               style={{
-                                width: '20px',
-                                height: '20px',
-                                cursor: 'pointer'
+                                width: '22px',
+                                height: '22px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '4px',
+                                background: checked ? '#2196F3' : 'transparent',
+                                border: '2px solid #2196F3',
+                                transition: 'background 0.15s'
                               }}
-                            />
+                            >
+                              {checked && (
+                                <svg width="16" height="16" viewBox="0 0 16 16">
+                                  <polyline
+                                    points="3,8 7,12 13,4"
+                                    style={{
+                                      fill: 'none',
+                                      stroke: 'white',
+                                      strokeWidth: 2
+                                    }}
+                                  />
+                                </svg>
+                              )}
+                            </span>
                           </div>
                         );
                       })}
