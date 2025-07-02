@@ -2380,19 +2380,6 @@ io.on('connection', socket => {
     // No-op, just to keep the connection active
     // Optionally, you could log or update a timestamp here
   });
-
-  socket.on('tradeRequest', (offer) => {
-    console.log('[SERVER] Received tradeRequest:', offer);
-
-    // Find the recipient socket
-    const recipientSocket = io.sockets.sockets.get(offer.to);
-    if (recipientSocket) {
-      console.log(`[SERVER] Emitting tradeRequest to recipient socketId: ${offer.to}`);
-      recipientSocket.emit('tradeRequest', offer);
-    } else {
-      console.log(`[SERVER] Recipient socketId ${offer.to} not found!`);
-    }
-  });
 });
 
 

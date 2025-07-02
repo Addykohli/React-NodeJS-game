@@ -166,7 +166,7 @@ const TradePanel = () => {
             color: 'white',
             marginBottom: '10px',
             cursor: 'pointer',
-            fontSize: '1.2em'
+            fontSize: '1.8em'
           }}
         >
           Offer
@@ -199,10 +199,14 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.2em'
+                  fontSize: '1.6em'
                 }}
               >-</button>
-              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${offerMoney}</span>
+
+              <span style={{ margin: '0 15px', fontSize: '2em' }}>
+                ${offerMoney}
+              </span>
+
               <button 
                 onClick={() => handleMoneyChange('offer', 500)}
                 style={{
@@ -212,7 +216,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.2em'
+                  fontSize: '1.6em'
                 }}
               >+</button>
             </div>
@@ -232,7 +236,7 @@ const TradePanel = () => {
                 borderRadius: '5px',
                 color: 'white',
                 cursor: 'pointer',
-                fontSize: '1.1em'
+                fontSize: '1.3em'
               }}
             >
               Properties
@@ -323,7 +327,7 @@ const TradePanel = () => {
             color: 'white',
             marginBottom: '10px',
             cursor: 'pointer',
-            fontSize: '1.2em'
+            fontSize: '1.8em'
           }}
         >
           Ask
@@ -357,10 +361,12 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.2em'
+                  fontSize: '1.6em'
                 }}
               >-</button>
-              <span style={{ margin: '0 15px', fontSize: '1.2em' }}>${askMoney}</span>
+              <span style={{ margin: '0 15px', fontSize: '2em' }}>
+                ${askMoney}
+                </span>
               <button 
                 onClick={() => handleMoneyChange('ask', 500)}
                 style={{
@@ -370,7 +376,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.2em'
+                  fontSize: '1.6em'
                 }}
               >+</button>
             </div>
@@ -431,7 +437,7 @@ const TradePanel = () => {
                     borderRadius: '5px',
                     color: 'white',
                     cursor: 'pointer',
-                    fontSize: '1.1em'
+                    fontSize: '1.3em'
                   }}
                 >
                   Properties
@@ -557,12 +563,12 @@ const TradePanel = () => {
                 borderRadius: '5px'
               }}>
                 <p>From: {fromPlayer?.name}</p>
-                <p>Offers: ${offer.offer.money}</p>
-                <p>Properties Offered: {offer.offer.properties.map(propId => 
+                <p>You get: ${offer.offer.money}</p>
+                <p>Properties you get: {offer.offer.properties.map(propId => 
                   tiles.find(t => t.id === propId)?.name
                 ).join(', ')}</p>
                 <p>Asks: ${offer.ask.money}</p>
-                <p>Properties Asked: {offer.ask.properties.map(propId => 
+                <p>Properties you give: {offer.ask.properties.map(propId => 
                   tiles.find(t => t.id === propId)?.name
                 ).join(', ')}</p>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
