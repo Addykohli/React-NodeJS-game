@@ -35,6 +35,7 @@ const TradePanel = () => {
     if (!socket) return;
 
     socket.on('tradeRequest', (offer) => {
+      console.log('[CLIENT] Received tradeRequest:', offer);
       setIncomingOffers(prev => [...prev, offer]);
     });
 
