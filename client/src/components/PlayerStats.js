@@ -80,20 +80,6 @@ const PlayerStats = () => {
     ? players.filter(p => p && p.socketId !== player?.socketId)
     : [];
 
-  // Wait for players and player to be loaded before rendering
-  if (!players || players.length === 0 || !player) {
-    return (
-      <div style={{
-        color: '#fff',
-        fontSize: '1.2em',
-        textAlign: 'center',
-        padding: '20px'
-      }}>
-        Loading player stats...
-      </div>
-    );
-  }
-
   // Get positions based on number of players
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
