@@ -34,9 +34,23 @@ const TradePanel = () => {
   React.useEffect(() => {
     if (!socket) return;
 
+    // Load any pending trade offers for this player on mount
+    socket.emit('getPendingTradeOffers');
+
     socket.on('tradeRequest', (offer) => {
-      console.log('[CLIENT] Received tradeRequest:', offer);
-      setIncomingOffers(prev => [...prev, offer]);
+      setIncomingOffers(prev => {
+        // Prevent duplicates
+        if (prev.some(o => o.id === offer.id)) return prev;
+        return [...prev, offer];
+      });
+    });
+
+    socket.on('pendingTradeOffers', (offers) => {
+      setIncomingOffers(prev => {
+        // Merge new offers, avoid duplicates
+        const newOffers = offers.filter(o => !prev.some(p => p.id === o.id));
+        return [...prev, ...newOffers];
+      });
     });
 
     socket.on('tradeAccepted', ({ offerId }) => {
@@ -56,6 +70,7 @@ const TradePanel = () => {
 
     return () => {
       socket.off('tradeRequest');
+      socket.off('pendingTradeOffers');
       socket.off('tradeAccepted');
       socket.off('tradeRejected');
     };

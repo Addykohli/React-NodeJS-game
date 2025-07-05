@@ -127,12 +127,19 @@ class GameEngine {
     return { tileId: fallback.to };
   }
 
-  chooseBranch(socketId, branchChoices, branchIndex) {
-    const choice = branchChoices[branchIndex];
+  chooseBranch(socketId, branchChoices, branchIndex, toTileId) {
+    // Use toTileId if provided, otherwise fallback to branchIndex
+    let choice;
+    if (typeof toTileId !== 'undefined') {
+      choice = branchChoices.find(b => b.to === toTileId);
+    }
+    if (!choice) {
+      choice = branchChoices[branchIndex];
+    }
     if (!choice) return null;
     const player = this.getPlayer(socketId);
     if (!player) return null;
-    console.log(`[Engine] chooseBranch idx=${branchIndex} →`, choice.to);
+    console.log(`[Engine] chooseBranch idx=${branchIndex} toTileId=${toTileId} →`, choice.to);
     player.prevTile = player.tileId;
     player.tileId   = choice.to;
     this.session.history.push({
