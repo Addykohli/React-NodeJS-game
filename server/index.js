@@ -339,7 +339,7 @@ io.on('connection', socket => {
       if (!step) break;
 
       // Always re-fetch the player after moveOneStep to get the latest tileId
-      const player = engine.getPlayer(socket.id);
+      let player = engine.getPlayer(socket.id);
 
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
@@ -347,7 +347,14 @@ io.on('connection', socket => {
         const idx = await new Promise(res => branchResolvers[socket.id] = res);
         console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
-        io.emit('playerMoved', { playerId: socket.id, tileId: step.branchChoices[0]?.to ?? player.tileId, hasMoved: player.hasMoved });
+
+        // Re-fetch player after branch choice
+        player = engine.getPlayer(socket.id);
+
+        // Emit playerMoved with the correct tile after branch
+        io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: player.hasMoved });
+
+        // After a branch, continue the movement loop as normal
       } else {
         const player = engine.getPlayer(socket.id);
         const newTile = player.tileId;
