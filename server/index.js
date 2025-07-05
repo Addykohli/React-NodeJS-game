@@ -344,9 +344,9 @@ io.on('connection', socket => {
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
         socket.emit('branchChoices', { options: step.branchChoices.map(c => c.to) });
-        const [branchIdx, toTileId] = await new Promise(res => branchResolvers[socket.id] = res);
-        console.log('Branch selected index:', branchIdx);
-        const to = engine.chooseBranch(socket.id, step.branchChoices, branchIdx, toTileId);
+        const idx = await new Promise(res => branchResolvers[socket.id] = res);
+        console.log('Branch selected index:', idx);
+        const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
         io.emit('playerMoved', { playerId: socket.id, tileId: step.branchChoices[0]?.to ?? player.tileId, hasMoved: player.hasMoved });
       } else {
         const player = engine.getPlayer(socket.id);
@@ -732,10 +732,10 @@ io.on('connection', socket => {
     socket.emit('movementDone');
   });
 
-  socket.on('branchChoice', ({ idx, toTileId }) => {
-    console.log('[branchChoice] idx:', idx, 'toTileId:', toTileId);
+  socket.on('branchChoice', idx => {
+    console.log('[branchChoice] idx:', idx);
     const fn = branchResolvers[socket.id];
-    if (fn) { fn(idx, toTileId); delete branchResolvers[socket.id]; }
+    if (fn) { fn(idx); delete branchResolvers[socket.id]; }
   });
 
   socket.on('endTurn', async () => {
@@ -2334,7 +2334,6 @@ io.on('connection', socket => {
           if (currentSessionId) {
             GameSession.findByIdAndUpdate(currentSessionId, { 
               currentPlayerIndex: engine.session.currentPlayerIndex 
- 
             }).catch(err => {
               console.error('Error updating game session after quit:', err);
             });
