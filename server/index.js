@@ -344,10 +344,14 @@ io.on('connection', socket => {
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
         socket.emit('branchChoices', { options: step.branchChoices.map(c => c.to) });
-        const [branchIdx, toTileId] = await new Promise(res => branchResolvers[socket.id] = res);
+        // Await a single object, not an array
+        const branchChoice = await new Promise(res => branchResolvers[socket.id] = res);
+        // branchChoice should be { idx, toTileId }
+        const branchIdx = branchChoice.idx;
+        const toTileId = branchChoice.toTileId;
         console.log('Branch selected index:', branchIdx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, branchIdx, toTileId);
-        io.emit('playerMoved', { playerId: socket.id, tileId: step.branchChoices[0]?.to ?? player.tileId, hasMoved: player.hasMoved });
+        io.emit('playerMoved', { playerId: socket.id, tileId: to ?? player.tileId, hasMoved: player.hasMoved });
       } else {
         const player = engine.getPlayer(socket.id);
         const newTile = player.tileId;

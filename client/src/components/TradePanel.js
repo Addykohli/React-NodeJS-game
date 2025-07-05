@@ -34,45 +34,50 @@ const TradePanel = () => {
   React.useEffect(() => {
     if (!socket) return;
 
-    // Load any pending trade offers for this player on mount
+    // Helper to merge offers without duplicates
+    const mergeOffers = (prev, offers) => {
+      const ids = new Set(prev.map(o => o.id));
+      return [...prev, ...offers.filter(o => !ids.has(o.id))];
+    };
+
+    // Always request pending offers when panel is (re)mounted
     socket.emit('getPendingTradeOffers');
 
-    socket.on('tradeRequest', (offer) => {
+    // Listen for new trade requests
+    const handleTradeRequest = (offer) => {
       setIncomingOffers(prev => {
-        // Prevent duplicates
         if (prev.some(o => o.id === offer.id)) return prev;
         return [...prev, offer];
       });
-    });
+    };
 
-    socket.on('pendingTradeOffers', (offers) => {
-      setIncomingOffers(prev => {
-        // Merge new offers, avoid duplicates
-        const newOffers = offers.filter(o => !prev.some(p => p.id === o.id));
-        return [...prev, ...newOffers];
-      });
-    });
+    // Listen for all pending offers (server should send all for this player)
+    const handlePendingTradeOffers = (offers) => {
+      setIncomingOffers(prev => mergeOffers(prev, offers));
+    };
 
-    socket.on('tradeAccepted', ({ offerId }) => {
+    // Listen for trade accepted/rejected
+    const handleTradeAccepted = ({ offerId }) => {
       setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-      // Refresh player data will be handled by GameContext
-    });
-
-    socket.on('tradeRejected', ({ offerId, reason, message, keepOffer }) => {
+    };
+    const handleTradeRejected = ({ offerId, reason, message, keepOffer }) => {
       if (!keepOffer) {
         setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
       }
-      // Only show alert if there's a message
-      if (message) {
-        alert(message);
-      }
-    });
+      if (message) alert(message);
+    };
 
+    socket.on('tradeRequest', handleTradeRequest);
+    socket.on('pendingTradeOffers', handlePendingTradeOffers);
+    socket.on('tradeAccepted', handleTradeAccepted);
+    socket.on('tradeRejected', handleTradeRejected);
+
+    // On mount, always fetch pending offers (again) to ensure up-to-date
     return () => {
-      socket.off('tradeRequest');
-      socket.off('pendingTradeOffers');
-      socket.off('tradeAccepted');
-      socket.off('tradeRejected');
+      socket.off('tradeRequest', handleTradeRequest);
+      socket.off('pendingTradeOffers', handlePendingTradeOffers);
+      socket.off('tradeAccepted', handleTradeAccepted);
+      socket.off('tradeRejected', handleTradeRejected);
     };
   }, [socket]);
 
