@@ -64,9 +64,7 @@ const Board = () => {
   }, [player, socket]);
 
   const chooseBranch = (idx) => {
-    // Send both idx and toTileId to the server for safety
-    const toTileId = branchOptions[idx];
-    socket.emit('branchChoice', { idx, toTileId });
+    socket.emit('branchChoice', idx);
     setBranchOptions(null);
   };
 
