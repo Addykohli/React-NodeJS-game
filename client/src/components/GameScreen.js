@@ -960,7 +960,8 @@ export default function GameScreen() {
                           const isGain = event.message.includes('received') ||
                                          event.message.includes('won') ||
                                          event.message.includes('bonus') ||
-                                         event.message.includes('collected $'); 
+                                         event.message.includes('collected $') ||
+                                         event.message.includes('won $') && event.message.includes('on the road');
                           const isLoss = event.message.includes('paid') ||
                                          event.message.includes('lost');
                           return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
@@ -1013,7 +1014,7 @@ export default function GameScreen() {
                             border: 'none',
                             color: 'white',
                             borderRadius: '4px',
-                            border: '1px inset rgb(80, 80, 170)',
+                            border: '2px inset rgb(80, 80, 170)',
                           }}
                         >
                           -
@@ -1025,7 +1026,7 @@ export default function GameScreen() {
                           minWidth: '100px',
                           textAlign: 'center',
                           fontSize: '1.7em',
-                          border: '1px inset rgb(80, 80, 170)',
+                          border: '2px inset rgb(80, 80, 170)',
                         }}>
                           ${borrowAmount}
                         </div>
@@ -1039,30 +1040,35 @@ export default function GameScreen() {
                             border: 'none',
                             color: 'white',
                             borderRadius: '4px',
-                            border: '1px inset rgb(80, 80, 170)',
+                            border: '2px inset rgb(80, 80, 170)',
                           }}
                         >
                           +
                         </button>
                       </div>
+                      {/* Borrow Button with border effect */}
                       <button
-                        onClick={() => {
+                        onClick={async (e) => {
+                          // Add border effect on click
+                          e.target.style.border = '2px inset rgb(80, 80, 170)';
                           if (socket) {
                             socket.emit('borrowMoney', { amount: borrowAmount });
                             setBorrowAmount(500); // Reset to default
                           }
+                          setTimeout(() => {
+                            e.target.style.border = '2px outset rgb(80, 80, 170)';
+                          }, 180);
                         }}
                         style={{
                           width: '100%',
                           padding: '12px',
                           backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                          border: 'none',
+                          border: '1px outset rgb(80, 80, 170)',
                           color: 'white',
                           borderRadius: '4px',
                           cursor: 'pointer',
                           fontSize: '1.1em',
-                          transition: 'background-color 0.2s',
-                          border: '1px inset rgb(80, 80, 170)',
+                          transition: 'background-color 0.2s, border 0.1s',
                         }}
                       >
                         Borrow
@@ -1098,7 +1104,7 @@ export default function GameScreen() {
                             color: 'white',
                             borderRadius: '4px',
                             fontSize: '1.7em',
-                            border: '1px inset rgb(80, 80, 170)',
+                            border: '2px inset rgb(80, 80, 170)',
                           }}
                         >
                           -
@@ -1110,7 +1116,7 @@ export default function GameScreen() {
                           minWidth: '100px',
                           textAlign: 'center',
                           fontSize: '1.7em',
-                          border: '1px inset rgb(80, 80, 170)',
+                          border: '2px inset rgb(80, 80, 170)',
                         }}>
                           ${Math.min(payoffAmount, player?.loan || 0)}
                         </div>
@@ -1125,18 +1131,24 @@ export default function GameScreen() {
                             border: 'none',
                             color: 'white',
                             borderRadius: '4px',
-                            border: '1px inset rgb(80, 80, 170)',
+                            border: '2px inset rgb(80, 80, 170)',
                           }}
                         >
                           +
                         </button>
                       </div>
+                      {/* Pay Off Button with border effect */}
                       <button
-                        onClick={() => {
+                        onClick={async (e) => {
+                          // Add border effect on click
+                          e.target.style.border = '2px inset rgb(80, 80, 170)';
                           if (socket && player?.loan && player?.money >= payoffAmount) {
                             socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
                             setPayoffAmount(1000); // Reset to default
                           }
+                          setTimeout(() => {
+                            e.target.style.border = '2px outset rgb(80, 80, 170)';
+                          }, 180);
                         }}
                         disabled={!player?.loan || player?.money < payoffAmount}
                         style={{
@@ -1145,13 +1157,12 @@ export default function GameScreen() {
                           backgroundColor: player?.loan && player?.money >= payoffAmount 
                             ? 'rgba(255, 255, 255, 0.3)' 
                             : 'rgba(255, 255, 255, 0.1)',
-                          border: 'none',
+                          border: '2px outset rgb(80, 80, 170)',
                           color: 'white',
                           borderRadius: '4px',
                           cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
                           fontSize: '1.1em',
-                          transition: 'background-color 0.2s',
-                          border: '1px inset rgb(80, 80, 170)',
+                          transition: 'background-color 0.2s, border 0.1s',
                         }}
                       >
                         Pay Off
@@ -1670,15 +1681,15 @@ export default function GameScreen() {
                       onClick={handleBuy}
                       disabled={player.money < tileMeta.cost || (player.loan || 0) > 10000}
                       style={{
-                        padding: '15px 30px',  // Increased padding
-                        fontSize: '1.4em',     // Increased font size
+                        padding: '15px 30px',  
+                        fontSize: '1.8em',    
                         backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? '#4CAF50' : '#ccc',
                         color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'white' : '#ff0000',
                         border: 'none',
-                        borderRadius: '12px',  // Increased border radius
+                        borderRadius: '12px',  
                         cursor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'pointer' : 'not-allowed',
                         fontWeight: 'bold',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  // Added shadow
+                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  
                         transition: 'transform 0.2s',
                         ':hover': {
                           transform: 'scale(1.05)'
@@ -1890,10 +1901,15 @@ export default function GameScreen() {
 
               // Show error message if any
               if (error) {
-                // Show green for bonus or Start! messages, else tomato
-                const isGreen = typeof error === 'string' && (error.includes('bonus') || error.includes('Start!'));
+                // Show green for bonus, Start!, or road cash win messages, else tomato
+                const isGreen = typeof error === 'string' &&
+                  (
+                    error.includes('bonus') ||
+                    error.includes('Start!') ||
+                    error.includes('won $') && error.includes('on the road')
+                  );
                 return (
-                  <p style={{ color: isGreen ? '#4CAF50' : 'tomato', margin: 0 }}>{error}</p>
+                  <p style={{ color: isGreen ? '#4CAF50' : 'tomato', margin: 0, fontSize: '1.4em'  }}>{error}</p>
                 );
               }
 
@@ -1972,16 +1988,6 @@ export default function GameScreen() {
               padding: 4px !important;
               font-size: 0.95em !important;
               box-sizing: border-box !important;
-              overflow: hidden !important;
-              display: flex !important;
-              flex-direction: column !important;
-              align-items: center !important;
-              justify-content: center !important;
-            }
-            .footer-section > * {
-              max-width: 100% !important;
-              width: 100% !important;
-              overflow: hidden !important;
               text-overflow: ellipsis !important;
             }
             .quit-game-button {
@@ -1996,7 +2002,7 @@ export default function GameScreen() {
             }
           }
           @media (min-width: 901px) {
-            .quit-game-mobile {
+                       .quit-game-mobile {
               display: none !important;
             }
           }

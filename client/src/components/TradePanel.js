@@ -34,32 +34,44 @@ const TradePanel = () => {
   React.useEffect(() => {
     if (!socket) return;
 
+    // Always fetch all active offers from server on mount/open
+    socket.emit('getActiveTradeOffers');
+
     socket.on('tradeRequest', (offer) => {
-      console.log('[CLIENT] Received tradeRequest:', offer);
-      setIncomingOffers(prev => [...prev, offer]);
+      setIncomingOffers(prev => {
+        // Prevent duplicates
+        if (prev.some(o => o.id === offer.id)) return prev;
+        return [...prev, offer];
+      });
     });
 
     socket.on('tradeAccepted', ({ offerId }) => {
       setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-      // Refresh player data will be handled by GameContext
     });
 
     socket.on('tradeRejected', ({ offerId, reason, message, keepOffer }) => {
       if (!keepOffer) {
         setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
       }
-      // Only show alert if there's a message
       if (message) {
         alert(message);
       }
+    });
+
+    // Listen for full active offers list from server
+    socket.on('activeTradeOffers', (offers) => {
+      setIncomingOffers(offers.filter(offer =>
+        offer.to === player.socketId // Only show offers for this player
+      ));
     });
 
     return () => {
       socket.off('tradeRequest');
       socket.off('tradeAccepted');
       socket.off('tradeRejected');
+      socket.off('activeTradeOffers');
     };
-  }, [socket]);
+  }, [socket, player.socketId]);
 
   // Update ready states
   React.useEffect(() => {
