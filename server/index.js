@@ -770,48 +770,74 @@ io.on('connection', socket => {
     console.log('[buyProperty] received from', socket.id);
     
     try {
-    const playerObj = engine.getPlayer(socket.id);
+      const playerObj = engine.getPlayer(socket.id);
       if (!playerObj) {
         console.log('purchaseFailed: playerNotFound');
         return socket.emit('purchaseFailed', { reason: 'playerNotFound' });
       }
-    console.log('PlayerObj:', playerObj);
+      console.log('PlayerObj:', playerObj);
 
-    const { tiles } = require('./data/tiles.cjs');
+      const { tiles } = require('./data/tiles.cjs');
       const tile = tiles.find(t => t.id === playerObj.tileId);
-    //console.log('Tile metadata:', tile);
 
-    if (!tile || tile.type !== 'property') {
-      console.log('purchaseFailed: notProperty');
-      return socket.emit('purchaseFailed', { reason: 'notProperty' });
-    }
+      if (!tile || tile.type !== 'property') {
+        console.log('purchaseFailed: notProperty');
+        return socket.emit('purchaseFailed', { reason: 'notProperty' });
+      }
 
-    // Check if ANY player owns this property
-    const isOwnedByAnyPlayer = engine.session.players.some(p => p.properties.includes(tile.id));
-    if (isOwnedByAnyPlayer) {
-      console.log('purchaseFailed: alreadyOwned');
-      return socket.emit('purchaseFailed', { reason: 'alreadyOwned' });
-    }
+      // Check if ANY player owns this property (in-memory check)
+      const isOwnedByAnyPlayer = engine.session.players.some(p => p.properties.includes(tile.id));
+      if (isOwnedByAnyPlayer) {
+        console.log('purchaseFailed: alreadyOwned');
+        return socket.emit('purchaseFailed', { reason: 'alreadyOwned' });
+      }
 
-    if (playerObj.money < tile.cost) {
-      console.log('purchaseFailed: insufficientFunds');
-      return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
-    }
+      if (playerObj.money < tile.cost) {
+        console.log('purchaseFailed: insufficientFunds');
+        return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
+      }
 
       // Start a transaction
       const transaction = await sequelize.transaction();
 
       try {
-    // perform purchase
-        playerObj.money -= tile.cost;
-    playerObj.properties.push(tile.id);
-    console.log('After purchase - money:', playerObj.money, 'properties:', playerObj.properties);
+        // --- ATOMIC CHECKS INSIDE TRANSACTION ---
+        // Re-fetch player from DB for up-to-date state
+        const dbPlayer = await Player.findOne({ where: { socketId: socket.id }, transaction, lock: transaction.LOCK.UPDATE });
+        if (!dbPlayer) {
+          await transaction.rollback();
+          return socket.emit('purchaseFailed', { reason: 'playerNotFound' });
+        }
+        // Prevent duplicate property
+        const dbProperties = Array.isArray(dbPlayer.properties) ? dbPlayer.properties : [];
+        if (dbProperties.includes(tile.id)) {
+          await transaction.rollback();
+          console.log('purchaseFailed: alreadyOwned (db check)');
+          return socket.emit('purchaseFailed', { reason: 'alreadyOwned' });
+        }
+        // Prevent insufficient funds
+        if (dbPlayer.money < tile.cost) {
+          await transaction.rollback();
+          console.log('purchaseFailed: insufficientFunds (db check)');
+          return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
+        }
+
+        // perform purchase
+        const newMoney = dbPlayer.money - tile.cost;
+        // Prevent negative money
+        if (newMoney < 0) {
+          await transaction.rollback();
+          console.log('purchaseFailed: insufficientFunds (would go negative)');
+          return socket.emit('purchaseFailed', { reason: 'insufficientFunds' });
+        }
+        // Add property only once
+        const newProperties = [...dbProperties, tile.id];
 
         // Update player in database within transaction
         const updatedPlayer = await Player.update(
           {
-            money: playerObj.money,
-            properties: playerObj.properties
+            money: newMoney,
+            properties: newProperties
           },
           {
             where: { socketId: socket.id },
@@ -821,12 +847,17 @@ io.on('connection', socket => {
         );
 
         if (!updatedPlayer[0]) {
+          await transaction.rollback();
           throw new Error('Failed to update player');
         }
 
+        // Update in-memory player object as well (for engine/session)
+        playerObj.money = newMoney;
+        playerObj.properties = newProperties;
+
         // If game session exists, update it within the same transaction
-    if (currentSessionId) {
-      console.log('Updating GameSession', currentSessionId);
+        if (currentSessionId) {
+          console.log('Updating GameSession', currentSessionId);
           await GameSession.update(
             {
               players: engine.session.players.map(p => ({
@@ -853,12 +884,12 @@ io.on('connection', socket => {
         // Broadcast game event for property purchase
         broadcastGameEvent(`${playerObj.name} bought ${tile.name} for $${tile.cost}`);
 
-    console.log('purchaseSuccess emit');
-    io.emit('purchaseSuccess', {
+        console.log('purchaseSuccess emit');
+        io.emit('purchaseSuccess', {
           socketId: socket.id,
           money: playerObj.money,
-      properties: playerObj.properties
-    });
+          properties: playerObj.properties
+        });
       } catch (err) {
         // Rollback transaction on error
         await transaction.rollback();
@@ -889,7 +920,6 @@ io.on('connection', socket => {
 
   // Handle casino roll
   socket.on('casinoRoll', async ({ betAmount, betType }) => {
-    console.log('[casinoRoll]', { betAmount, betType });
     
     const player = engine.getPlayer(socket.id);
     if (!player) return;
@@ -902,7 +932,6 @@ io.on('connection', socket => {
       const die1 = Math.floor(Math.random() * 6) + 1;
       const die2 = Math.floor(Math.random() * 6) + 1;
       const total = die1 + die2;
-      console.log('Casino roll:', { die1, die2, total });
 
       // Determine if player won based on bet type
       let won = false;
@@ -983,7 +1012,7 @@ io.on('connection', socket => {
 
   // When landing on Road tile (ID 22)
   socket.on('landOnRoad', async () => {
-    console.log('[landOnRoad] Player landed on Road tile');
+
     const player = engine.getPlayer(socket.id);
     if (!player) return;
 
@@ -1051,7 +1080,6 @@ io.on('connection', socket => {
 
   // Handle road cash selection
   socket.on('roadCashSelected', async ({ amount }) => {
-    console.log('[roadCashSelected]', { amount });
     
     const player = engine.getPlayer(socket.id);
     if (!player) return;

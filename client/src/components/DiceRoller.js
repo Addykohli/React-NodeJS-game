@@ -6,8 +6,6 @@ import Dicebox from '../assets/diceBoard.png';
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
   const isMyTurn = player?.socketId === currentPlayerId;
-  // [***DEBUG CHANCE***] Print player, currentPlayerId, isMyTurn
-  console.log('[***DEBUG CHANCE***] player:', player, 'currentPlayerId:', currentPlayerId, 'isMyTurn:', isMyTurn);
 
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
@@ -19,8 +17,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   // Get current tile to check if we're on casino
   const tileMeta = tiles.find(t => t.id === player?.tileId);
-  // [***DEBUG CHANCE***] Print tileMeta
-  console.log('[***DEBUG CHANCE***] tileMeta:', tileMeta);
 
   const isOnCasino = tileMeta?.id === 16;
 
@@ -98,17 +94,12 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   }, [player, socket]);
 
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
-  // [***DEBUG CHANCE***] Print hasRolled, die1, done, movementDone, branchOptions
-  console.log('[***DEBUG CHANCE***] hasRolled:', hasRolled, 'die1:', die1, 'done:', done, 'movementDone:', movementDone, 'branchOptions:', branchOptions);
-
   // Instead of:
   // if (!player || player.socketId !== currentPlayerId) {
   // Use:
   const currentPlayer = players.find(p => p.socketId === currentPlayerId);
   if (!player || !currentPlayer || player.name !== currentPlayer.name) {
-    // [***DEBUG CHANCE***] Not my turn or player missing (name check)
-    console.log('[***DEBUG CHANCE***] Not my turn or player missing (name check), hiding DiceRoller');
-    return null;
+      return null;
   }
 
   const handleRoll = () => {

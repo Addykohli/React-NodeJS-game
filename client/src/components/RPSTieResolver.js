@@ -29,7 +29,6 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
   // If maxAmount is less than 500, skip the animation and resolve immediately
   useEffect(() => {
     if (maxAmount < 500) {
-      console.log('[RPS] Skipping animation, maxAmount < 500');
       socket.emit('stonePaperScissorsTieAmount', { 
         gameId, 
         amount: maxAmount,
@@ -39,28 +38,19 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
       return;
     }
 
-    console.log('[RPS] RPSTieResolver mounted:', { maxAmount, gameId, tiedPlayerId, tiedPlayerName });
     setTimeout(() => {
       setHasEntered(true);
     }, 100);
 
     return () => {
-      console.log('[RPS] RPSTieResolver unmounting');
+
     };
   }, [maxAmount, gameId, tiedPlayerId, tiedPlayerName, socket, onResolved]);
 
   const handleCashClick = (index) => {
     if (selectedIndex !== null) {
-      console.log('[RPS] Ignoring click, card already selected');
       return;
     }
-
-    console.log('[RPS] Card clicked:', {
-      index,
-      amount: availableAmounts[index].amount,
-      gameId,
-      tiedPlayerId
-    });
 
     setSelectedIndex(index);
     const amount = availableAmounts[index].amount;
@@ -68,17 +58,11 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
 
     // First reveal selected card
     setTimeout(() => {
-      console.log('[RPS] Revealing selected card');
       // After 3 seconds, reveal all other cards
       setShowAll(true);
       
       // After another 3 seconds, send the amount and start exit animations
-      setTimeout(() => {
-        console.log('[RPS] Sending tie amount to server:', {
-          gameId,
-          amount,
-          tiedPlayerId
-        });
+      setTimeout(() => {      
         // Send the transaction amount before starting exit animation
         socket.emit('stonePaperScissorsTieAmount', { 
           gameId, 
@@ -88,12 +72,10 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
         
         // Wait a bit to ensure server processes the transaction
         setTimeout(() => {
-          console.log('[RPS] Starting exit animations');
           setIsExiting(true);
           
           // Finally remove from DOM after animations complete
           setTimeout(() => {
-            console.log('[RPS] Cleanup and resolve');
             setIsActive(false);
             if (onResolved) onResolved();
           }, 1000);

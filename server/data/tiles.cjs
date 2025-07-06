@@ -302,7 +302,7 @@ const tiles = [
     next: [
     { from: 25, roll: 'any', to: 27 }
         ],
-    cost: 5000,
+    cost: 8000,
     rent: 200
   },
 

@@ -270,15 +270,10 @@ export default function GameScreen() {
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
-  // [***DEBUG CHANCE***] Print player, currentPlayerId, isMyTurn
-  console.log('[***DEBUG CHANCE***] player:', player, 'currentPlayerId:', currentPlayerId, 'isMyTurn:', isMyTurn);
 
   // Use the pickedRoadCash value from the players array for the current player
   const pickedRoadCash = players.find(p => p.socketId === player?.socketId)?.pickedRoadCash ?? player?.pickedRoadCash ?? false;
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
-  // [***DEBUG CHANCE***] Print hasRolled, pickedRoadCash, movementDone
-  console.log('[***DEBUG CHANCE***] hasRolled:', hasRolled, 'pickedRoadCash:', pickedRoadCash, 'movementDone:', movementDone);
-
   const [error, setError] = useState(null);
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
@@ -360,8 +355,6 @@ export default function GameScreen() {
 
   // Determine metadata for the current tile
   const tileMeta = tiles.find(t => t.id === player?.tileId);
-  // [***DEBUG CHANCE***] Print tileMeta
-  console.log('[***DEBUG CHANCE***] tileMeta:', tileMeta);
 
   // Reset hasChosenCorner when turn ends or tile changes
   useEffect(() => {
@@ -405,14 +398,12 @@ export default function GameScreen() {
 
   // Debug logging to trace condition
   useEffect(() => {
-    // [***DEBUG CHANCE***] Print all relevant state for turn/roll logic
-    console.log('[***DEBUG CHANCE***] EFFECT: isMyTurn:', isMyTurn, 'movementDone:', movementDone, 'tileMeta:', tileMeta, 'player:', player, 'hasRolled:', hasRolled);
-  }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput, hasRolled]);
+    }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput, hasRolled]);
 
   // Listen for purchase events
   useEffect(() => {
     socket.on('purchaseSuccess', ({ socketId, money, properties }) => {
-      console.log('[GameScreen] purchaseSuccess', { socketId, money, properties });
+      
       const updated = players.map(p =>
         p.socketId === socketId ? { ...p, money, properties } : p
       );
@@ -437,7 +428,6 @@ export default function GameScreen() {
 
     // Add property update handler
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
-      console.log('[GameScreen] propertyUpdated', { playerId, propertyId, action, newMoney });
       
       // Update players' properties and money
       setPlayers(prevPlayers => {
@@ -476,7 +466,6 @@ export default function GameScreen() {
 
     // Add rent payment handler
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney, amount, baseRent, multiplier, propertyName }) => {
-      console.log('[GameScreen] rentPaid', { payerSocketId, ownerSocketId, amount });
       
       // Update players' money and loan synchronously
       setPlayers(prevPlayers => {
@@ -532,7 +521,6 @@ export default function GameScreen() {
 
     // Add start bonus handler
     socket.on('startBonus', ({ playerSocketId, newMoney, amount, reason }) => {
-      console.log('[GameScreen] startBonus', { playerSocketId, newMoney, amount, reason });
       
       // Update players' money synchronously
       setPlayers(prevPlayers => {
@@ -553,8 +541,7 @@ export default function GameScreen() {
 
     // Add road cash handler
     socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
-      console.log('[GameScreen] roadCashResult', { playerSocketId, newMoney, amount });
-      
+            
       // Update players' money synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
@@ -574,7 +561,6 @@ export default function GameScreen() {
 
     // Add casino result handler
     socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
-      console.log('[GameScreen] casinoResult', { playerId, dice, amount, won, playerName, playerMoney });
       
       // Update players' money synchronously
       setPlayers(prevPlayers => {
@@ -623,7 +609,6 @@ export default function GameScreen() {
 
     // Add playerMoved event handler
     socket.on('playerMoved', ({ playerId, tileId }) => {
-      console.log('[GameScreen] playerMoved', { playerId, tileId });
       if (playerId === player?.socketId) {
         setPlayer(prev => ({ ...prev, tileId }));
       }
@@ -649,7 +634,6 @@ export default function GameScreen() {
 
     // Add rent bonus handler
     socket.on('rentBonus', ({ playerSocketId, newMoney, amount, propertyName }) => {
-      console.log('[GameScreen] rentBonus', { playerSocketId, amount });
       
       // Update player's money
       const updated = players.map(p =>
@@ -844,22 +828,9 @@ export default function GameScreen() {
   }, [isMyTurn]);
 
   const handleBuy = () => {
-    console.log('[GameScreen] handleBuy invoked');
     setError(null);
     socket.emit('buyProperty');
   };
-
-  // Print booleans when player lands on tile 22
-  useEffect(() => {
-    if (tileMeta?.id === 22) {
-      console.log('[DEBUG***] RoadCash Overlay Check:', {
-        isMyTurn,
-        isTile22: tileMeta?.id === 22,
-        pickedRoadCash: pickedRoadCash,
-        hasRolled: hasRolled,
-      });
-    }
-  }, [tileMeta, isMyTurn, player?.hasMoved]);
 
   return (
     <div style={{
@@ -986,12 +957,12 @@ export default function GameScreen() {
                         /\$(\d+,?\d*)/g,
                         (match, amount) => {
                           // Determine if this is a gain or loss
-                          const isGain = event.message.includes('received') || 
-                                       event.message.includes('won') ||
-                                       event.message.includes('bonus');
-                          const isLoss = event.message.includes('paid') || 
-                                       event.message.includes('lost');
-                      
+                          const isGain = event.message.includes('received') ||
+                                         event.message.includes('won') ||
+                                         event.message.includes('bonus') ||
+                                         event.message.includes('collected $'); 
+                          const isLoss = event.message.includes('paid') ||
+                                         event.message.includes('lost');
                           return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
                         }
                       );
