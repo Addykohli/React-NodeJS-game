@@ -137,25 +137,38 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       {!die1 && !hasRolled && !branchOptions && (
         <button
           onClick={handleRoll}
-          style={{ 
-            padding: '16px 32px',
-            margin: '4px',
-            opacity: testRollMode ? 0.5 : 1,
+          style={{
+            padding: '17px 40px',
+            borderRadius: '10px',
+            border: 0,
+            backgroundColor: 'rgb(76, 175, 80)', 
+            letterSpacing: '1.5px',
+            fontSize: '15px',
+            transition: 'all 0.3s ease',
+            boxShadow: 'rgb(61, 146, 4) 0px 10px 0px 0px',
+            color: 'hsl(0, 0%, 100%)',
             cursor: testRollMode ? 'not-allowed' : 'pointer',
-            fontSize: '1.8rem',
-            fontWeight: 'bold',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            ':hover': {
-              transform: 'scale(1.05)',
-              boxShadow: '0 6px 12px rgba(0,0,0,0.6)'
-            }
+            opacity: testRollMode ? 0.5 : 1,
           }}
           disabled={testRollMode}
+          onMouseOver={e => {
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 7px 0px 0px';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+          }}
+          onMouseDown={e => {
+            e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 0px 0px 0px';
+            e.currentTarget.style.transform = 'translateY(5px)';
+            e.currentTarget.style.transition = '200ms';
+          }}
+          onMouseUp={e => {
+            e.currentTarget.style.backgroundColor = '#4CAF50';
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.transition = 'all 0.3s ease';
+          }}
         >
           {testRollMode ? 'Type testroll#' : 'Roll Dice'}
         </button>
@@ -191,16 +204,36 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
         <button
           onClick={handleDone}
-          style={{ 
-            padding: '16px 32px', 
-            marginTop: '16px',
-            fontSize: '1.5em',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
+          style={{
+            padding: '17px 40px',
+            borderRadius: '10px',
+            border: 0,
+            backgroundColor: 'rgb(76, 175, 80)',
+            letterSpacing: '1.5px',
+            fontSize: '15px',
+            transition: 'all 0.3s ease',
+            boxShadow: 'rgb(61, 146, 4) 0px 10px 0px 0px',
+            color: 'hsl(0, 0%, 100%)',
             cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            marginTop: '16px',
+          }}
+          onMouseOver={e => {
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 7px 0px 0px';
+          }}
+          onMouseOut={e => {
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+          }}
+          onMouseDown={e => {
+            e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 0px 0px 0px';
+            e.currentTarget.style.transform = 'translateY(5px)';
+            e.currentTarget.style.transition = '200ms';
+          }}
+          onMouseUp={e => {
+            e.currentTarget.style.backgroundColor = '#4CAF50';
+            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.transform = 'none';
+            e.currentTarget.style.transition = 'all 0.3s ease';
           }}
         >
           Done

@@ -1681,18 +1681,43 @@ export default function GameScreen() {
                       onClick={handleBuy}
                       disabled={player.money < tileMeta.cost || (player.loan || 0) > 10000}
                       style={{
-                        padding: '15px 30px',  
-                        fontSize: '1.8em',    
-                        backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? '#4CAF50' : '#ccc',
-                        color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'white' : '#ff0000',
-                        border: 'none',
-                        borderRadius: '12px',  
+                        padding: '17px 40px',
+                        borderRadius: '10px',
+                        border: 0,
+                        backgroundColor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'rgb(76, 175, 80)' : '#ccc',
+                        letterSpacing: '1.5px',
+                        fontSize: '15px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'rgb(61, 146, 4) 0px 10px 0px 0px' : 'none',
+                        color: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'hsl(0, 0%, 100%)' : '#ff0000',
                         cursor: player.money >= tileMeta.cost && (player.loan || 0) <= 10000 ? 'pointer' : 'not-allowed',
                         fontWeight: 'bold',
-                        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',  
-                        transition: 'transform 0.2s',
-                        ':hover': {
-                          transform: 'scale(1.05)'
+                        outline: 'none'
+                      }}
+                      onMouseOver={e => {
+                        if (player.money >= tileMeta.cost && (player.loan || 0) <= 10000) {
+                          e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 7px 0px 0px';
+                        }
+                      }}
+                      onMouseOut={e => {
+                        if (player.money >= tileMeta.cost && (player.loan || 0) <= 10000) {
+                          e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+                        }
+                      }}
+                      onMouseDown={e => {
+                        if (player.money >= tileMeta.cost && (player.loan || 0) <= 10000) {
+                          e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+                          e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 0px 0px 0px';
+                          e.currentTarget.style.transform = 'translateY(5px)';
+                          e.currentTarget.style.transition = '200ms';
+                        }
+                      }}
+                      onMouseUp={e => {
+                        if (player.money >= tileMeta.cost && (player.loan || 0) <= 10000) {
+                          e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+                          e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+                          e.currentTarget.style.transform = 'none';
+                          e.currentTarget.style.transition = 'all 0.3s ease';
                         }
                       }}
                     >

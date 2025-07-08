@@ -30,13 +30,11 @@ const TradePanel = () => {
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  // Effect to listen for trade requests
+  // Effect to listen for trade requests and active offers
   React.useEffect(() => {
     if (!socket) return;
 
-    // Always fetch all active offers from server on mount/open
-    socket.emit('getActiveTradeOffers');
-
+    // Listen for new trade requests
     socket.on('tradeRequest', (offer) => {
       setIncomingOffers(prev => {
         // Prevent duplicates
@@ -60,10 +58,13 @@ const TradePanel = () => {
 
     // Listen for full active offers list from server
     socket.on('activeTradeOffers', (offers) => {
-      setIncomingOffers(offers.filter(offer =>
-        offer.to === player.socketId // Only show offers for this player
-      ));
+      setIncomingOffers(
+        offers.filter(offer => offer.to === player.socketId)
+      );
     });
+
+    // On mount, fetch all active offers
+    socket.emit('getActiveTradeOffers');
 
     return () => {
       socket.off('tradeRequest');
@@ -72,6 +73,15 @@ const TradePanel = () => {
       socket.off('activeTradeOffers');
     };
   }, [socket, player.socketId]);
+
+  // Fetch active trade offers whenever the panel is opened/expanded
+  React.useEffect(() => {
+    if (isOfferExpanded || isAskExpanded || requestTradeBtnPressed) {
+      if (socket) {
+        socket.emit('getActiveTradeOffers');
+      }
+    }
+  }, [isOfferExpanded, isAskExpanded, requestTradeBtnPressed, socket]);
 
   // Update ready states
   React.useEffect(() => {
