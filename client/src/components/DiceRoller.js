@@ -25,25 +25,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setCasinoPlayed(hasCasinoPlayed);
   }, [hasCasinoPlayed]);
 
-  // Debug logging for RoadCash overlay check
-  useEffect(() => {
-    console.log('[DEBUG***] Casino turn Check:', {
-      isMyTurn,
-      die1,
-      done
-    });
-  }, [isMyTurn, die1, done]);
-
-  useEffect(() => {
-    console.log('[DEBUG***] rps tie done Check:', {
-      isMyTurn,
-      rpsGame,
-      done,
-      isOnCasino,
-      casinoPlayed
-    });
-  }, [isMyTurn, rpsGame, done, isOnCasino, casinoPlayed]);
-
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
@@ -143,29 +124,29 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
             border: 0,
             backgroundColor: 'rgb(76, 175, 80)', 
             letterSpacing: '1.5px',
-            fontSize: '15px',
+            fontSize: '1.8rem',
             transition: 'all 0.3s ease',
-            boxShadow: 'rgb(61, 146, 4) 0px 10px 0px 0px',
+            boxShadow: 'rgb(46, 115, 0) 0px 10px 0px 0px',
             color: 'hsl(0, 0%, 100%)',
             cursor: testRollMode ? 'not-allowed' : 'pointer',
             opacity: testRollMode ? 0.5 : 1,
           }}
           disabled={testRollMode}
           onMouseOver={e => {
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 7px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 7px 0px 0px';
           }}
           onMouseOut={e => {
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
           }}
           onMouseDown={e => {
             e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 0px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 0px 0px 0px';
             e.currentTarget.style.transform = 'translateY(5px)';
             e.currentTarget.style.transition = '200ms';
           }}
           onMouseUp={e => {
             e.currentTarget.style.backgroundColor = '#4CAF50';
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
             e.currentTarget.style.transform = 'none';
             e.currentTarget.style.transition = 'all 0.3s ease';
           }}
@@ -210,28 +191,28 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
             border: 0,
             backgroundColor: 'rgb(76, 175, 80)',
             letterSpacing: '1.5px',
-            fontSize: '15px',
+            fontSize: '1.5em',
             transition: 'all 0.3s ease',
-            boxShadow: 'rgb(61, 146, 4) 0px 10px 0px 0px',
+            boxShadow: 'rgb(46, 115, 0) 0px 10px 0px 0px',
             color: 'hsl(0, 0%, 100%)',
             cursor: 'pointer',
             marginTop: '16px',
           }}
           onMouseOver={e => {
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 7px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 7px 0px 0px';
           }}
           onMouseOut={e => {
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
           }}
           onMouseDown={e => {
             e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 0px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 0px 0px 0px';
             e.currentTarget.style.transform = 'translateY(5px)';
             e.currentTarget.style.transition = '200ms';
           }}
           onMouseUp={e => {
             e.currentTarget.style.backgroundColor = '#4CAF50';
-            e.currentTarget.style.boxShadow = 'rgb(61, 146, 4) 0px 10px 0px 0px';
+            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
             e.currentTarget.style.transform = 'none';
             e.currentTarget.style.transition = 'all 0.3s ease';
           }}

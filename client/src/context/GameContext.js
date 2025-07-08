@@ -97,12 +97,7 @@ export function GameProvider({ children }) {
   useEffect(() => {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
-      console.log('[GameContext] Syncing player state:', {
-        socketId: socket?.id,
-        foundPlayer: !!me,
-        piece: me?.piece,
-        currentPiece: player?.piece
-      });
+      
       if (me) {
         setPlayer(prev => ({
           ...me,
@@ -131,10 +126,6 @@ export function GameProvider({ children }) {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
       if (me) {
-        console.log('[GameContext] Updating player from players array:', {
-          playerId: me.socketId,
-          money: me.money
-        });
         setPlayer(me);
       }
     }
@@ -203,7 +194,6 @@ export function GameProvider({ children }) {
 
     // TURN ENDED
     socket.on('turnEnded', ({ nextPlayerId }) => {
-      console.log('[GameContext] Turn ended, next player:', nextPlayerId);
       setCurrentPlayerId(nextPlayerId);
       setDiceRoll(null);
       setMovementDone(false);
@@ -396,7 +386,6 @@ export function GameProvider({ children }) {
 
     // Add loan handling
     socket.on('loanUpdated', ({ playerId, newMoney, loanAmount }) => {
-      console.log('[GameContext] Loan update:', { playerId, newMoney, loanAmount });
       
       // Update current player first if they're involved
       if (player?.socketId === playerId) {

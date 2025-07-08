@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
@@ -20,75 +20,93 @@ const TradePanel = () => {
   const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [askReady, setAskReady] = useState(false);
 
-  // Incoming offers state
+  // Use a ref to avoid duplicate listeners and to persist offers across re-renders
+  const offersRef = useRef([]);
   const [incomingOffers, setIncomingOffers] = useState([]);
 
-  // Add pressed state for offer, ask, request trade, and both properties buttons
-  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
-  const [askBtnPressed, setAskBtnPressed] = useState(false);
-  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
-  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
-  const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
+  // Debug: log when component mounts/unmounts and when offers change
+  useEffect(() => {
+    console.log('[TradePanel] MOUNT');
+    return () => {
+      console.log('[TradePanel] UNMOUNT');
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('[TradePanel] incomingOffers changed:', incomingOffers);
+  }, [incomingOffers]);
 
   // Effect to listen for trade requests and active offers
-  React.useEffect(() => {
+  useEffect(() => {
     if (!socket) return;
 
-    // Listen for new trade requests
-    socket.on('tradeRequest', (offer) => {
-      setIncomingOffers(prev => {
-        // Prevent duplicates
-        if (prev.some(o => o.id === offer.id)) return prev;
-        return [...prev, offer];
-      });
-    });
+    // Handler functions
+    const handleTradeRequest = (offer) => {
+      console.log('[TradePanel] tradeRequest received:', offer);
+      // Prevent duplicates
+      offersRef.current = offersRef.current.filter(o => o.id !== offer.id);
+      offersRef.current = [...offersRef.current, offer];
+      setIncomingOffers([...offersRef.current]);
+    };
 
-    socket.on('tradeAccepted', ({ offerId }) => {
-      setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-    });
+    const handleTradeAccepted = ({ offerId }) => {
+      console.log('[TradePanel] tradeAccepted:', offerId);
+      offersRef.current = offersRef.current.filter(offer => offer.id !== offerId);
+      setIncomingOffers([...offersRef.current]);
+    };
 
-    socket.on('tradeRejected', ({ offerId, reason, message, keepOffer }) => {
+    const handleTradeRejected = ({ offerId, reason, message, keepOffer }) => {
+      console.log('[TradePanel] tradeRejected:', offerId, reason, message, keepOffer);
       if (!keepOffer) {
-        setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
+        offersRef.current = offersRef.current.filter(offer => offer.id !== offerId);
+        setIncomingOffers([...offersRef.current]);
       }
       if (message) {
         alert(message);
       }
-    });
+    };
 
-    // Listen for full active offers list from server
-    socket.on('activeTradeOffers', (offers) => {
-      setIncomingOffers(
-        offers.filter(offer => offer.to === player.socketId)
-      );
-    });
+    const handleActiveTradeOffers = (offers) => {
+      console.log('[TradePanel] activeTradeOffers:', offers);
+      // Only keep offers for this player
+      offersRef.current = offers.filter(offer => offer.to === player.socketId);
+      setIncomingOffers([...offersRef.current]);
+    };
+
+    // Register listeners
+    socket.on('tradeRequest', handleTradeRequest);
+    socket.on('tradeAccepted', handleTradeAccepted);
+    socket.on('tradeRejected', handleTradeRejected);
+    socket.on('activeTradeOffers', handleActiveTradeOffers);
 
     // On mount, fetch all active offers
     socket.emit('getActiveTradeOffers');
 
+    // Cleanup
     return () => {
-      socket.off('tradeRequest');
-      socket.off('tradeAccepted');
-      socket.off('tradeRejected');
-      socket.off('activeTradeOffers');
+      socket.off('tradeRequest', handleTradeRequest);
+      socket.off('tradeAccepted', handleTradeAccepted);
+      socket.off('tradeRejected', handleTradeRejected);
+      socket.off('activeTradeOffers', handleActiveTradeOffers);
     };
   }, [socket, player.socketId]);
 
   // Fetch active trade offers whenever the panel is opened/expanded
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOfferExpanded || isAskExpanded || requestTradeBtnPressed) {
       if (socket) {
+        console.log('[TradePanel] Fetching active trade offers...');
         socket.emit('getActiveTradeOffers');
       }
     }
   }, [isOfferExpanded, isAskExpanded, requestTradeBtnPressed, socket]);
 
   // Update ready states
-  React.useEffect(() => {
+  useEffect(() => {
     setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
   }, [offerMoney, selectedOfferProperties]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
