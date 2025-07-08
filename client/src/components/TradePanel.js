@@ -68,7 +68,19 @@ const TradePanel = () => {
     const handleActiveTradeOffers = (offers) => {
       // Only show offers for this player
       const filtered = offers.filter(offer => offer.to === player.socketId);
-      setIncomingOffers(filtered);
+      // Only update if the offers have changed (prevent clearing on empty array)
+      setIncomingOffers(prev => {
+        // If both arrays are empty, don't update (prevents flicker)
+        if (filtered.length === 0 && prev.length === 0) return prev;
+        // If arrays are the same (by id), don't update
+        if (
+          filtered.length === prev.length &&
+          filtered.every((o, i) => o.id === prev[i]?.id)
+        ) {
+          return prev;
+        }
+        return filtered;
+      });
       console.log('[TradePanel] Received activeTradeOffers:', filtered);
     };
 
@@ -94,6 +106,8 @@ const TradePanel = () => {
       socket.emit('getActiveTradeOffers');
       console.log('[TradePanel] Fetching active trade offers on mount');
     }
+    // Do NOT clear incomingOffers here!
+    // setIncomingOffers([]); // <-- REMOVE this if present
   }, [socket, player.socketId]);
 
   // Remove this effect: it causes the offers to be cleared when toggling the panel
