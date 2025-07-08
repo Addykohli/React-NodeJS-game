@@ -25,6 +25,25 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setCasinoPlayed(hasCasinoPlayed);
   }, [hasCasinoPlayed]);
 
+  // Debug logging for RoadCash overlay check
+  useEffect(() => {
+    console.log('[DEBUG***] Casino turn Check:', {
+      isMyTurn,
+      die1,
+      done
+    });
+  }, [isMyTurn, die1, done]);
+
+  useEffect(() => {
+    console.log('[DEBUG***] rps tie done Check:', {
+      isMyTurn,
+      rpsGame,
+      done,
+      isOnCasino,
+      casinoPlayed
+    });
+  }, [isMyTurn, rpsGame, done, isOnCasino, casinoPlayed]);
+
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
