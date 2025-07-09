@@ -1747,6 +1747,11 @@ io.on('connection', socket => {
     const currentLoan = player.loan || 0;
     player.loan = currentLoan + amount;
     player.money += amount;
+    // Immediately persist to DB
+    await Player.update(
+      { loan: player.loan, money: player.money },
+      { where: { socketId: socket.id } }
+    );
 
     console.log('[borrowMoney] Updated player state:', {
       name: player.name,
@@ -1843,6 +1848,11 @@ io.on('connection', socket => {
     // Update player's money and loan
     player.loan -= paymentAmount;
     player.money -= paymentAmount;
+    // Immediately persist to DB
+    await Player.update(
+      { loan: player.loan, money: player.money },
+      { where: { socketId: socket.id } }
+    );
 
     console.log('[payoffLoan] Updated player state:', {
       name: player.name,
@@ -2268,6 +2278,11 @@ io.on('connection', socket => {
               money: toPlayer.money,
               properties: toPlayer.properties
             }
+          });
+
+          // Also broadcast the full updated player state for all clients to update their UI
+          io.emit('playersStateUpdate', {
+            players: engine.session.players
           });
 
           // Create detailed game event message
