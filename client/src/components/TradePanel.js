@@ -20,111 +20,55 @@ const TradePanel = () => {
   const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [askReady, setAskReady] = useState(false);
 
-  // Incoming offers state
+  // Remove offersRef and all listeners, just use state for offers
   const [incomingOffers, setIncomingOffers] = useState([]);
 
-  // Add pressed state for offer, ask, request trade, and both properties buttons
-  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
-  const [askBtnPressed, setAskBtnPressed] = useState(false);
-  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
-  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
-  const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
+  // Debug: log when component mounts/unmounts and when offers change
+  useEffect(() => {
+    console.log('[TradePanel] MOUNT');
+    return () => {
+      console.log('[TradePanel] UNMOUNT');
+    };
+  }, []);
 
-  // Add a debug log for incomingOffers
   useEffect(() => {
     console.log('[TradePanel] incomingOffers changed:', incomingOffers);
   }, [incomingOffers]);
 
-  // Effect to listen for trade requests and active offers
+  // When panel is opened, fetch active trade offers and filter for this player
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for new trade requests
-    const handleTradeRequest = (offer) => {
-      setIncomingOffers(prev => {
-        // Prevent duplicates
-        if (prev.some(o => o.id === offer.id)) return prev;
-        return [...prev, offer];
-      });
-      console.log('[TradePanel] Received tradeRequest:', offer);
-    };
-
-    const handleTradeAccepted = ({ offerId }) => {
-      setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-      console.log('[TradePanel] Trade accepted, removed offer:', offerId);
-    };
-
-    const handleTradeRejected = ({ offerId, reason, message, keepOffer }) => {
-      if (!keepOffer) {
-        setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
-        console.log('[TradePanel] Trade rejected, removed offer:', offerId);
-      }
-      if (message) {
-        alert(message);
-      }
-    };
-
-    // Listen for full active offers list from server
-    const handleActiveTradeOffers = (offers) => {
-      // Only show offers for this player
-      const filtered = offers.filter(offer => offer.to === player.socketId);
-      // Only update if the offers have changed (prevent clearing on empty array)
-      setIncomingOffers(prev => {
-        // If both arrays are empty, don't update (prevents flicker)
-        if (filtered.length === 0 && prev.length === 0) return prev;
-        // If arrays are the same (by id), don't update
-        if (
-          filtered.length === prev.length &&
-          filtered.every((o, i) => o.id === prev[i]?.id)
-        ) {
-          return prev;
-        }
-        return filtered;
-      });
-      console.log('[TradePanel] Received activeTradeOffers:', filtered);
-    };
-
-    socket.on('tradeRequest', handleTradeRequest);
-    socket.on('tradeAccepted', handleTradeAccepted);
-    socket.on('tradeRejected', handleTradeRejected);
-    socket.on('activeTradeOffers', handleActiveTradeOffers);
-
-    // On mount, fetch all active offers
-    socket.emit('getActiveTradeOffers');
-
-    return () => {
-      socket.off('tradeRequest', handleTradeRequest);
-      socket.off('tradeAccepted', handleTradeAccepted);
-      socket.off('tradeRejected', handleTradeRejected);
-      socket.off('activeTradeOffers', handleActiveTradeOffers);
-    };
-  }, [socket, player.socketId]);
-
-  // Always fetch active trade offers when the panel is mounted (not just when expanded)
-  useEffect(() => {
-    if (socket) {
+    // Only fetch when panel is opened (expanded)
+    if (isOfferExpanded || isAskExpanded) {
       socket.emit('getActiveTradeOffers');
-      console.log('[TradePanel] Fetching active trade offers on mount');
-    }
-    // Do NOT clear incomingOffers here!
-    // setIncomingOffers([]); // <-- REMOVE this if present
-  }, [socket, player.socketId]);
+      // Listen for one-time response
+      const handleActiveTradeOffers = (offers) => {
+        // Only keep offers for this player
+        setIncomingOffers(
+          Array.isArray(offers)
+            ? offers.filter(offer => offer.to === player.socketId)
+            : []
+        );
+      };
+      socket.once('activeTradeOffers', handleActiveTradeOffers);
 
-  // Remove this effect: it causes the offers to be cleared when toggling the panel
-  // React.useEffect(() => {
-  //   if (isOfferExpanded || isAskExpanded || requestTradeBtnPressed) {
-  //     if (socket) {
-  //       socket.emit('getActiveTradeOffers');
-  //     }
-  //   }
-  // }, [isOfferExpanded, isAskExpanded, requestTradeBtnPressed, socket]);
+      // Cleanup: remove listener if component unmounts or panel closes before response
+      return () => {
+        socket.off('activeTradeOffers', handleActiveTradeOffers);
+      };
+    } else {
+      // If panel is closed, clear offers
+      setIncomingOffers([]);
+    }
+  }, [isOfferExpanded, isAskExpanded, socket, player.socketId]);
 
   // Update ready states
-  React.useEffect(() => {
+  useEffect(() => {
     setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
   }, [offerMoney, selectedOfferProperties]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
@@ -200,10 +144,6 @@ const TradePanel = () => {
       flexDirection: 'column',
       gap: '20px'
     }}>
-      {/* Debug: Show incomingOffers count */}
-      <div style={{ color: '#aaa', fontSize: '0.9em', marginBottom: '4px' }}>
-        [debug] incomingOffers: {incomingOffers.length}
-      </div>
       {/* Offer Section */}
       <div style={{
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -604,21 +544,21 @@ const TradePanel = () => {
 
       {/* Incoming Offers Section */}
       {incomingOffers.length > 0 && (
-        <div style={{
+        <div style={{ 
           marginTop: '10px',
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
           borderRadius: '10px',
           padding: '15px'
         }}>
-          <h3 style={{
-            color: 'white',
+          <h3 style={{ 
+            color: 'white', 
             marginTop: 0,
             marginBottom: '15px'
           }}>Incoming Offers:</h3>
           {incomingOffers.map(offer => {
             const fromPlayer = players.find(p => p.socketId === offer.from);
             return (
-              <div key={offer.id} style={{
+              <div key={offer.id} style={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
                 padding: '10px',
                 marginBottom: '10px',
