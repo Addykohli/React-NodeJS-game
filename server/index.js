@@ -2042,6 +2042,15 @@ io.on('connection', socket => {
     io.emit('chatMessage', message);
   });
 
+  // Handle getActiveTradeOffers
+  socket.on('getActiveTradeOffers', () => {
+    // Only send offers where this socket is the recipient
+    const offersForPlayer = activeTradeOffers.filter(
+      offer => offer.to === socket.id
+    );
+    socket.emit('activeTradeOffers', offersForPlayer);
+  });
+
   // Handle trade request
   socket.on('tradeRequest', (request) => {
     console.log('[tradeRequest]', request);

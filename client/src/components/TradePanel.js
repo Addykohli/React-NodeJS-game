@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
@@ -20,55 +20,65 @@ const TradePanel = () => {
   const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [askReady, setAskReady] = useState(false);
 
-  // Remove offersRef and all listeners, just use state for offers
+  // Incoming offers state
   const [incomingOffers, setIncomingOffers] = useState([]);
 
-  // Debug: log when component mounts/unmounts and when offers change
-  useEffect(() => {
-    console.log('[TradePanel] MOUNT');
-    return () => {
-      console.log('[TradePanel] UNMOUNT');
-    };
-  }, []);
+  // Add pressed state for offer, ask, request trade, and both properties buttons
+  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
+  const [askBtnPressed, setAskBtnPressed] = useState(false);
+  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
+  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
+  const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  useEffect(() => {
-    console.log('[TradePanel] incomingOffers changed:', incomingOffers);
-  }, [incomingOffers]);
-
-  // When panel is opened, fetch active trade offers and filter for this player
-  useEffect(() => {
+  // Effect to listen for trade requests
+  React.useEffect(() => {
     if (!socket) return;
 
-    // Only fetch when panel is opened (expanded)
-    if (isOfferExpanded || isAskExpanded) {
-      socket.emit('getActiveTradeOffers');
-      // Listen for one-time response
-      const handleActiveTradeOffers = (offers) => {
-        // Only keep offers for this player
-        setIncomingOffers(
-          Array.isArray(offers)
-            ? offers.filter(offer => offer.to === player.socketId)
-            : []
-        );
-      };
-      socket.once('activeTradeOffers', handleActiveTradeOffers);
+    // Always fetch all active offers from server on mount/open
+    socket.emit('getActiveTradeOffers');
 
-      // Cleanup: remove listener if component unmounts or panel closes before response
-      return () => {
-        socket.off('activeTradeOffers', handleActiveTradeOffers);
-      };
-    } else {
-      // If panel is closed, clear offers
-      setIncomingOffers([]);
-    }
-  }, [isOfferExpanded, isAskExpanded, socket, player.socketId]);
+    socket.on('tradeRequest', (offer) => {
+      setIncomingOffers(prev => {
+        // Prevent duplicates
+        if (prev.some(o => o.id === offer.id)) return prev;
+        return [...prev, offer];
+      });
+    });
+
+    socket.on('tradeAccepted', ({ offerId }) => {
+      setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
+    });
+
+    socket.on('tradeRejected', ({ offerId, reason, message, keepOffer }) => {
+      if (!keepOffer) {
+        setIncomingOffers(prev => prev.filter(offer => offer.id !== offerId));
+      }
+      if (message) {
+        alert(message);
+      }
+    });
+
+    // Listen for full active offers list from server
+    socket.on('activeTradeOffers', (offers) => {
+      setIncomingOffers(offers.filter(offer =>
+        offer.to === player.socketId // Only show offers for this player
+      ));
+    });
+
+    return () => {
+      socket.off('tradeRequest');
+      socket.off('tradeAccepted');
+      socket.off('tradeRejected');
+      socket.off('activeTradeOffers');
+    };
+  }, [socket, player.socketId]);
 
   // Update ready states
-  useEffect(() => {
+  React.useEffect(() => {
     setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
   }, [offerMoney, selectedOfferProperties]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
