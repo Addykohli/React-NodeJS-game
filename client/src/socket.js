@@ -10,29 +10,49 @@ const socket = io(SOCKET_SERVER_URL, {
         credentials: true
     },
     withCredentials: true,
-    transports: ['websocket', 'polling'],
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000,
+    transports: ['websocket', 'polling'], 
+    reconnection: true,                  
+    reconnectionAttempts: Infinity,      
+    reconnectionDelay: 1000,             
+    reconnectionDelayMax: 5000,         
+    timeout: 20000,                      
     autoConnect: true,
-    forceNew: false,
-    reconnection: true
+    forceNew: false
 });
 
-// Add connection event handlers
+// Robust connection event handlers for Socket.IO
 socket.on('connect', () => {
     console.log('Connected to server');
+    // Optionally: re-fetch game state or notify UI
+});
+
+socket.on('disconnect', (reason) => {
+    console.warn('Disconnected from server:', reason);
+    // Always try to reconnect unless user manually disconnected
+    if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
+        // Socket.IO will auto-reconnect, but can force if needed
+        if (!socket.connected) {
+            socket.connect();
+        }
+    }
+    // Optionally: show reconnecting UI
+});
+
+socket.on('reconnect_attempt', (attempt) => {
+    console.log('Reconnection attempt:', attempt);
+    // Optionally: show UI feedback
+});
+
+socket.on('reconnect', (attempt) => {
+    console.log('Successfully reconnected on attempt', attempt);
+    // Optionally: re-fetch game state or notify UI
 });
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
+    // Optionally: show error UI
 });
 
-socket.on('disconnect', (reason) => {
-    console.log('Disconnected:', reason);
-    if (reason === 'io server disconnect' || reason === 'transport close') {
-        socket.connect();
-    }
-});
 
 // Add reconnect event handlers
 socket.on('reconnect', (attemptNumber) => {
