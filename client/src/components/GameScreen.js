@@ -16,7 +16,7 @@ import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
 
-const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed }) => {
+const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
@@ -1806,6 +1806,7 @@ export default function GameScreen() {
                     socket={socket}
                     player={player}
                     onCasinoPlayed={() => setHasCasinoPlayed(true)}
+                    isRpsActive={isRpsActive}
                   />
                 );
               }
