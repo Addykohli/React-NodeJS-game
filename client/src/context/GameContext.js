@@ -36,14 +36,17 @@ export function GameProvider({ children }) {
   // Listen for chat messages globally
   useEffect(() => {
     if (!socket) return;
-    const handleChatMessage = (message) => {
+    console.log('[GameContext] Registering chatMessage listener');
+    function handleChatMessage(message) {
+      console.log('[GameContext] Received chat message:', message);
       setChatMessages(prev => [...prev, message]);
-    };
+    }
     socket.on('chatMessage', handleChatMessage);
     return () => {
+      console.log('[GameContext] Removing chatMessage listener');
       socket.off('chatMessage', handleChatMessage);
     };
-  }, [socket, setChatMessages]);
+  }, []); // Run only once on mount/unmount
 
   // Listen for RPS state changes
   useEffect(() => {
