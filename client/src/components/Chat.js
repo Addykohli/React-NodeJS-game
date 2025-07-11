@@ -89,6 +89,7 @@ const Chat = () => {
       content: inputMessage.trim()
     });
     setInputMessage('');
+    // Do NOT append locally; rely on socket event only.
   };
 
 
@@ -167,7 +168,7 @@ const Chat = () => {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '8px',
             color: 'white',
-            marginBottom: '12px',
+            margin: '9px 9px12px 0px',
             boxSizing: 'border-box'
           }}
         />
@@ -179,7 +180,8 @@ const Chat = () => {
             alignSelf: 'center',
             opacity: inputMessage.trim() ? 1 : 0.6,
             pointerEvents: inputMessage.trim() ? 'auto' : 'none',
-            marginTop: 0
+            marginTop: 0,
+            width: '100%',
           }}
         >
           <span className="svg-wrapper" style={{ display: 'flex', alignItems: 'center' }}>

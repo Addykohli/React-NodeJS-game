@@ -33,6 +33,18 @@ export function GameProvider({ children }) {
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
+  // Listen for chat messages globally
+  useEffect(() => {
+    if (!socket) return;
+    const handleChatMessage = (message) => {
+      setChatMessages(prev => [...prev, message]);
+    };
+    socket.on('chatMessage', handleChatMessage);
+    return () => {
+      socket.off('chatMessage', handleChatMessage);
+    };
+  }, [socket, setChatMessages]);
+
   // Listen for RPS state changes
   useEffect(() => {
     if (!socket) return;
