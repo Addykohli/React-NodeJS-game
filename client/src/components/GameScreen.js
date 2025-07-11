@@ -1094,13 +1094,12 @@ export default function GameScreen() {
                              width: '100%',
                              marginTop: '10px',
                              padding: '12px',
-                             backgroundColor: 'rgba(255, 255, 255, 0.45)',
+                             backgroundColor: 'rgba(255, 255, 255, 0.3)',
                              border: '1px outset rgb(80, 80, 170)',
                              color: 'rgb(255, 255, 255)',
                              borderRadius: '4px',
                              cursor: 'pointer',
                              fontSize: '1.1em',
-                             fontWeight: 'bold',
                              transition: 'background-color 0.2s, border 0.1s',
                            }}
                          >

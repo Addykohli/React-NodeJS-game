@@ -199,104 +199,85 @@ const PlayerStats = () => {
 
         return (
           <div key={p.socketId} style={style}>
-            {/* Name at the top, centered */}
-            <div style={{
-              width: '100%',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '1.2em',
-              color:'white',
-              userSelect: 'none',
-              marginBottom: '8px',
-              padding: '2px 0 6px 0',
-              borderBottom: '1px solid rgba(255,255,255,0.25)'
-            }}>
-              {p.name && p.name.length > 12
-                ? (
-                    <>
-                      {p.name.slice(0, 12)}
-                      <wbr />
-                      {p.name.slice(12)}
-                    </>
-                  )
-                : p.name
-              }
-            </div>
-            {/* Row: left = stats, right = piece */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              width: '100%',
-              gap: '12px',
-              marginTop: '8px',
-              minWidth: 0
-            }}>
-              {/* Stats column */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                minWidth: 0
+            
+            {/* Stats content */}
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                marginBottom: '8px', 
+                fontWeight: 'bold',
+                display: 'inline-block',
+                maxWidth: '180px',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-line',
+                overflowWrap: 'break-word'
               }}>
-                <div style={{
-                  fontSize: '1.1em',
-                  marginBottom: '4px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  paddingLeft: '20px'
-                }}>
-                  Money: ${p.money?.toLocaleString() || 0}
-                </div>
-                {p.loan > 0 && (
-                  <div style={{
-                    fontSize: '1.1em',
-                    marginBottom: '4px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  paddingLeft: '20px'
-                  }}>
-                    Loan: ${p.loan?.toLocaleString()}
-                  </div>
-                )}
-                <div style={{
-                  fontSize: '1.1em',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  paddingLeft: '20px'
-                }}>
-                  At: {currentTile}
-                </div>
+                {/* Insert a line break after 8 characters if name is longer */}
+                {p.name && p.name.length > 8
+                  ? (
+                      <>
+                        {p.name.slice(0, 8)}
+                        <wbr />
+                        {'\n'}
+                        {p.name.slice(8)}
+                      </>
+                    )
+                  : p.name
+                }
               </div>
-              {/* Player piece column */}
-              <div style={{
-                width: PIECE_DISPLAY_WIDTH,
-                height: pieceDims.height,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
+              <div style={{ 
+                fontSize: '1.2rem', 
+                marginBottom: '4px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                paddingLeft: '20px'
               }}>
-                {pieceImg && (
-                  <img
-                    src={pieceImg}
-                    alt="Piece"
-                    style={{
-                      width: PIECE_DISPLAY_WIDTH,
-                      height: pieceDims.height,
-                      objectFit: 'contain',
-                      display: 'block'
-                    }}
-                  />
-                )}
+                Money: ${p.money?.toLocaleString() || 0}
+              </div>
+              {p.loan > 0 && (
+                <div style={{ 
+                  fontSize: '1.1em', 
+                  marginBottom: '4px', 
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  paddingLeft: '20px'
+                }}>
+                  Loan: ${p.loan?.toLocaleString()}
+                </div>
+              )}
+              <div style={{ 
+                fontSize: '1.1em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                paddingLeft: '20px'
+              }}>
+                At: {currentTile}
               </div>
             </div>
           
-
+            {/* Player piece */}
+            <div style={{
+              width: PIECE_DISPLAY_WIDTH,
+              height: pieceDims.height,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              {pieceImg && (
+                <img
+                  src={pieceImg}
+                  alt="Piece"
+                  style={{
+                    width: PIECE_DISPLAY_WIDTH,
+                    height: pieceDims.height,
+                    objectFit: 'contain',
+                    display: 'block'
+                  }}
+                />
+              )}
+            </div>
           </div>
         );
       })}
