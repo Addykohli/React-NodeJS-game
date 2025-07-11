@@ -132,7 +132,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
         }}>
           <button
             onClick={() => handleAmountChange(-500)}
-            disabled={!isMyTurn || betAmount <= 1000}
+            disabled={!isMyTurn || betAmount <= 1000 || isRpsActive}
             style={{
               padding: '6px 12px',
               fontSize: '1.2em',
@@ -159,7 +159,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
           </div>
           <button
             onClick={() => handleAmountChange(500)}
-            disabled={!isMyTurn || betAmount >= currentMoney}
+            disabled={!isMyTurn || betAmount >= currentMoney || isRpsActive}
             style={{
               padding: '6px 12px',
               fontSize: '1.2em',
@@ -222,7 +222,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed 
         {/* Roll button */}
         <button
           onClick={handleRoll}
-          disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney}
+          disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney || isRpsActive}
           style={{
             padding: '10px 30px',
             backgroundColor: isMyTurn && selectedBet && betAmount >= 1000 && betAmount <= currentMoney 
@@ -266,7 +266,8 @@ export default function GameScreen() {
     currentPlayerId,
     socket,
     movementDone,
-    handleQuit
+    handleQuit,
+    isRpsActive
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -303,10 +304,7 @@ export default function GameScreen() {
     };
 
     socket.on('borrowResponse', handleBorrowResponse);
-
-    return () => {
-      socket.off('borrowResponse', handleBorrowResponse);
-    };
+    return () => socket.off('borrowResponse', handleBorrowResponse);
   }, [socket]);
 
   // Add socket event listener for game events
@@ -1006,6 +1004,7 @@ export default function GameScreen() {
                       }}>
                         <button
                           onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
+                          disabled={isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
@@ -1032,6 +1031,7 @@ export default function GameScreen() {
                         </div>
                         <button
                           onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
+                          disabled={isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
@@ -1080,6 +1080,7 @@ export default function GameScreen() {
                         tileMeta.cost > (player?.money || 0) && (
                          <button
                            onClick={async (e) => {
+                           if (isRpsActive) return;
                              e.target.style.border = '2px inset rgb(80, 80, 170)';
                              if (socket) {
                                const amountNeeded = tileMeta.cost - (player?.money || 0);
@@ -1127,7 +1128,7 @@ export default function GameScreen() {
                       }}>
                         <button
                           onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
-                          disabled={!player?.loan}
+                          disabled={!player?.loan || isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.2em',
@@ -1155,7 +1156,7 @@ export default function GameScreen() {
                         </div>
                         <button
                           onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
-                          disabled={!player?.loan}
+                          disabled={!player?.loan || isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
@@ -1183,7 +1184,7 @@ export default function GameScreen() {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);
                         }}
-                        disabled={!player?.loan || player?.money < payoffAmount}
+                        disabled={!player?.loan || player?.money < payoffAmount || isRpsActive}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -1223,7 +1224,7 @@ export default function GameScreen() {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);
                         }}
-                        disabled={!player?.loan || !player?.money}
+                        disabled={!player?.loan || !player?.money || isRpsActive}
                         style={{
                           width: '100%',
                           marginTop: '10px',
@@ -1429,7 +1430,7 @@ export default function GameScreen() {
                 handleQuit();
               }
             }}
-            disabled={isMyTurn}
+            disabled={isMyTurn || isRpsActive}
             style={{
               padding: '10px 20px',
               fontSize: '1.2em',

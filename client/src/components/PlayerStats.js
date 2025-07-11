@@ -203,13 +203,15 @@ const PlayerStats = () => {
             {/* Stats content */}
             <div style={{ flex: 1 }}>
               <div style={{ 
-                marginBottom: '8px', 
+                paddingBottom: '12px', 
                 fontWeight: 'bold',
-                display: 'inline-block',
+                display: 'block',
                 maxWidth: '180px',
                 wordBreak: 'break-word',
                 whiteSpace: 'pre-line',
-                overflowWrap: 'break-word'
+                overflowWrap: 'break-word',
+                fontSize: '1.3em',
+                marginLeft: '70px'
               }}>
                 {/* Insert a line break after 8 characters if name is longer */}
                 {p.name && p.name.length > 8
@@ -225,7 +227,7 @@ const PlayerStats = () => {
                 }
               </div>
               <div style={{ 
-                fontSize: '1.2rem', 
+                fontSize: '1.1em', 
                 marginBottom: '4px',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',

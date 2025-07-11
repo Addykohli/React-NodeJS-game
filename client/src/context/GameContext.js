@@ -4,6 +4,10 @@ import socket from '../socket';
 export const GameContext = createContext();
 
 export function GameProvider({ children }) {
+  // RPS active state
+  const [isRpsActive, setIsRpsActive] = useState(false);
+  // Chat messages state for persistent chat
+  const [chatMessages, setChatMessages] = useState([]);
   // Initialize state from localStorage if available
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
@@ -28,6 +32,19 @@ export function GameProvider({ children }) {
     return savedMovementDone ? JSON.parse(savedMovementDone) : false;
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
+
+  // Listen for RPS state changes
+  useEffect(() => {
+    if (!socket) return;
+    const handleRpsStarted = () => setIsRpsActive(true);
+    const handleRpsEnded = () => setIsRpsActive(false);
+    socket.on('rpsStarted', handleRpsStarted);
+    socket.on('rpsEnded', handleRpsEnded);
+    return () => {
+      socket.off('rpsStarted', handleRpsStarted);
+      socket.off('rpsEnded', handleRpsEnded);
+    };
+  }, [socket]);
 
   // Save important state to localStorage whenever it changes
   useEffect(() => {
@@ -505,6 +522,10 @@ export function GameProvider({ children }) {
         setMovementDone,
         insufficientFunds,
         setInsufficientFunds,
+        chatMessages,
+        setChatMessages,
+        isRpsActive,
+        setIsRpsActive,
         handleQuit
       }}
     >

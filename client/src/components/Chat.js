@@ -56,8 +56,7 @@ if (typeof document !== 'undefined' && !document.getElementById('chat-send-style
 
 
 const Chat = () => {
-  const { socket, player, players } = useContext(GameContext);
-  const [messages, setMessages] = useState([]);
+  const { socket, player, players, chatMessages, setChatMessages } = useContext(GameContext);
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -67,19 +66,19 @@ const Chat = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [chatMessages]);
 
   useEffect(() => {
     if (!socket) return;
 
     socket.on('chatMessage', (message) => {
-      setMessages(prev => [...prev, message]);
+      setChatMessages(prev => [...prev, message]);
     });
 
     return () => {
       socket.off('chatMessage');
     };
-  }, [socket]);
+  }, [socket, setChatMessages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -91,6 +90,7 @@ const Chat = () => {
     });
     setInputMessage('');
   };
+
 
   return (
     <div style={{
@@ -110,7 +110,7 @@ const Chat = () => {
         flexDirection: 'column',
         gap: '10px'
       }}>
-        {messages.map((msg, index) => (
+        {chatMessages.map((msg, index) => (
           <div 
             key={index}
             style={{
