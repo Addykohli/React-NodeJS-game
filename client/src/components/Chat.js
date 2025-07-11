@@ -79,7 +79,6 @@ const Chat = () => {
       content: inputMessage.trim()
     });
     setInputMessage('');
-    // Do NOT append locally; rely on socket event only.
   };
 
 

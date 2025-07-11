@@ -932,7 +932,6 @@ io.on('connection', socket => {
 
   // Handle chat messages
   socket.on('chatMessage', (message) => {
-    // Optionally add server-side timestamp or validation here
     io.emit('chatMessage', message);
   });
 
@@ -2062,12 +2061,6 @@ io.on('connection', socket => {
     } catch (err) {
       console.error('Error starting transaction:', err);
     }
-  });
-
-  // Add chat message handler
-  socket.on('chatMessage', (message) => {
-    console.log('[Chat] Message received:', message);
-    io.emit('chatMessage', message);
   });
 
   // Handle getActiveTradeOffers
