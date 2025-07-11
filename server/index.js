@@ -930,6 +930,12 @@ io.on('connection', socket => {
     }
   });
 
+  // Handle chat messages
+  socket.on('chatMessage', (message) => {
+    // Optionally add server-side timestamp or validation here
+    io.emit('chatMessage', message);
+  });
+
   // Handle casino roll
   socket.on('casinoRoll', async ({ betAmount, betType }) => {
     

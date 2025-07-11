@@ -284,6 +284,14 @@ export default function GameScreen() {
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
+
+  // Automatically clear RPS result message after 5 seconds
+  useEffect(() => {
+    if (rpsResult) {
+      const timeout = setTimeout(() => setRpsResult(null), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [rpsResult]);
   const [rpsTieAmount, setRpsTieAmount] = useState(null);
   const [activeSidePanel, setActiveSidePanel] = useState(null);
   // Add new state for toggling side panel visibility

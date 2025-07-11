@@ -164,7 +164,7 @@ const PlayerStats = () => {
           background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.8)' : 'rgba(80, 80, 80, 0.8)',
           fontSize: '1.5rem',
           color: 'white',
-          width: '340px', 
+          width: '400px', 
           borderRadius: '12px',
           boxShadow: '0 3px 6px rgba(0,0,0,0.2)',
           zIndex: 1,
