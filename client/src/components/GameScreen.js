@@ -975,7 +975,7 @@ export default function GameScreen() {
                             backgroundColor: 'rgba(0, 0, 0, 0.6)',
                             padding: '12px 15px',
                             borderRadius: '8px',
-                            fontSize: '1.2em',
+                            fontSize: '2em',
                             lineHeight: '1.4'
                           }}
                           dangerouslySetInnerHTML={{ __html: message }}
@@ -1073,6 +1073,40 @@ export default function GameScreen() {
                       >
                         Borrow
                       </button>
+
+                      {/* Borrow exact amount for property if needed */}
+                      {isMyTurn && tileMeta?.type === 'property' &&
+                        !players.some(p => (p.properties || []).includes(tileMeta?.id)) &&
+                        tileMeta.cost > (player?.money || 0) && (
+                         <button
+                           onClick={async (e) => {
+                             e.target.style.border = '2px inset rgb(80, 80, 170)';
+                             if (socket) {
+                               const amountNeeded = tileMeta.cost - (player?.money || 0);
+                               socket.emit('borrowMoney', { amount: amountNeeded });
+                               setBorrowAmount(500);
+                             }
+                             setTimeout(() => {
+                               e.target.style.border = '2px outset rgb(80, 80, 170)';
+                             }, 180);
+                           }}
+                           style={{
+                             width: '100%',
+                             marginTop: '10px',
+                             padding: '12px',
+                             backgroundColor: 'rgba(255, 255, 255, 0.45)',
+                             border: '1px outset rgb(80, 80, 170)',
+                             color: '#4CAF50',
+                             borderRadius: '4px',
+                             cursor: 'pointer',
+                             fontSize: '1.1em',
+                             fontWeight: 'bold',
+                             transition: 'background-color 0.2s, border 0.1s',
+                           }}
+                         >
+                           Borrow ${tileMeta.cost - (player?.money || 0)}
+                         </button>
+                       )}
                     </div>
 
                     {/* Pay Off Section */}
@@ -1177,6 +1211,36 @@ export default function GameScreen() {
                           Insufficient funds
                         </div>
                       )}
+                      {/* Pay All Button */}
+                      <button
+                        onClick={async (e) => {
+                          e.target.style.border = '2px inset rgb(80, 80, 170)';
+                          if (socket && player?.loan && player?.money) {
+                            const payAmount = player.money >= player.loan ? player.loan : player.money;
+                            socket.emit('payoffLoan', { amount: payAmount });
+                            setPayoffAmount(1000); // Reset to default
+                          }
+                          setTimeout(() => {
+                            e.target.style.border = '2px outset rgb(80, 80, 170)';
+                          }, 180);
+                        }}
+                        disabled={!player?.loan || !player?.money}
+                        style={{
+                          width: '100%',
+                          marginTop: '10px',
+                          padding: '12px',
+                          backgroundColor: (!player?.loan || !player?.money) ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.3)',
+                          border: '2px outset rgb(80, 80, 170)',
+                          color: (!player?.loan || !player?.money) ? '#aaa' : '#fff',
+                          borderRadius: '4px',
+                          cursor: (!player?.loan || !player?.money) ? 'not-allowed' : 'pointer',
+                          fontSize: '1.1em',
+                          fontWeight: 'bold',
+                          transition: 'background-color 0.2s, border 0.1s',
+                        }}
+                      >
+                        Pay All
+                      </button>
                     </div>
 
                     {/* Status Section */}

@@ -161,7 +161,7 @@ const PlayerStats = () => {
           position: 'absolute',
           border: '4px outset rgb(190, 190, 190)',
           padding: '16px',
-          background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.61)' : 'rgba(80, 80, 80, 0.61)',
+          background: isCurrentPlayer ? 'rgba(76, 175, 80, 0.8)' : 'rgba(80, 80, 80, 0.8)',
           fontSize: '1.5rem',
           color: 'white',
           width: '340px', 
@@ -199,80 +199,65 @@ const PlayerStats = () => {
 
         return (
           <div key={p.socketId} style={style}>
+            {/* Player name, centered */}
+            <div style={{
+              position: 'absolute',
+              top: '-26px',
+              left: 0,
+              width: '100%',
+              textAlign: 'center',
+              fontWeight: 'bold',
+              fontSize: '1.2em',
+              color: isCurrentPlayer ? '#4CAF50' : 'white',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              zIndex: 2
+            }}>
+              {p.name && p.name.length > 8
+                ? (
+                    <>
+                      {p.name.slice(0, 8)}
+                      <wbr />
+                      {'\n'}
+                      {p.name.slice(8)}
+                    </>
+                  )
+                : p.name
+              }
+            </div>
             {/* Stats content */}
             <div style={{ flex: 1 }}>
               <div style={{ 
-                marginBottom: '8px', 
-                fontWeight: 'bold',
-                display: 'inline-block',
-                maxWidth: '180px',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-line',
-                overflowWrap: 'break-word'
-              }}>
-                {/* Insert a line break after 8 characters if name is longer */}
-                {p.name && p.name.length > 8
-                  ? (
-                      <>
-                        {p.name.slice(0, 8)}
-                        <wbr />
-                        {'\n'}
-                        {p.name.slice(8)}
-                      </>
-                    )
-                  : p.name
-                }
-              </div>
-              <div style={{ 
-                fontSize: '1.2rem', 
+                fontSize: '1.1em', 
                 marginBottom: '4px',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                paddingLeft: '20px'
               }}>
                 Money: ${p.money?.toLocaleString() || 0}
               </div>
               {p.loan > 0 && (
                 <div style={{ 
-                  fontSize: '1.2rem', 
+                  fontSize: '1.1em', 
                   marginBottom: '4px', 
-                  color: '#ff6b6b',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
-                  textOverflow: 'ellipsis'
+                  textOverflow: 'ellipsis',
+                  paddingLeft: '20px'
                 }}>
                   Loan: ${p.loan?.toLocaleString()}
                 </div>
               )}
               <div style={{ 
-                fontSize: '1.2rem',
+                fontSize: '1.1em',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                paddingLeft: '20px'
               }}>
                 At: {currentTile}
               </div>
-              {playerDice && (
-                <div style={{
-                  marginTop: '8px',
-                  display: 'flex',
-                  gap: '8px',
-                  justifyContent: 'center'
-                }}>
-                  <img
-                    src={`/dice/dice${playerDice.die1}.png`}
-                    alt={`Die ${playerDice.die1}`}
-                    width={40}
-                    height={40}
-                  />
-                  <img
-                    src={`/dice/dice${playerDice.die2}.png`}
-                    alt={`Die ${playerDice.die2}`}
-                    width={40}
-                    height={40}
-                  />
-                </div>
-              )}
             </div>
           
             {/* Player piece */}
