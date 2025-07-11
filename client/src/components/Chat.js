@@ -68,17 +68,7 @@ const Chat = () => {
     scrollToBottom();
   }, [chatMessages]);
 
-  useEffect(() => {
-    if (!socket) return;
 
-    socket.on('chatMessage', (message) => {
-      setChatMessages(prev => [...prev, message]);
-    });
-
-    return () => {
-      socket.off('chatMessage');
-    };
-  }, [socket, setChatMessages]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
