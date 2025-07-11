@@ -201,25 +201,22 @@ const PlayerStats = () => {
           <div key={p.socketId} style={style}>
             {/* Player name, centered */}
             <div style={{
-              position: 'absolute',
-              top: '-26px',
-              left: 0,
               width: '100%',
               textAlign: 'center',
               fontWeight: 'bold',
               fontSize: '1.2em',
               color: isCurrentPlayer ? '#4CAF50' : 'white',
-              pointerEvents: 'none',
               userSelect: 'none',
-              zIndex: 2
+              marginBottom: '8px',
+              padding: '2px 0 6px 0',
+              borderBottom: '1px solid rgba(255,255,255,0.25)'
             }}>
-              {p.name && p.name.length > 8
+              {p.name && p.name.length > 12
                 ? (
                     <>
-                      {p.name.slice(0, 8)}
+                      {p.name.slice(0, 12)}
                       <wbr />
-                      {'\n'}
-                      {p.name.slice(8)}
+                      {p.name.slice(12)}
                     </>
                   )
                 : p.name

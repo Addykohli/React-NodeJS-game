@@ -1096,7 +1096,7 @@ export default function GameScreen() {
                              padding: '12px',
                              backgroundColor: 'rgba(255, 255, 255, 0.45)',
                              border: '1px outset rgb(80, 80, 170)',
-                             color: '#4CAF50',
+                             color: 'rgb(255, 255, 255)',
                              borderRadius: '4px',
                              cursor: 'pointer',
                              fontSize: '1.1em',
