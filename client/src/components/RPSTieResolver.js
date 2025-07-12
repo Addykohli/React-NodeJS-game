@@ -15,6 +15,7 @@ const cashAmounts = [
 
 const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socket, onResolved }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const setRevealedAmount = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [isExiting, setIsExiting] = useState(false);

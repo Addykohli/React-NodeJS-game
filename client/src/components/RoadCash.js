@@ -15,6 +15,7 @@ const cashAmounts = [
 
 const RoadCash = ({ isMyTurn, socket }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [etRevealedAmount] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
