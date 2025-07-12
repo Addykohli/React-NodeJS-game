@@ -15,11 +15,11 @@ const cashAmounts = [
 
 const RoadCash = ({ isMyTurn, socket }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
-  const [etRevealedAmount] = useState(null);
+  const setRevealedAmount = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
-  const [cardOrder] = useState(cashAmounts);
+  const cardOrder = useState(cashAmounts);
   const [hasEntered, setHasEntered] = useState(false);
   const [cashDimensions, setCashDimensions] = useState({ width: 0, height: 0 });
 
