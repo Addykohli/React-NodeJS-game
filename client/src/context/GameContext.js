@@ -36,7 +36,6 @@ export function GameProvider({ children }) {
   // Listen for chat messages globally
   useEffect(() => {
     if (!socket) return;
-    console.log('[GameContext] Registering chatMessage listener');
     function handleChatMessage(message) {
       console.log('[GameContext] Received chat message:', message);
       setChatMessages(prev => [...prev, message]);
@@ -66,7 +65,7 @@ export function GameProvider({ children }) {
     if (player) {
       const playerData = {
         ...player,
-        piece: player.piece || null // Ensure piece is included
+        piece: player.piece || null 
       };
       localStorage.setItem('gamePlayer', JSON.stringify(playerData));
     } else {
@@ -167,7 +166,6 @@ export function GameProvider({ children }) {
   function ensurePiece(players, prevPlayers = []) {
     return players.map(p => {
       if (p.piece !== undefined) return p;
-      // Try to preserve piece from previous state if possible
       const prev = prevPlayers.find(prevP => prevP.socketId === p.socketId);
       return { ...p, piece: prev?.piece ?? null };
     });

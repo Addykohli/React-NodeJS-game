@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { GameContext } from '../context/GameContext';
-import Dicebox from '../assets/diceBoard.png';
 import { tiles } from '../data/tiles';
 
 // Import piece images
@@ -154,7 +153,6 @@ const PlayerStats = () => {
         if (!pos) return null;
 
         const isCurrentPlayer = p.socketId === currentPlayerId;
-        const playerDice = diceRolls[p.socketId];
         const currentTile = tiles.find(t => t.id === p.tileId)?.name || 'Unknown';
 
         const style = {

@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
-import Dicebox from '../assets/diceBoard.png';
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
-  const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
-  const isMyTurn = player?.socketId === currentPlayerId;
-
+  const { player, currentPlayerId, socket } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
   const [done, setDone] = useState(false);

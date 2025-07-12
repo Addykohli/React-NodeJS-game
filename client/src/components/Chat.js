@@ -56,7 +56,7 @@ if (typeof document !== 'undefined' && !document.getElementById('chat-send-style
 
 
 const Chat = () => {
-  const { socket, player, players, chatMessages, setChatMessages } = useContext(GameContext);
+  const { socket, player, chatMessages } = useContext(GameContext);
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef(null);
 

@@ -1,13 +1,11 @@
 import React, { useContext, useState, useEffect } from 'react';
 import bgImage from '../assets/bg.png';
-import Dicebox from '../assets/diceBoard.png';
 import startIcon from '../assets/start.png';
 import hotelIcon from '../assets/hotel.png';
 import casinoIcon from '../assets/casino.png';
 import roadIcon from '../assets/road.png';
 import Board from './Board';
 import DiceRoller from './DiceRoller';
-import Dashboard from './Dashboard';
 import PlayerStats from './PlayerStats';
 import RoadCash from './RoadCash';
 import RPSTieResolver from './RPSTieResolver';
@@ -271,16 +269,13 @@ export default function GameScreen() {
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
-
-  // Use the pickedRoadCash value from the players array for the current player
-  const pickedRoadCash = players.find(p => p.socketId === player?.socketId)?.pickedRoadCash ?? player?.pickedRoadCash ?? false;
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
   const [error, setError] = useState(null);
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
   const [inCasino, setInCasino] = useState(false);
   const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
-  const [hasChosenCorner, setHasChosenCorner] = useState(false);
+  const [setHasChosenCorner] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
@@ -967,7 +962,7 @@ export default function GameScreen() {
                                          event.message.includes('won') ||
                                          event.message.includes('bonus') ||
                                          event.message.includes('collected $') ||
-                                         event.message.includes('won $') && event.message.includes('on the road');
+                                         event.message.includes('on the road');
                           const isLoss = event.message.includes('paid') ||
                                          event.message.includes('lost');
                           return `<span style="color: ${isGain ? '#4CAF50' : isLoss ? '#f44336' : 'white'}">${match}</span>`;
@@ -1007,8 +1002,7 @@ export default function GameScreen() {
                         gap: '10px',
                         fontSize: '1em',
                         marginBottom: '20px',
-                        justifyContent: 'center',
-                        alignItems: 'center'
+                        justifyContent: 'center'
                       }}>
                         <button
                           onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
@@ -1018,7 +1012,6 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             cursor: 'pointer',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
@@ -1045,7 +1038,6 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             cursor: 'pointer',
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
@@ -1139,10 +1131,8 @@ export default function GameScreen() {
                           disabled={!player?.loan || isRpsActive}
                           style={{
                             padding: '8px 12px',
-                            fontSize: '1.2em',
                             cursor: player?.loan ? 'pointer' : 'not-allowed',
                             backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
                             fontSize: '1.7em',
@@ -1170,7 +1160,6 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             cursor: player?.loan ? 'pointer' : 'not-allowed',
                             backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-                            border: 'none',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
@@ -2004,7 +1993,7 @@ export default function GameScreen() {
                   (
                     error.includes('bonus') ||
                     error.includes('Start!') ||
-                    error.includes('won $') && error.includes('on the road')
+                    error.includes('on the road')
                   );
                 return (
                   <p style={{ color: isGreen ? '#4CAF50' : 'tomato', margin: 0, fontSize: '1.4em'  }}>{error}</p>

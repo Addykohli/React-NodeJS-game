@@ -9,7 +9,6 @@ const GameEngine    = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
 const sequelize     = require('./config/database');
 require('dotenv').config();
-// Redis health check helper
 const { checkRedisHealth } = require('./redisHealth');
 
 const PORT = process.env.PORT || 5000;
@@ -26,7 +25,6 @@ const allowedOrigins = [
 // CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
-    // Allow requests with no origin 
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
@@ -50,7 +48,6 @@ const io     = new Server(server, {
 initDatabase()
   .then(() => {
     console.log('✅ Database initialized');
-    // Test the connection after initialization
     return sequelize.authenticate();
   })
   .then(() => {
@@ -58,7 +55,6 @@ initDatabase()
   })
   .catch(err => {
     console.error('❌ Database initialization/connection error:', err);
-    // Add enhanced error logging
     console.error('Full error details:', {
       name: err.name,
       message: err.message,
@@ -86,11 +82,10 @@ let hasStarted        = false;
 let currentSessionId  = null;
 const branchResolvers = {};
 const activeRPSGames = {};
-const disconnectedPlayers = new Map(); // Store disconnected players by name
-const gameEvents = []; // Store game events history
-let activeTradeOffers = []; // Store active trade offers
+const disconnectedPlayers = new Map();
+const gameEvents = [];
+let activeTradeOffers = [];
 
-// Function to broadcast game event
 const broadcastGameEvent = (message) => {
   gameEvents.push({
     message,
@@ -105,13 +100,11 @@ const broadcastGameEvent = (message) => {
 io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
 
-  // Send game events history to newly connected clients
   socket.emit('gameEventsHistory', gameEvents);
 
   socket.on('joinLobby', async ({ name }) => {
     console.log('[joinLobby] name:', name);
     
-    // Check if name is already taken by an ACTIVE player
     const isNameTaken = lobbyPlayers.some(p => 
       p.name.toLowerCase() === name.toLowerCase() && 
       p.socketId !== socket.id &&
@@ -128,43 +121,36 @@ io.on('connection', socket => {
     if (hasStarted) {
       const disconnectedPlayer = disconnectedPlayers.get(name);
       if (disconnectedPlayer) {
-        // Player is reconnecting
         const oldSocketId = disconnectedPlayer.socketId;
 
-        // Get the player's state from database
         try {
           const playerState = await Player.findOne({
             where: { socketId: oldSocketId }
           });
           
           if (playerState) {
-            // Update socket ID in database and preserve all state
             await Player.update(
               { 
                 socketId: socket.id,
                 hasRolled: false
-                // Don't update other fields - keep them as is in database
               },
               { where: { socketId: oldSocketId } }
             );
 
-            // Update engine state from database
             engine.session.players = engine.session.players.map(p =>
               p.socketId === oldSocketId ? {
-                ...playerState.get(),  // Get all fields from database
+                ...playerState.get(),  
                 socketId: socket.id,
               } : p
             );
             
-            // Update lobby state from database
             lobbyPlayers = lobbyPlayers.map(p =>
               p.socketId === oldSocketId ? {
-                ...playerState.get(),  // Get all fields from database
+                ...playerState.get(),  
                 socketId: socket.id,
               } : p
             );
 
-            // Update the disconnected player's state
             disconnectedPlayer.socketId = socket.id;
             disconnectedPlayer.hasMoved = playerState.hasMoved;
             disconnectedPlayer.money = playerState.money;
@@ -180,7 +166,6 @@ io.on('connection', socket => {
 
         disconnectedPlayers.delete(name);
 
-        // Check if this player was the current player when they disconnected
         const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
         
         socket.emit('gameStart', {
@@ -199,7 +184,6 @@ io.on('connection', socket => {
             hasMoved: currentPlayer.hasMoved 
           });
           
-          // Only emit movementDone if it's not their turn or if they had already moved
           if (!isCurrentPlayer || currentPlayer.hasMoved) {
             socket.emit('movementDone');
           }
@@ -212,7 +196,6 @@ io.on('connection', socket => {
       return;
     }
 
-    // Create new player
     try {
       const playerData = {
         socketId: socket.id,
@@ -301,7 +284,6 @@ io.on('connection', socket => {
     }
     console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
-    // --- Update hasRolled in memory and DB, and emit to frontend ---
     currentPlayer.hasRolled = true;
     try {
       const transaction = await sequelize.transaction();
@@ -323,19 +305,15 @@ io.on('connection', socket => {
       console.error('Error updating hasRolled state:', err);
     }
 
-    // Emit updated player state to all clients for frontend sync
     io.emit('playersStateUpdate', {
       players: engine.session.players
     });
-
-    // Emit dice result and hasRolled state to all players
     io.emit('diceResult', {
       playerId: socket.id,
       die1: roll.die1,
       die2: roll.die2,
       total: roll.total
     });
-    // Also emit updated player state for immediate sync
     io.emit('playerMoved', {
       playerId: socket.id,
       tileId: currentPlayer.tileId,
@@ -344,13 +322,12 @@ io.on('connection', socket => {
     });
 
     let remaining = roll.total;
-    let passedStart = false; // Track if passed through start during movement
+    let passedStart = false;
 
     while (remaining > 0) {
       const step = engine.moveOneStep(socket.id, roll.total);
       if (!step) break;
 
-      // Always re-fetch the player after moveOneStep to get the latest tileId
       let player = engine.getPlayer(socket.id);
 
       if (step.branchChoices) {
@@ -360,20 +337,16 @@ io.on('connection', socket => {
         console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
 
-        // Re-fetch player after branch choice
         player = engine.getPlayer(socket.id);
 
-        // Emit playerMoved with the correct tile after branch
         io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: player.hasMoved });
 
-        // After a branch, continue the movement loop as normal
       } else {
         const player = engine.getPlayer(socket.id);
         const newTile = player.tileId;
         const prevTile = player.prevTile;
         console.log('Moved from tile', prevTile, 'to tile:', newTile);
 
-        // Check if player landed on start
         if (newTile === 1 && !passedStart) {
           const bonusAmount = player.loan > 0 ? 4000 : 5000;
           console.log('Player landed on start! Awarding bonus.', {
@@ -382,25 +355,20 @@ io.on('connection', socket => {
             currentLoan: player.loan
           });
           
-          // Start a transaction
           const transaction = await sequelize.transaction();
 
           try {
             player.money += bonusAmount;
-            passedStart = true; // Set flag to prevent double bonus
+            passedStart = true; 
             
-            // Update player in database within transaction
             await Player.update(
               { money: player.money },
               { where: { socketId: socket.id }, transaction }
             );
 
-            // Update the engine's player data
             engine.session.players = engine.session.players.map(p =>
               p.socketId === socket.id ? { ...p, money: player.money } : p
             );
-
-            // Update game session if exists
             if (currentSessionId) {
               await GameSession.update(
                 { players: engine.session.players },
@@ -408,10 +376,8 @@ io.on('connection', socket => {
               );
             }
 
-            // Commit transaction
             await transaction.commit();
 
-            // Notify clients about the bonus
             io.emit('startBonus', {
               playerSocketId: socket.id,
               newMoney: player.money,
@@ -419,18 +385,14 @@ io.on('connection', socket => {
               reason: 'landing on'
             });
 
-            // Broadcast game event
             const playerName = engine.getPlayer(socket.id).name;
             broadcastGameEvent(`${playerName} received $${bonusAmount} for landing on Start!`);
 
           } catch (err) {
-            // Rollback transaction on error
             await transaction.rollback();
             console.error('Error processing start bonus:', err);
           }
         }
-        // Check if we passed through start (tile 1) during movement
-        // This only happens when moving from tile 30 to tile 2-29
         else if (prevTile === 30 && newTile > 1 && !passedStart) {
           const bonusAmount = player.loan > 0 ? 4000 : 5000;
           console.log('Player passed through start! Awarding bonus.', {
@@ -441,7 +403,6 @@ io.on('connection', socket => {
           player.money += bonusAmount;
           passedStart = true;
           
-          // Update player in database
           try {
             const transaction = await sequelize.transaction();
             try {
@@ -458,7 +419,6 @@ io.on('connection', socket => {
               }
               await transaction.commit();
               
-              // Notify clients about the bonus
               io.emit('startBonus', {
                 playerSocketId: socket.id,
                 newMoney: player.money,
@@ -493,15 +453,12 @@ io.on('connection', socket => {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    // Always re-fetch the player after movement loop for accurate tileId
     const finalPlayer = engine.getPlayer(socket.id);
     const finalTileId = finalPlayer.tileId;
 
-    // Update prevTile based on final position
     if (finalTileId <= 30) {
       finalPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
       
-      // Update player in database
       try {
         const transaction = await sequelize.transaction();
         await Player.update(
@@ -512,7 +469,7 @@ io.on('connection', socket => {
           }
         );
 
-        // If updating game session as well, include in same transaction
+        // If updating game session as well, include in same transactio n
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },

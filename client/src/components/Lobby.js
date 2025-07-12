@@ -3,7 +3,6 @@ import React, { useContext, useState, useEffect } from 'react';
 import { GameContext } from '../context/GameContext';
 import bgImage from '../assets/bg.png';
 
-// List of piece images (names should match your /public/pieces folder)
 const allPieces = [
   'piece1.png', 'piece2.png', 'piece3.png', 'piece4.png',
   'piece5.png', 'piece6.png', 'piece7.png', 'piece8.png'

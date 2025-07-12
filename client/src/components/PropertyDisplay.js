@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { tiles } from '../data/tiles';
 import { GameContext } from '../context/GameContext';
 
-const PropertyCard = ({ property, isExpanded, isLastProperty, socket, playerId, player }) => {
+const PropertyCard = ({ property,socket, playerId, player }) => {
   const { player: currentPlayer } = useContext(GameContext);
   
 
@@ -130,7 +130,7 @@ const PropertyCard = ({ property, isExpanded, isLastProperty, socket, playerId, 
 };
 
 const PropertyDisplayLeft = ({ player, position }) => {
-  const { socket, player: currentPlayer } = useContext(GameContext);
+  const socket= useContext(GameContext);
   const [expandedIndex, setExpandedIndex] = useState(null);
   
   // Get only this player's properties and sort by division
@@ -224,7 +224,7 @@ const PropertyDisplayLeft = ({ player, position }) => {
 };
 
 const PropertyDisplayRight = ({ player, position }) => {
-  const { socket, player: currentPlayer } = useContext(GameContext);
+  const socket= useContext(GameContext);
   const [expandedIndex, setExpandedIndex] = useState(null);
   
   // Get only this player's properties and sort by division
@@ -341,12 +341,6 @@ const PropertyDisplay = () => {
               action: 'add'
             });
           }
-        }
-        
-        // Process dice roll commands
-        if (commands.includes('testroll') || commands.includes('diceroll')) {
-          const dice1 = Math.floor(Math.random() * 6) + 1;
-          const dice2 = Math.floor(Math.random() * 6) + 1;
         }
         
         setKeyInput('');

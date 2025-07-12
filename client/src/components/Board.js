@@ -18,7 +18,7 @@ const REFERENCE_HEIGHT = 165;
 const Board = () => {
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
-  const { player, players, currentPlayerId, socket, movementDone } = useContext(GameContext);
+  const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
 
 
@@ -33,12 +33,6 @@ const Board = () => {
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};
-      // Load piece1 first to get reference dimensions
-      const piece1 = new Image();
-      piece1.src = pieceImages['piece1.png'];
-      await new Promise(resolve => piece1.onload = resolve);
-      const referenceRatio = piece1.width / piece1.height;
-
       // Calculate scales for all pieces
       for (let i = 1; i <= 8; i++) {
         const img = new Image();
