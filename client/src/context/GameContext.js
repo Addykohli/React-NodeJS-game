@@ -513,7 +513,7 @@ export function GameProvider({ children }) {
       socket.off('tradeAccepted');
       socket.off('playersStateUpdate');
     };
-  }, [player]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player, players]);
 
   return (
     <GameContext.Provider
