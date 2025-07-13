@@ -13,7 +13,7 @@ export default function Dashboard() {
     });
   }, [player?.money, player?.loan, player?.name]);
 
-  // Listen for all money-changing events
+  
   useEffect(() => {
     if (!socket) return;
 
@@ -21,7 +21,7 @@ export default function Dashboard() {
       updateDisplay();
     };
 
-    // Subscribe to all money-changing events
+    
     socket.on('rentPaid', handleMoneyUpdate);
     socket.on('startBonus', handleMoneyUpdate);
     socket.on('propertyUpdated', handleMoneyUpdate);
@@ -31,7 +31,7 @@ export default function Dashboard() {
     socket.on('tradeAccepted', handleMoneyUpdate);
 
     return () => {
-      // Cleanup all event listeners
+      
       socket.off('rentPaid', handleMoneyUpdate);
       socket.off('startBonus', handleMoneyUpdate);
       socket.off('propertyUpdated', handleMoneyUpdate);

@@ -13,12 +13,12 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
 
-  // Get current tile to check if we're on casino
+  
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
   const isOnCasino = tileMeta?.id === 16;
 
-  // Update casinoPlayed when prop changes
+  
   useEffect(() => {
     setCasinoPlayed(hasCasinoPlayed);
   }, [hasCasinoPlayed]);
@@ -73,9 +73,9 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   }, [player, socket]);
 
   const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
-  // Instead of:
-  // if (!player || player.socketId !== currentPlayerId) {
-  // Use:
+  
+  
+  
   const currentPlayer = players.find(p => p.socketId === currentPlayerId);
   if (!player || !currentPlayer || player.name !== currentPlayer.name) {
       return null;
@@ -153,7 +153,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
 
-      {/* Show dice faces once rolled */}
       {die1 && (
         <div
           style={{
@@ -178,8 +177,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </div>
       )}
 
-
-      {/* Done button - Only show if not on casino or if casino has been played */}
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
         <button
           onClick={handleDone}

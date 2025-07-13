@@ -89,7 +89,6 @@ const Chat = () => {
       height: 'calc(100vh - 400px)',
       gap: '15px'
     }}>
-      {/* Messages container */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
@@ -134,7 +133,6 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input form */}
       <form 
         onSubmit={handleSendMessage}
         style={{

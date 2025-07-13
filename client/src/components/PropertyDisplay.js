@@ -7,7 +7,7 @@ const PropertyCard = ({ property,socket, playerId, player }) => {
   
 
   const handleSell = (e) => {
-    e.stopPropagation(); // Prevent card expansion when clicking sell button
+    e.stopPropagation(); 
     if (window.confirm(`Are you sure you want to sell ${property.name} for $${property.cost}?`)) {
       socket.emit('updateProperty', {
         playerId: playerId,
@@ -18,7 +18,7 @@ const PropertyCard = ({ property,socket, playerId, player }) => {
     }
   };
 
-  // Calculate rent multiplier based on owned properties
+  
   const getRentMultiplier = () => {
     if (!player?.properties) return 1;
     
@@ -36,7 +36,7 @@ const PropertyCard = ({ property,socket, playerId, player }) => {
       
       if (hasGoogle && hasApple && hasAmazon) return 3;
       
-      // Check for any 2 of Google, Apple, Amazon
+      
       const bigTechCount = [hasGoogle, hasApple, hasAmazon].filter(Boolean).length;
       if (bigTechCount >= 2) return 2;
       
@@ -133,7 +133,7 @@ const PropertyDisplayLeft = ({ player, position }) => {
   const socket= useContext(GameContext);
   const [expandedIndex, setExpandedIndex] = useState(null);
   
-  // Get only this player's properties and sort by division
+  
   const ownedProperties = tiles
     .filter(tile => tile.type === 'property')
     .filter(tile => player?.properties?.includes(tile.id))
@@ -227,7 +227,7 @@ const PropertyDisplayRight = ({ player, position }) => {
   const socket= useContext(GameContext);
   const [expandedIndex, setExpandedIndex] = useState(null);
   
-  // Get only this player's properties and sort by division
+  
   const ownedProperties = tiles
     .filter(tile => tile.type === 'property')
     .filter(tile => player?.properties?.includes(tile.id))
@@ -386,15 +386,14 @@ const PropertyDisplay = () => {
     };
   }, [keyInput, currentPlayerId, setPlayer, socket, player?.socketId, setPlayers]);
 
-  // Get only current player's properties and sort by division
   const ownedProperties = tiles
     .filter(tile => tile.type === 'property')
     .filter(tile => player?.properties?.includes(tile.id))
     .sort((a, b) => {
       if (a.division === b.division) {
-        return a.name.localeCompare(b.name); // Sort by name within same division
+        return a.name.localeCompare(b.name); 
       }
-      return a.division.localeCompare(b.division); // Sort by division
+      return a.division.localeCompare(b.division); 
     });
 
   const handlePropertyClick = (index) => {
@@ -402,10 +401,8 @@ const PropertyDisplay = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Get left-side and right-side players (based on PlayerStats logic)
   const otherPlayers = players.filter(p => p && p.socketId !== player?.socketId);
   
-  // Wait for players and player to be loaded before rendering
   if (!players || players.length === 0 || !player) {
     return (
       <div style={{
@@ -419,7 +416,7 @@ const PropertyDisplay = () => {
     );
   }
 
-  // Get positions based on number of players (matching PlayerStats logic)
+  
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
       case 1: // Just one other player
@@ -521,7 +518,7 @@ const PropertyDisplay = () => {
               
               if (hasGoogle && hasApple && hasAmazon) return 3;
               
-              // Check for any 2 of Google, Apple, Amazon
+              
               const bigTechCount = [hasGoogle, hasApple, hasAmazon].filter(Boolean).length;
               if (bigTechCount >= 2) return 2;
               
@@ -536,7 +533,7 @@ const PropertyDisplay = () => {
           })();
 
           const handleSell = (e) => {
-            e.stopPropagation(); // Prevent card expansion when clicking sell button
+            e.stopPropagation(); 
             if (window.confirm(`Are you sure you want to sell ${property.name} for $${property.cost}?`)) {
               socket.emit('updateProperty', {
                 playerId: player.socketId,

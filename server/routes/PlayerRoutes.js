@@ -1,9 +1,7 @@
-// server/routes/playerRoutes.js
 const express = require('express');
 const router = express.Router();
 const { Player } = require('../models');
 
-// Create or update a player (upsert by socketId)
 router.post('/', async (req, res) => {
   try {
     const { socketId, name, piece, tileId, prevTile, money, properties, ready } = req.body;
@@ -18,7 +16,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get all players
 router.get('/', async (req, res) => {
   try {
     const players = await Player.findAll();
@@ -28,7 +25,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get one player
 router.get('/:id', async (req, res) => {
   try {
     const player = await Player.findOne({
@@ -43,7 +39,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update player
 router.patch('/:id', async (req, res) => {
   try {
     const [updated] = await Player.update(req.body, {
@@ -61,7 +56,6 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-// Delete a single player by socketId
 router.delete('/:socketId', async (req, res) => {
   try {
     const { socketId } = req.params;
@@ -72,7 +66,6 @@ router.delete('/:socketId', async (req, res) => {
   }
 });
 
-// Clear all players (e.g. when lobby resets)
 router.delete('/clear', async (req, res) => {
   try {
     await Player.deleteMany({});
@@ -82,18 +75,15 @@ router.delete('/clear', async (req, res) => {
   }
 });
 
-// Join game route
 router.post('/join', async (req, res) => {
   const { name } = req.body;
   
   try {
-    // Check if player with same name exists and is disconnected
     const existingPlayer = await Player.findOne({
       where: { name, isConnected: false }
     });
 
     if (existingPlayer) {
-      // Update existing player
       const [updatedRows] = await Player.update(
         { isConnected: true },
         { where: { id: existingPlayer.id } }
@@ -109,7 +99,6 @@ router.post('/join', async (req, res) => {
       });
     }
 
-    // Create new player if no disconnected player with same name exists
     const newPlayer = await Player.create({
       name,
       isConnected: true,

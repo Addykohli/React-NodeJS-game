@@ -5,7 +5,7 @@ import cash5000 from '../assets/cash5000.png';
 import cash10000 from '../assets/cash10000.png';
 import cashBehind from '../assets/cashBehind.png';
 
-// Define cash amounts separately to ensure random order
+
 const cashAmounts = [
   { amount: 500, image: cash500 },
   { amount: 1000, image: cash1000 },
@@ -23,7 +23,7 @@ const RoadCash = ({ isMyTurn, socket }) => {
   const [hasEntered, setHasEntered] = useState(false);
   const [cashDimensions, setCashDimensions] = useState({ width: 0, height: 0 });
 
-  // Get dimensions of cashBehind image
+  
   useEffect(() => {
     const img = new Image();
     img.src = cashBehind;
@@ -35,14 +35,14 @@ const RoadCash = ({ isMyTurn, socket }) => {
     };
   }, []);
 
-  // Start entrance animation after mount
+  
   useEffect(() => {
     setTimeout(() => {
       setHasEntered(true);
     }, 100);
   }, []);
 
-  // Fix: Only set isActive after exit animation, and fix transform logic for smooth animation
+  
   const handleCashClick = (index) => {
     if (!isMyTurn || selectedIndex !== null) return;
 
@@ -51,17 +51,17 @@ const RoadCash = ({ isMyTurn, socket }) => {
     setRevealedAmount(amount);
     socket.emit('roadCashSelected', { amount });
 
-    // Show all cards after 3s
+    
     setTimeout(() => {
       setShowAll(true);
-      // Start exit animation after another 3s
+      
       setTimeout(() => {
         setIsExiting(true);
       }, 3000);
     }, 3000);
   };
 
-  // Remove from DOM only after exit animation completes
+  
   useEffect(() => {
     if (isExiting) {
       const timer = setTimeout(() => setIsActive(false), 1000);
@@ -89,10 +89,10 @@ const RoadCash = ({ isMyTurn, socket }) => {
         // Determine which image to show
         let currentImage = cashBehind;
         if (isSelected) {
-          // Show revealed amount for selected card immediately
+          
           currentImage = card.image;
         } else if (showAll) {
-          // Show actual amounts for other cards after delay
+          
           currentImage = card.image;
         }
 
@@ -104,7 +104,7 @@ const RoadCash = ({ isMyTurn, socket }) => {
             onClick={() => handleCashClick(index)}
             style={{
               cursor: isMyTurn && selectedIndex === null ? 'pointer' : 'default',
-              // Animation: entrance, then exit (selected goes down, others go up)
+              
               transform: hasEntered
                 ? isExiting
                   ? `translateY(${isSelected ? '100vh' : '-100vh'})`

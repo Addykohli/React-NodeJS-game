@@ -2,19 +2,19 @@ import React, { useContext, useEffect, useState } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
-// Import piece images
+
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
-const PIECE_DISPLAY_WIDTH = 70; // px
+const PIECE_DISPLAY_WIDTH = 70; 
 
 const PlayerStats = () => {
   const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);
   const [diceRolls, setDiceRolls] = useState({});
   const [pieceScales, setPieceScales] = useState({});
 
-  // Listen for all money and property changing events
+  
   useEffect(() => {
     if (!socket) return;
 
@@ -23,7 +23,7 @@ const PlayerStats = () => {
       setDiceRolls(prev => ({ ...prev }));
     };
 
-    // Subscribe to all money and property changing events
+    
     socket.on('rentPaid', handleStateUpdate);
     socket.on('startBonus', handleStateUpdate);
     socket.on('propertyUpdated', handleStateUpdate);
@@ -35,7 +35,7 @@ const PlayerStats = () => {
     socket.on('rentBonus', handleStateUpdate);
 
     return () => {
-      // Cleanup all event listeners
+      
       socket.off('rentPaid', handleStateUpdate);
       socket.off('startBonus', handleStateUpdate);
       socket.off('propertyUpdated', handleStateUpdate);
@@ -46,10 +46,10 @@ const PlayerStats = () => {
       socket.off('playerMoved', handleStateUpdate);
       socket.off('rentBonus', handleStateUpdate);
     };
-// eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [socket]);
 
-  // Update dice rolls when a new roll happens
+  
   useEffect(() => {
     if (diceRoll) {
       setDiceRolls(prev => ({
@@ -57,10 +57,10 @@ const PlayerStats = () => {
         [diceRoll.playerId]: diceRoll
       }));
     }
-// eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [diceRoll]);
 
-  // Calculate piece scales once for all pieces
+  
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};
@@ -76,32 +76,32 @@ const PlayerStats = () => {
     // eslint-disable-next-line
   }, []);
 
-  // Filter out current player and get others
+  
   const others = players && player
     ? players.filter(p => p && p.socketId !== player?.socketId)
     : [];
 
-  // Get positions based on number of players
+  
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
-      case 1: // Just one other player
+      case 1: 
         return [{ position: 'left' }];
-      case 2: // Two other players
+      case 2: 
         return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
-      case 3: // Three other players
+      case 3: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
           { position: 'top' , left: '50%'}
         ];
-      case 4: // Four other players
+      case 4: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
           { position: 'top' , left: '33%'},
           { position: 'top' , left: '66%'}
         ];
-      case 5: // Five other players
+      case 5: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -109,7 +109,7 @@ const PlayerStats = () => {
           { position: 'right', top: '75%' },
           { position: 'top' , left: '50%'}
         ];
-      case 6: // Six other players
+      case 6: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -135,7 +135,7 @@ const PlayerStats = () => {
 
   const positions = getPositions(others.length);
 
-  // Helper to get piece dimensions preserving aspect ratio
+  
   const getPieceDims = (piece, pieceScales) => {
     if (!piece || !pieceScales[piece]) {
       return { width: PIECE_DISPLAY_WIDTH, height: PIECE_DISPLAY_WIDTH };

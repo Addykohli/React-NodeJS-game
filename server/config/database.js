@@ -1,7 +1,6 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Validate and sanitize the database URL
 const validateDatabaseUrl = (url) => {
   if (!url) {
     throw new Error('DATABASE_URL environment variable is not set');
@@ -9,18 +8,14 @@ const validateDatabaseUrl = (url) => {
 
   try {
     const parsedUrl = new URL(url);
-    // Remove any forward slashes from the database name
     const pathname = parsedUrl.pathname.replace(/^\//, '');
     const cleanDbName = pathname.replace(/\//g, '_');
-    
-    // Reconstruct the URL with the cleaned database name
     return `${parsedUrl.protocol}//${parsedUrl.username}:${parsedUrl.password}@${parsedUrl.host}/${cleanDbName}`;
   } catch (e) {
     throw new Error(`Invalid DATABASE_URL format: ${e.message}`);
   }
 };
 
-// Log the DATABASE_URL (but mask sensitive information)
 const maskDatabaseUrl = (url) => {
   if (!url) return 'DATABASE_URL is not set';
   try {
@@ -70,7 +65,6 @@ const sequelize = new Sequelize(dbUrl, {
   }
 });
 
-// Test the connection and create database if needed
 const initializeDatabase = async () => {
   try {
     await sequelize.authenticate();
@@ -93,11 +87,9 @@ const initializeDatabase = async () => {
       ssl: sequelize.options.dialectOptions.ssl
     });
     
-    // If database doesn't exist, try to create it
     if (err.original?.code === '3D000') {
       console.log('Attempting to create database...');
       try {
-        // Create a temporary connection to 'postgres' database to create our database
         const tmpSequelize = new Sequelize({
           ...sequelize.config,
           database: 'postgres',
@@ -107,7 +99,6 @@ const initializeDatabase = async () => {
         await tmpSequelize.close();
         console.log('✅ Database created successfully.');
         
-        // Try connecting again
         await sequelize.authenticate();
         console.log('✅ Connected to newly created database.');
       } catch (createErr) {
@@ -120,7 +111,6 @@ const initializeDatabase = async () => {
   }
 };
 
-// Initialize the database
 initializeDatabase().catch(err => {
   console.error('❌ Database initialization failed:', err);
   process.exit(1);

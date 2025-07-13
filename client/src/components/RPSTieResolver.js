@@ -5,7 +5,7 @@ import cash5000 from '../assets/cash5000.png';
 import cash10000 from '../assets/cash10000.png';
 import cashBehind from '../assets/cashBehind.png';
 
-// Define cash amounts separately to ensure random order
+
 const cashAmounts = [
   { amount: 500, image: cash500 },
   { amount: 1000, image: cash1000 },
@@ -26,7 +26,7 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
       .sort(() => Math.random() - 0.5)
   );
 
-  // If maxAmount is less than 500, skip the animation and resolve immediately
+  
   useEffect(() => {
     if (maxAmount < 500) {
       socket.emit('stonePaperScissorsTieAmount', { 
@@ -58,23 +58,23 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
 
     // First reveal selected card
     setTimeout(() => {
-      // After 3 seconds, reveal all other cards
+      
       setShowAll(true);
       
-      // After another 3 seconds, send the amount and start exit animations
+      
       setTimeout(() => {      
-        // Send the transaction amount before starting exit animation
+        
         socket.emit('stonePaperScissorsTieAmount', { 
           gameId, 
           amount,
           tiedPlayerId 
         });
         
-        // Wait a bit to ensure server processes the transaction
+        
         setTimeout(() => {
           setIsExiting(true);
           
-          // Finally remove from DOM after animations complete
+          
           setTimeout(() => {
             setIsActive(false);
             if (onResolved) onResolved();
@@ -84,7 +84,7 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
     }, 3000);
   };
 
-  // If maxAmount is less than 500, don't render anything
+  
   if (maxAmount < 500 || !isActive) return null;
 
   return (
@@ -119,13 +119,13 @@ const RPSTieResolver = ({ maxAmount, gameId, tiedPlayerId, tiedPlayerName, socke
         {availableAmounts.map((card, index) => {
           const isSelected = index === selectedIndex;
           
-          // Determine which image to show
+          
           let currentImage = cashBehind;
           if (isSelected && selectedIndex !== null) {
-            // Show revealed amount for selected card immediately
+            
             currentImage = card.image;
           } else if (showAll) {
-            // Show actual amounts for other cards after delay
+            
             currentImage = card.image;
           }
 

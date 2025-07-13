@@ -1,4 +1,3 @@
-// server/game/GameEngine.js
 const { tiles } = require('../data/tiles.cjs');
 
 class GameEngine {
@@ -39,11 +38,7 @@ class GameEngine {
     return { die1, die2, total };
   }
 
-  /**
-   * Move exactly one step.
-   * Filtering now allows both from===prev OR from===null.
-   * BranchOnly on exact 7 when both above+below exist.
-   */
+
   moveOneStep(socketId, initialTotal) {
     const player = this.getPlayer(socketId);
     if (!player) return null;
@@ -62,7 +57,6 @@ class GameEngine {
       return null;
     }
 
-    // 1) any
     const anyC = candidates.find(n => n.roll === 'any');
     if (anyC) {
       console.log('[Engine] → ANY to', anyC.to);
@@ -76,7 +70,6 @@ class GameEngine {
       return { tileId: anyC.to };
     }
 
-    // 2) below / above
     if (initialTotal < 7) {
       const belowC = candidates.find(n => n.roll === 'below');
       if (belowC) {
@@ -105,7 +98,6 @@ class GameEngine {
       }
     }
 
-    // 3) EXACT 7 → branch if both above+below present
     if (initialTotal === 7) {
       const forks = candidates.filter(n => n.roll === 'above' || n.roll === 'below');
       if (forks.length > 1) {
@@ -114,7 +106,6 @@ class GameEngine {
       }
     }
 
-    // 4) FALLBACK
     const fallback = candidates[0];
     console.log('[Engine] → FALLBACK to', fallback.to);
     player.prevTile = current;
@@ -170,10 +161,9 @@ class GameEngine {
   findShortestPathsToPlayers(fromTileId) {
     const paths = {};
     const visited = new Set();
-    const queue = [[fromTileId, [fromTileId]]];  // [currentTile, pathSoFar]
-    const MAX_PATH_LENGTH = 50;  // Cap to prevent infinite loops
+    const queue = [[fromTileId, [fromTileId]]];  
+    const MAX_PATH_LENGTH = 50; 
     
-    // First check for players on the same tile
     const playersOnSameTile = this.session.players.filter(p => 
       p.tileId === fromTileId && p.socketId !== this.session.players[this.session.currentPlayerIndex].socketId
     );
@@ -191,10 +181,8 @@ class GameEngine {
     while (queue.length > 0) {
       const [currentTile, currentPath] = queue.shift();
       
-      // Skip if path is too long
       if (currentPath.length > MAX_PATH_LENGTH) continue;
       
-      // Check if any player is on this tile (excluding the current player)
       const playersOnTile = this.session.players.filter(p => 
         p.tileId === currentTile && 
         p.socketId !== this.session.players[this.session.currentPlayerIndex].socketId
@@ -202,7 +190,6 @@ class GameEngine {
       
       if (playersOnTile.length > 0 && currentTile !== fromTileId) {
         playersOnTile.forEach(player => {
-          // Only update path if it's shorter than existing one or no path exists
           if (!paths[player.socketId] || currentPath.length - 1 < paths[player.socketId].steps) {
             paths[player.socketId] = {
               player: player,
@@ -213,21 +200,17 @@ class GameEngine {
         });
       }
       
-      // Get next possible tiles
       const currentTileDef = tiles.find(t => t.id === currentTile);
       if (!currentTileDef) continue;
 
-      // Get all possible next moves
       const nextMoves = new Set();
 
-      // Add forward connections from current tile's "next" field
       if (currentTileDef.next) {
         currentTileDef.next.forEach(move => {
           nextMoves.add(move.to);
         });
       }
 
-      // Add backward connections by checking all tiles that have current tile in their "next" field
       tiles.forEach(tile => {
         if (tile.next) {
           tile.next.forEach(move => {
@@ -238,27 +221,21 @@ class GameEngine {
         }
       });
 
-      // Process next moves
       for (const nextTile of nextMoves) {
-        // Skip if this would create a 2-tile cycle
         if (currentPath.length >= 2 && 
             nextTile === currentPath[currentPath.length - 2]) {
           continue;
         }
 
-        // Skip if this would create a small cycle (checking last 4 moves)
         const recentMoves = currentPath.slice(-4);
         if (recentMoves.includes(nextTile)) {
           continue;
         }
-
-        // Add to queue if not creating a cycle
         const newPath = [...currentPath, nextTile];
         queue.push([nextTile, newPath]);
       }
     }
     
-    // Convert paths to readable format
     const readablePaths = {};
     let closestPlayers = [];
     let minSteps = Infinity;
@@ -274,7 +251,6 @@ class GameEngine {
         steps: data.steps
       };
       
-      // Track closest players
       if (data.steps < minSteps) {
         minSteps = data.steps;
         closestPlayers = [data.player.name];
@@ -283,7 +259,6 @@ class GameEngine {
       }
     });
     
-    // Log results
     console.log('\nShortest paths to each player:');
     Object.entries(readablePaths).forEach(([playerName, data]) => {
       console.log(`shortest path to ${playerName}: ${data.path}`);

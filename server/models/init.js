@@ -4,11 +4,9 @@ const GameSession = require('./GameSession');
 
 async function initDatabase() {
   try {
-    // Test the connection
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
 
-    // Sync all models
     await sequelize.sync({ alter: true });
     console.log('All models were synchronized successfully.');
 

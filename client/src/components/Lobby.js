@@ -1,4 +1,4 @@
-// src/components/Lobby.js
+
 import React, { useContext, useState, useEffect } from 'react';
 import { GameContext } from '../context/GameContext';
 import bgImage from '../assets/bg.png';
@@ -20,12 +20,12 @@ const Lobby = () => {
   } = useContext(GameContext);
 
   const [name, setName] = useState(() => {
-    // Initialize name from localStorage if available
+    
     const savedPlayer = localStorage.getItem('gamePlayer');
     return savedPlayer ? JSON.parse(savedPlayer).name : '';
   });
   const [hasJoined, setHasJoined] = useState(() => {
-    // Initialize hasJoined based on whether we have a saved player
+    
     return !!localStorage.getItem('gamePlayer');
   });
   const [selectedPiece, setSelectedPiece] = useState('');
@@ -34,7 +34,7 @@ const Lobby = () => {
   useEffect(() => {
     const handleLobby = updatedPlayers => {
       setPlayers(updatedPlayers || []);
-      // sync our local `player` object
+      
       const me = updatedPlayers.find(p => p.socketId === socket.id)
                 || (name && updatedPlayers.find(p => p.name === name));
       if (me) {
@@ -68,7 +68,7 @@ const Lobby = () => {
   const joinLobby = () => {
     if (!name.trim()) return;
     
-    // Check for duplicate name locally before sending to server
+    
     const isDuplicateName = players.some(p => p.name.toLowerCase() === name.toLowerCase());
     if (isDuplicateName) {
       setError('This name is already taken. Please choose another name.');
@@ -95,14 +95,14 @@ const Lobby = () => {
   const usedPieces = players.map(p => p.piece).filter(Boolean);
   const availablePieces = allPieces.filter(p => !usedPieces.includes(p));
 
-  // find our player in the array
+  
   const thisPlayer = player?.socketId
     ? players.find(p => p.socketId === player.socketId)
     : players.find(p => p.name === player?.name);
 
   const showReadyButton = !!selectedPiece && thisPlayer && !thisPlayer.ready;
 
-  // If we've picked a piece but server hasn't echoed back our player object yet:
+  
   if (hasJoined && selectedPiece && !thisPlayer) {
     return (
       <div style={{
@@ -130,7 +130,7 @@ const Lobby = () => {
     );
   }
 
-  // Wait for players to be loaded before rendering
+  
   if (!players) {
     return null;
   }

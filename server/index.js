@@ -15,14 +15,12 @@ const PORT = process.env.PORT || 5000;
 const app  = express();
 const server = http.createServer(app);
 
-// Define allowed origins
 const allowedOrigins = [
   'https://react-nodejs-game.onrender.com',
   'https://react-nodejs-game-client.onrender.com',
   'http://localhost:3000'
 ];
 
-// CORS configuration
 const corsOptions = {
   origin: function(origin, callback) {
     if (!origin) return callback(null, true);
@@ -39,12 +37,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Socket.io configuration
 const io     = new Server(server, {
   cors: corsOptions
 });
 
-// Initialize database
 initDatabase()
   .then(() => {
     console.log('✅ Database initialized');
@@ -66,7 +62,6 @@ initDatabase()
 
 app.use(express.json());
 
-// Health check endpoint for Redis/Bull
 app.get('/healthz', async (req, res) => {
   const result = await checkRedisHealth();
   if (result.healthy) {
@@ -2400,19 +2395,16 @@ io.on('connection', socket => {
 
   socket.on("log", (VarName, value) => {
     console.log(`[Log] ${VarName}:`, value);
-  });
+});
 
-  // Handle client ping to keep connection alive
-  socket.on('clientPing', () => {
+socket.on('clientPing', () => {
     // No-op, just to keep the connection active
-    // Optionally, you could log or update a timestamp here
+
   });
 });
 
-
 function determineRPSWinner(choice1, choice2) {
   if (choice1 === choice2) return 'tie';
-  
    
   if (
     (choice1 === 'rock' && choice2 === 'scissors') ||

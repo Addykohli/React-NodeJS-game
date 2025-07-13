@@ -1,6 +1,5 @@
-/* Set root scale based on screen size and board zoom */
 html {
-  font-size: 18px;  /* bumped from 16px to 18px */
+  font-size: 18px;  
 }
 
 body {

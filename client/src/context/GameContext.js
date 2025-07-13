@@ -4,11 +4,11 @@ import socket from '../socket';
 export const GameContext = createContext();
 
 export function GameProvider({ children }) {
-  // RPS active state
+  
   const [isRpsActive, setIsRpsActive] = useState(false);
-  // Chat messages state for persistent chat
+  
   const [chatMessages, setChatMessages] = useState([]);
-  // Initialize state from localStorage if available
+  
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
     return savedPlayer ? JSON.parse(savedPlayer) : null;
@@ -33,7 +33,7 @@ export function GameProvider({ children }) {
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
-  // Listen for chat messages globally
+  
   useEffect(() => {
     if (!socket) return;
     function handleChatMessage(message) {
@@ -45,9 +45,9 @@ export function GameProvider({ children }) {
       console.log('[GameContext] Removing chatMessage listener');
       socket.off('chatMessage', handleChatMessage);
     };
-  }, []); // Correct: run once on mount/unmount, do not include 'socket' in deps
+  }, []); 
 
-  // Listen for RPS state changes
+  
   useEffect(() => {
     if (!socket) return;
     const handleRpsStarted = () => setIsRpsActive(true);
@@ -58,9 +58,9 @@ export function GameProvider({ children }) {
       socket.off('rpsStarted', handleRpsStarted);
       socket.off('rpsEnded', handleRpsEnded);
     };
-  }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
-  // Save important state to localStorage whenever it changes
+  
   useEffect(() => {
     if (player) {
       const playerData = {
@@ -95,13 +95,13 @@ export function GameProvider({ children }) {
     } else {
       localStorage.removeItem('gameDiceRoll');
     }
-  }, [diceRoll]); // OK
+  }, [diceRoll]); 
 
   useEffect(() => {
     localStorage.setItem('gameMovementDone', JSON.stringify(movementDone));
-  }, [movementDone]); // OK
+  }, [movementDone]); 
 
-  // Auto-rejoin on refresh/reconnect
+  
   useEffect(() => {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
@@ -291,7 +291,7 @@ export function GameProvider({ children }) {
         setPlayer(prev => ({ ...prev, money: ownerMoney }));
       }
 
-      // Then update all players' money
+      
       setPlayers(prevPlayers => 
         prevPlayers.map(p => {
           if (p.socketId === payerSocketId) {
@@ -323,7 +323,7 @@ export function GameProvider({ children }) {
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
       console.log('[GameContext] Property update:', { playerId, propertyId, action, newMoney });
       
-      // Update current player first if they're involved
+      
       if (player?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
@@ -334,7 +334,7 @@ export function GameProvider({ children }) {
         }));
       }
 
-      // Then update all players
+      
       setPlayers(prev => prev.map(p => {
         if (p.socketId === playerId) {
           return {
@@ -363,7 +363,7 @@ export function GameProvider({ children }) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
 
-      // Then update all players
+      
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
@@ -379,12 +379,12 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update current player first if they're involved
+      
       if (socket.id === playerId) {
         setPlayer(prev => ({ ...prev, money: playerMoney }));
       }
 
-      // Then update all players
+      
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === playerId ? { ...p, money: playerMoney } : p
@@ -401,12 +401,12 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update current player first if they got the money
+      
       if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
 
-      // Then update all players
+      
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
@@ -414,10 +414,10 @@ export function GameProvider({ children }) {
       );
     });
 
-    // Add loan handling
+    
     socket.on('loanUpdated', ({ playerId, newMoney, loanAmount }) => {
       
-      // Update current player first if they're involved
+      
       if (player?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
@@ -426,7 +426,7 @@ export function GameProvider({ children }) {
         }));
       }
 
-      // Then update all players
+      
       setPlayers(prev => prev.map(p => {
         if (p.socketId === playerId) {
           return {
@@ -439,7 +439,7 @@ export function GameProvider({ children }) {
       }));
     });
 
-    // TRADE ACCEPTED
+    
     socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
       console.log('[GameContext] Updating after trade accepted:', {
         fromPlayer,
@@ -447,7 +447,7 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
 
-      // Update current player first if they were involved
+      
       if (socket.id === fromPlayer.socketId) {
         setPlayer(prev => ({ 
           ...prev, 
@@ -462,7 +462,7 @@ export function GameProvider({ children }) {
         }));
       }
 
-      // Then update all players
+      
       setPlayers(prevPlayers => 
         prevPlayers.map(p => {
           if (p.socketId === fromPlayer.socketId) {
@@ -486,7 +486,7 @@ export function GameProvider({ children }) {
 
     socket.on('playersStateUpdate', ({ players }) => {
       setPlayers(players);
-      // Update the current player's state if it matches
+      
       const updatedPlayer = players.find(p => p.socketId === socket.id);
       if (updatedPlayer) {
         setPlayer(updatedPlayer);

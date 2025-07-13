@@ -6,13 +6,13 @@ import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
-// Map piece names to images
+
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
 
-// Reference piece height in px
+
 const REFERENCE_HEIGHT = 165;
 
 const Board = () => {
@@ -29,7 +29,7 @@ const Board = () => {
     img.src = boardImage;
   }, []);
 
-  // Calculate scales for all pieces based on piece1's height
+  
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};

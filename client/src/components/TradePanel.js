@@ -5,14 +5,12 @@ import { tiles } from '../data/tiles';
 const TradePanel = () => {
   const { socket, player, players } = useContext(GameContext);
   
-  // Offer section state
   const [offerMoney, setOfferMoney] = useState(0);
   const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
   const [isOfferExpanded, setIsOfferExpanded] = useState(false);
   const [isOfferPropertiesExpanded, setIsOfferPropertiesExpanded] = useState(false);
   const [offerReady, setOfferReady] = useState(false);
   
-  // Ask section state
   const [askMoney, setAskMoney] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedAskProperties, setSelectedAskProperties] = useState([]);
@@ -20,26 +18,21 @@ const TradePanel = () => {
   const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [askReady, setAskReady] = useState(false);
 
-  // Incoming offers state
   const [incomingOffers, setIncomingOffers] = useState([]);
 
-  // Add pressed state for offer, ask, request trade, and both properties buttons
   const [offerBtnPressed, setOfferBtnPressed] = useState(false);
   const [askBtnPressed, setAskBtnPressed] = useState(false);
   const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  // Effect to listen for trade requests
   React.useEffect(() => {
     if (!socket) return;
 
-    // Always fetch all active offers from server on mount/open
     socket.emit('getActiveTradeOffers');
 
     socket.on('tradeRequest', (offer) => {
       setIncomingOffers(prev => {
-        // Prevent duplicates
         if (prev.some(o => o.id === offer.id)) return prev;
         return [...prev, offer];
       });
@@ -58,7 +51,6 @@ const TradePanel = () => {
       }
     });
 
-    // Listen for full active offers list from server
     socket.on('activeTradeOffers', (offers) => {
       setIncomingOffers(offers.filter(offer =>
         offer.to === player.socketId // Only show offers for this player
@@ -73,7 +65,6 @@ const TradePanel = () => {
     };
   }, [socket, player.socketId]);
 
-  // Update ready states
   React.useEffect(() => {
     setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
   }, [offerMoney, selectedOfferProperties]);
@@ -110,7 +101,7 @@ const TradePanel = () => {
 
   const handlePlayerSelect = (playerId) => {
     setSelectedPlayer(playerId);
-    setSelectedAskProperties([]); // Reset selected properties when player changes
+    setSelectedAskProperties([]); 
     setIsAskPropertiesExpanded(false);
   };
 

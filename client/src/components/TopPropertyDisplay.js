@@ -6,10 +6,8 @@ const TopPropertyDisplay = () => {
   const [expandedStates, setExpandedStates] = useState({});
   const { players, player: currentPlayer, socket } = useContext(GameContext);
 
-  // Get all players except the current player
   const otherPlayers = players.filter(p => p.socketId !== currentPlayer?.socketId);
   
-  // Get positions based on number of players (matching PropertyDisplay logic)
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
       case 3: return [{ left: '50%' }];  // 1 player on top
@@ -21,7 +19,6 @@ const TopPropertyDisplay = () => {
     }
   };
 
-  // Get only the players that should appear at the top (matching PropertyDisplay logic)
   const getTopPlayers = (players, totalPlayers) => {
     switch(totalPlayers) {
       case 3: return players.slice(2, 3);  // Last 1 player
@@ -40,7 +37,6 @@ const TopPropertyDisplay = () => {
     }));
   };
 
-  // Calculate rent multiplier based on owned properties
   const getRentMultiplier = (player, property) => {
     if (!player?.properties) return 1;
     
@@ -58,7 +54,6 @@ const TopPropertyDisplay = () => {
       
       if (hasGoogle && hasApple && hasAmazon) return 3;
       
-      // Check for any 2 of Google, Apple, Amazon
       const bigTechCount = [hasGoogle, hasApple, hasAmazon].filter(Boolean).length;
       if (bigTechCount >= 2) return 2;
       
@@ -73,7 +68,7 @@ const TopPropertyDisplay = () => {
   };
 
   const handleSell = (e, player, property) => {
-    e.stopPropagation(); // Prevent card expansion when clicking sell button
+    e.stopPropagation(); 
     if (window.confirm(`Are you sure you want to sell ${property.name} for $${property.cost}?`)) {
       socket.emit('updateProperty', {
         playerId: player.socketId,
@@ -87,7 +82,6 @@ const TopPropertyDisplay = () => {
   const topPlayers = getTopPlayers(otherPlayers, otherPlayers.length);
   const positions = getPositions(otherPlayers.length);
 
-  // Reduced dimensions (70% of original)
   const cardWidth = 147; // 70% of 210
   const cardHeight = 196; // 70% of 280
   const cardOverlap = 39; // 70% of 56
@@ -111,15 +105,14 @@ const TopPropertyDisplay = () => {
           zIndex: 1
         }}>
         {topPlayers.map((player, playerIndex) => {
-          // Get player's properties and sort by division
           const ownedProperties = tiles
             .filter(tile => tile.type === 'property')
             .filter(tile => player?.properties?.includes(tile.id))
             .sort((a, b) => {
               if (a.division === b.division) {
-                return a.name.localeCompare(b.name); // Sort by name within same division
+                return a.name.localeCompare(b.name);
               }
-              return a.division.localeCompare(b.division); // Sort by division
+              return a.division.localeCompare(b.division);
             });
 
           const position = positions[playerIndex];
@@ -135,7 +128,6 @@ const TopPropertyDisplay = () => {
               display: 'flex',
               alignItems: 'flex-start'
             }}>
-              {/* Player name label */}
               <div style={{
                 position: 'absolute',
                 top: '100%',
@@ -159,20 +151,16 @@ const TopPropertyDisplay = () => {
                 const isExpanded = isLastProperty || playerExpandedIndex === index;
                 const multiplier = getRentMultiplier(player, property);
                 
-                // Calculate base position (never changes)
                 const basePosition = index * cardOverlap;
                 
-                // Calculate additional offset based on expanded state
                 let expandedOffset = 0;
                 
                 if (playerExpandedIndex !== null && playerExpandedIndex !== undefined) {
-                  // If there's an expanded card
                   if (index > playerExpandedIndex) {
                     expandedOffset = expandOffset;
                   }
                 }
 
-                // Calculate final position
                 const finalPosition = basePosition + expandedOffset;
                 
                 return (

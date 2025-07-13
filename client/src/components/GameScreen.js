@@ -50,7 +50,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
     return () => socket.off('casinoResult', handleCasinoResult);
   }, [socket, player.socketId, onCasinoPlayed]);
 
-  // If not active (after result), show result screen
+  
   if (!isActive) {
     if (showResult && diceResult) {
       return (
@@ -2001,7 +2001,7 @@ export default function GameScreen() {
                 );
               }
 
-              // Show empty state for non-turn players or when no action is needed
+              
               return (
                 <div style={{
                   display: 'flex',
@@ -2047,6 +2047,7 @@ export default function GameScreen() {
             })()}
           </div>
         </div>
+        
         {/* Responsive styles for mobile */}
         <style>{`
           @media (max-width: 900px) {
