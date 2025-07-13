@@ -46,7 +46,7 @@ const PlayerStats = () => {
       socket.off('playerMoved', handleStateUpdate);
       socket.off('rentBonus', handleStateUpdate);
     };
-  }, [socket]);
+  }, [socket]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // Update dice rolls when a new roll happens
   useEffect(() => {
@@ -56,7 +56,7 @@ const PlayerStats = () => {
         [diceRoll.playerId]: diceRoll
       }));
     }
-  }, [diceRoll]);
+  }, [diceRoll]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // Calculate piece scales once for all pieces
   useEffect(() => {

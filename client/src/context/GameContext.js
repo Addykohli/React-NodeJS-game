@@ -58,7 +58,7 @@ export function GameProvider({ children }) {
       socket.off('rpsStarted', handleRpsStarted);
       socket.off('rpsEnded', handleRpsEnded);
     };
-  }, [socket]);
+  }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   // Save important state to localStorage whenever it changes
   useEffect(() => {
@@ -513,7 +513,7 @@ export function GameProvider({ children }) {
       socket.off('tradeAccepted');
       socket.off('playersStateUpdate');
     };
-  }, [socket?.id, player]);
+  }, [player]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   return (
     <GameContext.Provider
