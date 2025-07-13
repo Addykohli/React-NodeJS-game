@@ -275,7 +275,7 @@ export default function GameScreen() {
   const [testRollMode, setTestRollMode] = useState(false);
   const [inCasino, setInCasino] = useState(false);
   const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
-  const [setHasChosenCorner] = useState(false);
+  const [hasChosenCorner, setHasChosenCorner] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
