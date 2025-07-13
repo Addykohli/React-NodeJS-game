@@ -45,7 +45,7 @@ export function GameProvider({ children }) {
       console.log('[GameContext] Removing chatMessage listener');
       socket.off('chatMessage', handleChatMessage);
     };
-  }, []); // Run only once on mount/unmount
+  }, []); // Correct: run once on mount/unmount, do not include 'socket' in deps
 
   // Listen for RPS state changes
   useEffect(() => {
@@ -95,11 +95,11 @@ export function GameProvider({ children }) {
     } else {
       localStorage.removeItem('gameDiceRoll');
     }
-  }, [diceRoll]);
+  }, [diceRoll]); // OK
 
   useEffect(() => {
     localStorage.setItem('gameMovementDone', JSON.stringify(movementDone));
-  }, [movementDone]);
+  }, [movementDone]); // OK
 
   // Auto-rejoin on refresh/reconnect
   useEffect(() => {
@@ -122,7 +122,7 @@ export function GameProvider({ children }) {
 
     socket.on('connect', handleReconnect);
     return () => socket.off('connect', handleReconnect);
-  }, [socket]);
+  }, []); // Correct: socket is a singleton, does not need to be in deps
 
   // Add piece state sync debugging
   useEffect(() => {
@@ -136,7 +136,7 @@ export function GameProvider({ children }) {
         }));
       }
     }
-  }, [players, socket?.id]);
+  }, [players]); // Only update when players change. 'socket' is a singleton.
 
   // Clear session data on quit
   const handleQuit = () => {
@@ -160,7 +160,7 @@ export function GameProvider({ children }) {
         setPlayer(me);
       }
     }
-  }, [players, socket?.id]);
+  }, [players]); // Only update when players change. 'socket' is a singleton.
 
   // Utility to ensure each player has a piece field
   function ensurePiece(players, prevPlayers = []) {

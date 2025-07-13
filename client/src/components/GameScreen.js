@@ -279,6 +279,7 @@ export default function GameScreen() {
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
+  
 
   // Automatically clear RPS result message after 5 seconds
   useEffect(() => {
@@ -359,10 +360,10 @@ export default function GameScreen() {
 
   // Reset hasChosenCorner when turn ends or tile changes
   useEffect(() => {
-    if (!isMyTurn || !tileMeta?.name?.toLowerCase().includes('choose corner')) {
+    if (!isMyTurn && tileMeta) {
       setHasChosenCorner(false);
     }
-  }, [isMyTurn, tileMeta]);
+  }, [isMyTurn, tileMeta, setHasChosenCorner]);
 
   // Add keyboard listener for test rolls
   useEffect(() => {
