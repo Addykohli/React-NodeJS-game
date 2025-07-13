@@ -11,6 +11,7 @@ const PIECE_DISPLAY_WIDTH = 70; // px
 
 const PlayerStats = () => {
   const { players, player, currentPlayerId, diceRoll, socket } = useContext(GameContext);
+  const setDiceRolls = useState({});
   const [pieceScales, setPieceScales] = useState({});
 
   // Listen for all money and property changing events
