@@ -181,43 +181,65 @@ const Board = () => {
         )}
 
         {/* Player pieces */}
-        {(!players || players.length === 0 || Object.keys(pieceScales).length === 0) ? null : players.map((p, i) => {
-          if (!p) {
-            console.log(`[Board] Missing player at index ${i}`);
-            return null;
-          }
-          const imgSrc = pieceImages[p.piece];
-          if (!imgSrc) {
-            console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
-            return null;
-          }
-          const tile = tiles.find(t => t.id === p.tileId);
-          if (!tile) {
-            console.log(`[Board.js] Player ${p.name} on missing tileId:`, p.tileId);
-            return null;
-          }
-          const { x, y } = tile.position;
-          const dimensions = pieceScales[p.piece] || { width: 'auto', height: REFERENCE_HEIGHT };
-          
-          return (
-            <img
-              key={p.socketId}
-              src={imgSrc}
-              alt={p.name}
-              title={p.name}
-              style={{
-                position: 'absolute',
-                top: y + i * 10,
-                left: x + i * 10,
-                width: dimensions.width,
-                height: dimensions.height,
-                transform: 'translate(-50%, -50%)',
-                transition: 'top 0.3s, left 0.3s',
-                zIndex: 10,
-              }}
-            />
-          );
-        })}
+        {(!players || players.length === 0 || Object.keys(pieceScales).length === 0) ? null : (() => {
+          // Group players by tileId
+          const playersByTile = {};
+          players.forEach((p) => {
+            if (!playersByTile[p.tileId]) playersByTile[p.tileId] = [];
+            playersByTile[p.tileId].push(p);
+          });
+
+          // Render all pieces
+          return players.map((p, i) => {
+            if (!p) {
+              console.log(`[Board] Missing player at index ${i}`);
+              return null;
+            }
+            const imgSrc = pieceImages[p.piece];
+            if (!imgSrc) {
+              console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
+              return null;
+            }
+            const tile = tiles.find(t => t.id === p.tileId);
+            if (!tile) {
+              console.log(`[Board.js] Player ${p.name} on missing tileId:`, p.tileId);
+              return null;
+            }
+            const { x, y } = tile.position;
+            const dimensions = pieceScales[p.piece] || { width: 'auto', height: REFERENCE_HEIGHT };
+            // Determine offset for this piece if multiple players are on the same tile
+            const sameTilePlayers = playersByTile[p.tileId];
+            const idxOnTile = sameTilePlayers.findIndex(pl => pl.socketId === p.socketId);
+            const totalOnTile = sameTilePlayers.length;
+            let offsetX = 0, offsetY = 0;
+            if (totalOnTile > 1) {
+              // Spread in a small circle (radius in px)
+              const radius = 22;
+              const angle = (2 * Math.PI / totalOnTile) * idxOnTile;
+              offsetX = Math.cos(angle) * radius;
+              offsetY = Math.sin(angle) * radius;
+            }
+            return (
+              <img
+                key={p.socketId}
+                src={imgSrc}
+                alt={p.name}
+                title={p.name}
+                style={{
+                  position: 'absolute',
+                  top: y + offsetY,
+                  left: x + offsetX,
+                  width: dimensions.width,
+                  height: dimensions.height,
+                  transform: 'translate(-50%, -50%)',
+                  transition: 'top 0.3s, left 0.3s',
+                  zIndex: 10,
+                }}
+              />
+            );
+          });
+        })()}
+
       </div>
 
       {/* Property Displays */}
