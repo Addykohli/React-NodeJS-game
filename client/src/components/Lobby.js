@@ -286,7 +286,7 @@ const Lobby = () => {
                       onClick={() => choosePiece(piece)}
                     >
                       <img
-                        src={`../assets/pieces/${piece}`}
+                        src={pieceImages[piece]}
                         alt={piece}
                         width={90}
                         height={90}
