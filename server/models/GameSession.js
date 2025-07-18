@@ -1,4 +1,3 @@
-// server/models/GameSession.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 

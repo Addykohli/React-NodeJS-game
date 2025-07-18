@@ -122,9 +122,8 @@ export function GameProvider({ children }) {
 
     socket.on('connect', handleReconnect);
     return () => socket.off('connect', handleReconnect);
-  }, []); // Correct: socket is a singleton, does not need to be in deps
+  }, []); 
 
-  // Add piece state sync debugging
   useEffect(() => {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
@@ -136,9 +135,8 @@ export function GameProvider({ children }) {
         }));
       }
     }
-  }, [players]); // Only update when players change. 'socket' is a singleton.
+  }, [players]); 
 
-  // Clear session data on quit
   const handleQuit = () => {
     localStorage.removeItem('gamePlayer');
     localStorage.removeItem('gameState');
@@ -152,7 +150,6 @@ export function GameProvider({ children }) {
     setMovementDone(false);
   };
 
-  // Update player whenever players array changes
   useEffect(() => {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
@@ -160,9 +157,8 @@ export function GameProvider({ children }) {
         setPlayer(me);
       }
     }
-  }, [players]); // Only update when players change. 'socket' is a singleton.
+  }, [players]); 
 
-  // Utility to ensure each player has a piece field
   function ensurePiece(players, prevPlayers = []) {
     return players.map(p => {
       if (p.piece !== undefined) return p;
@@ -172,12 +168,9 @@ export function GameProvider({ children }) {
   }
 
   useEffect(() => {
-    // LOBBY UPDATE
     socket.on('lobbyUpdate', updated => {
       setPlayers(prev => ensurePiece(updated, prev));
     });
-
-    // GAME START
     socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid }) => {
       setPlayers(prev => ensurePiece(ps, prev));
       setSessionId(sid);
@@ -188,7 +181,6 @@ export function GameProvider({ children }) {
       setInsufficientFunds(false);
     });
 
-    // GAME OVER
     socket.on('gameOver', ({ winner }) => {
       setGameState('lobby');
       setCurrentPlayerId(null);
@@ -202,11 +194,9 @@ export function GameProvider({ children }) {
       localStorage.removeItem('gameMovementDone');
     });
 
-    // PLAYER QUIT
     socket.on('playerQuit', ({ playerName, temporary }) => {
       if (!temporary) {
         setPlayers(prev => prev.filter(p => p.name !== playerName));
-        // If it's the current player who quit
         if (player?.name === playerName) {
           localStorage.removeItem('gamePlayer');
           localStorage.removeItem('gameState');
@@ -222,18 +212,15 @@ export function GameProvider({ children }) {
       }
     });
 
-    // TURN ENDED
     socket.on('turnEnded', ({ nextPlayerId }) => {
       setCurrentPlayerId(nextPlayerId);
       setDiceRoll(null);
       setMovementDone(false);
       setInsufficientFunds(false);
       
-      // Clear turn-related localStorage
       localStorage.removeItem('gameDiceRoll');
       localStorage.removeItem('gameMovementDone');
 
-      // If it's now our turn, ensure we start fresh
       if (socket.id === nextPlayerId) {
         console.log('[GameContext] It is now our turn');
         const currentPlayer = players.find(p => p.socketId === socket.id);
@@ -243,12 +230,9 @@ export function GameProvider({ children }) {
       }
     });
 
-    // DICE RESULT
     socket.on('diceResult', ({ playerId, die1, die2, total }) => {
       setDiceRoll({ playerId, die1, die2, total });
     });
-
-    // TILE MOVED
     socket.on('playerMoved', ({ playerId, tileId }) => {
       setPlayers(prev =>
         prev.map(p => 
@@ -258,23 +242,16 @@ export function GameProvider({ children }) {
         )
       );
       
-      // Update current player's position if it's them
       if (player?.socketId === playerId) {
         setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
       }
     });
-
-    // MOVEMENT DONE
     socket.on('movementDone', () => {
       setMovementDone(true);
     });
-
-    // INSUFFICIENT FUNDS
     socket.on('insufficientFunds', () => {
       setInsufficientFunds(true);
     });
-
-    // RENT PAID
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney }) => {
       console.log('[GameContext] Updating money after rent payment:', {
         payerSocketId,
@@ -284,7 +261,6 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update player state first if current player is involved
       if (socket.id === payerSocketId) {
         setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
       } else if (socket.id === ownerSocketId) {
@@ -304,8 +280,6 @@ export function GameProvider({ children }) {
         })
       );
     });
-
-    // RENT BONUS
     socket.on('rentBonus', ({ playerSocketId, newMoney }) => {
       console.log('[GameContext] Updating money after rent bonus:', {
         playerSocketId,
@@ -313,13 +287,11 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update players list
       setPlayers(prev => prev.map(p =>
         p.socketId === playerSocketId ? { ...p, money: newMoney } : p
       ));
     });
 
-    // PROPERTY UPDATED (for buying/selling)
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
       console.log('[GameContext] Property update:', { playerId, propertyId, action, newMoney });
       
@@ -349,7 +321,6 @@ export function GameProvider({ children }) {
       }));
     });
 
-    // START BONUS
     socket.on('startBonus', ({ playerSocketId, newMoney, amount }) => {
       console.log('[GameContext] Updating money after start bonus:', {
         playerSocketId,
@@ -358,7 +329,6 @@ export function GameProvider({ children }) {
         currentPlayerSocketId: socket.id
       });
       
-      // Update current player first if they got the bonus
       if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
@@ -371,7 +341,6 @@ export function GameProvider({ children }) {
       );
     });
 
-    // CASINO RESULT
     socket.on('casinoResult', ({ playerId, playerMoney }) => {
       console.log('[GameContext] Updating money after casino result:', {
         playerId,
@@ -392,7 +361,6 @@ export function GameProvider({ children }) {
       );
     });
 
-    // ROAD CASH
     socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
       console.log('[GameContext] Updating money after road cash:', {
         playerSocketId,

@@ -19,7 +19,6 @@ const PlayerStats = () => {
     if (!socket) return;
 
     const handleStateUpdate = () => {
-      // Force a re-render by updating dice rolls state
       setDiceRolls(prev => ({ ...prev }));
     };
 
@@ -73,7 +72,6 @@ const PlayerStats = () => {
       setPieceScales(scales);
     };
     calculateScales();
-    // eslint-disable-next-line
   }, []);
 
   
@@ -118,7 +116,7 @@ const PlayerStats = () => {
           { position: 'top' , left: '33%'},
           { position: 'top' , left: '66%'}
         ];
-      case 7: // Seven other players
+      case 7: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -174,7 +172,6 @@ const PlayerStats = () => {
           overflow: 'visible' 
         };
 
-        // Apply position based on placement
         if (pos.position === 'left') {
           style.right = 'calc(100% + 235px)';
           style.top = pos.top || '50%';
@@ -189,7 +186,6 @@ const PlayerStats = () => {
           style.transform = 'translate(-50%, 0)';
         }
 
-        // Piece image and dimensions
         let pieceImg = null;
         let pieceDims = { width: PIECE_DISPLAY_WIDTH, height: PIECE_DISPLAY_WIDTH };
         if (p.piece && pieceImages[p.piece]) {

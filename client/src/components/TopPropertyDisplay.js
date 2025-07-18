@@ -10,22 +10,22 @@ const TopPropertyDisplay = () => {
   
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
-      case 3: return [{ left: '50%' }];  // 1 player on top
-      case 4: return [{ left: '-30%' }, { left: '70%' }];  // 2 players on top
-      case 5: return [{ left: '50%' }];  // 1 player on top
-      case 6: return [{ left: '-30%' }, { left: '70%' }];  // 2 players on top
-      case 7: return [{ left: '-33%' }, { left: '33%' }, { left: '66%' }];  // 3 players on top
+      case 3: return [{ left: '50%' }]; 
+      case 4: return [{ left: '-30%' }, { left: '70%' }]; 
+      case 5: return [{ left: '50%' }]; 
+      case 6: return [{ left: '-30%' }, { left: '70%' }]; 
+      case 7: return [{ left: '-33%' }, { left: '33%' }, { left: '66%' }]; 
       default: return [];
     }
   };
 
   const getTopPlayers = (players, totalPlayers) => {
     switch(totalPlayers) {
-      case 3: return players.slice(2, 3);  // Last 1 player
-      case 4: return players.slice(2, 4);  // Last 2 players
-      case 5: return players.slice(4, 5);  // Last 1 player
-      case 6: return players.slice(4, 6);  // Last 2 players
-      case 7: return players.slice(4, 7);  // Last 3 players
+      case 3: return players.slice(2, 3); 
+      case 4: return players.slice(2, 4); 
+      case 5: return players.slice(4, 5); 
+      case 6: return players.slice(4, 6); 
+      case 7: return players.slice(4, 7); 
       default: return [];
     }
   };
@@ -82,10 +82,10 @@ const TopPropertyDisplay = () => {
   const topPlayers = getTopPlayers(otherPlayers, otherPlayers.length);
   const positions = getPositions(otherPlayers.length);
 
-  const cardWidth = 147; // 70% of 210
-  const cardHeight = 196; // 70% of 280
-  const cardOverlap = 39; // 70% of 56
-  const expandOffset = 108; // 70% of 154
+  const cardWidth = 147; 
+  const cardHeight = 196; 
+  const cardOverlap = 39; 
+  const expandOffset = 108; 
   const stackWidth = cardWidth + (cardOverlap * 4);
 
   return (

@@ -139,9 +139,9 @@ const PropertyDisplayLeft = ({ player, position }) => {
     .filter(tile => player?.properties?.includes(tile.id))
     .sort((a, b) => {
       if (a.division === b.division) {
-        return a.name.localeCompare(b.name); // Sort by name within same division
+        return a.name.localeCompare(b.name); 
       }
-      return a.division.localeCompare(b.division); // Sort by division
+      return a.division.localeCompare(b.division); 
     });
 
   const handlePropertyClick = (index) => {
@@ -150,17 +150,14 @@ const PropertyDisplayLeft = ({ player, position }) => {
   };
 
 
-  // Reduced dimensions (70% of original) - matching TopPropertyDisplay
-  const cardWidth = 196; // 70% of 280 
-  const cardHeight = 147; // 70% of 210 
-  const cardOverlap = 39; // 70% of 56
-  const expandOffset = 108; // 70% of 154
+  const cardWidth = 196; 
+  const cardHeight = 147; 
+  const cardOverlap = 39; 
+  const expandOffset = 108; 
 
-  // Calculate the total height of the stack when expanded
   const stackHeight = ownedProperties.length * cardOverlap + (expandedIndex !== null ? expandOffset : 0);
   
-  // Position relative to board center (300px = half of board height)
-  const centerOffset = position === 'top' ? -150 : 150; // ±150px from center
+  const centerOffset = position === 'top' ? -150 : 150; 
 
   return (
     <div style={{
@@ -233,9 +230,9 @@ const PropertyDisplayRight = ({ player, position }) => {
     .filter(tile => player?.properties?.includes(tile.id))
     .sort((a, b) => {
       if (a.division === b.division) {
-        return a.name.localeCompare(b.name); // Sort by name within same division
+        return a.name.localeCompare(b.name); 
       }
-      return a.division.localeCompare(b.division); // Sort by division
+      return a.division.localeCompare(b.division); 
     });
 
   const handlePropertyClick = (index) => {
@@ -243,17 +240,14 @@ const PropertyDisplayRight = ({ player, position }) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  // Reduced dimensions (70% of original) - matching TopPropertyDisplay
-  const cardWidth = 196; // 70% of 280 (swapped)
-  const cardHeight = 147; // 70% of 210 (swapped)
-  const cardOverlap = 39; // 70% of 56
-  const expandOffset = 108; // 70% of 154
+  const cardWidth = 196; 
+  const cardHeight = 147; 
+  const cardOverlap = 39; 
+  const expandOffset = 108; 
 
-  // Calculate the total height of the stack when expanded
   const stackHeight = ownedProperties.length * cardOverlap + (expandedIndex !== null ? expandOffset : 0);
   
-  // Position relative to board center (300px = half of board height)
-  const centerOffset = position === 'top' ? -150 : 150; // ±150px from center
+  const centerOffset = position === 'top' ? -150 : 150; 
 
   return (
     <div style={{
@@ -327,14 +321,12 @@ const PropertyDisplay = () => {
       if (e.key === 'Enter') {
         const commands = keyInput.trim().toLowerCase();
         
-        // Process 'own#' commands
         const ownMatches = commands.matchAll(/own(\d+)/g);
         const matchesArray = Array.from(ownMatches);
         for (const match of matchesArray) {
           const propertyId = parseInt(match[1], 10);
           const property = tiles.find(tile => tile.id === propertyId);
           if (property) {
-            // Emit socket event to update property ownership for all clients
             socket.emit('updateProperty', {
               playerId: player.socketId,
               propertyId: propertyId,
@@ -365,7 +357,6 @@ const PropertyDisplay = () => {
         });
       });
 
-      // Also update current player if they're involved
       if (player?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
@@ -419,24 +410,24 @@ const PropertyDisplay = () => {
   
   const getPositions = (numPlayers) => {
     switch(numPlayers) {
-      case 1: // Just one other player
+      case 1: 
         return [{ position: 'left' }];
-      case 2: // Two other players
+      case 2: 
         return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
-      case 3: // Three other players
+      case 3: 
         return [
           { position: 'left', top: '100%' },
           { position: 'left', top: '75%' },
           { position: 'top' }
         ];
-      case 4: // Four other players
+      case 4: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
           { position: 'top' },
           { position: 'top' }
         ];
-      case 5: // Five other players
+      case 5: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -444,7 +435,7 @@ const PropertyDisplay = () => {
           { position: 'right', top: '75%' },
           { position: 'top' }
         ];
-      case 6: // Six other players
+      case 6: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -453,7 +444,7 @@ const PropertyDisplay = () => {
           { position: 'top' },
           { position: 'top' }
         ];
-      case 7: // Seven other players
+      case 7: 
         return [
           { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
@@ -470,7 +461,6 @@ const PropertyDisplay = () => {
 
   const positions = getPositions(otherPlayers.length);
 
-  // Group players by position
   const leftPlayers = otherPlayers.filter((_, idx) => positions[idx]?.position === 'left');
   const rightPlayers = otherPlayers.filter((_, idx) => positions[idx]?.position === 'right');
 
@@ -502,7 +492,6 @@ const PropertyDisplay = () => {
 
           const finalPosition = basePosition + expandedOffset;
           
-          // Calculate rent multiplier
           const multiplier = (() => {
             const ownedProperties = tiles.filter(tile => player?.properties?.includes(tile.id));
             const divisionProperties = ownedProperties.filter(tile => tile.division === property.division);

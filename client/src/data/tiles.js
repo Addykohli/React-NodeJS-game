@@ -1,5 +1,3 @@
-// server/data/tiles.js
-
 export const tiles = [
 
   {

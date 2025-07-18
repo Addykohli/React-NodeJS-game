@@ -22,20 +22,20 @@ function calculateRentMultiplier(propertyId, ownerProperties) {
   const count = divisionProperties.length;
 
   if (property.division === 'tech') {
-    if (count >= 6) return 5; // All 6 tech properties
-    if (count >= 5) return 4; // Any 5 tech properties
+    if (count >= 6) return 5;
+    if (count >= 5) return 4;
     const hasGoogle = ownerProperties.includes(37);
     const hasApple = ownerProperties.includes(36);
     const hasAmazon = ownerProperties.includes(41);
-    if (hasGoogle && hasApple && hasAmazon) return 3; // Special tech trio
+    if (hasGoogle && hasApple && hasAmazon) return 3;
     const bigTechCount = [hasGoogle, hasApple, hasAmazon].filter(Boolean).length;
-    if (bigTechCount >= 2) return 2; // Any 2 of the big tech companies
-    if (count >= 3) return 2; // Any 3 tech properties
+    if (bigTechCount >= 2) return 2;
+    if (count >= 3) return 2;
     return 1;
   } else {
-    if (count >= 6) return 5;  // 6 properties
-    if (count >= 5) return 3;  // 5 properties
-    if (count >= 3) return 2;  // 3 properties
+    if (count >= 6) return 5;
+    if (count >= 5) return 3;
+    if (count >= 3) return 2;
     return 1;
   }
 }

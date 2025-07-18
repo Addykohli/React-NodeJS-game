@@ -1,4 +1,3 @@
-// server/models/Player.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 

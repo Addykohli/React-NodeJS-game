@@ -33,13 +33,11 @@ const Board = () => {
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};
-      // Calculate scales for all pieces
       for (let i = 1; i <= 8; i++) {
         const img = new Image();
         img.src = pieceImages[`piece${i}.png`];
         await new Promise(resolve => img.onload = resolve);
         
-        // Calculate the width that maintains aspect ratio at reference height
         const width = REFERENCE_HEIGHT * (img.width / img.height);
         scales[`piece${i}.png`] = { width, height: REFERENCE_HEIGHT };
       }
@@ -182,14 +180,12 @@ const Board = () => {
 
         {/* Player pieces */}
         {(!players || players.length === 0 || Object.keys(pieceScales).length === 0) ? null : (() => {
-          // Group players by tileId
           const playersByTile = {};
           players.forEach((p) => {
             if (!playersByTile[p.tileId]) playersByTile[p.tileId] = [];
             playersByTile[p.tileId].push(p);
           });
 
-          // Render all pieces
           return players.map((p, i) => {
             if (!p) {
               console.log(`[Board] Missing player at index ${i}`);
@@ -207,13 +203,11 @@ const Board = () => {
             }
             const { x, y } = tile.position;
             const dimensions = pieceScales[p.piece] || { width: 'auto', height: REFERENCE_HEIGHT };
-            // Determine offset for this piece if multiple players are on the same tile
             const sameTilePlayers = playersByTile[p.tileId];
             const idxOnTile = sameTilePlayers.findIndex(pl => pl.socketId === p.socketId);
             const totalOnTile = sameTilePlayers.length;
             let offsetX = 0, offsetY = 0;
             if (totalOnTile > 1) {
-              // Spread in a small circle (radius in px)
               const radius = 22;
               const angle = (2 * Math.PI / totalOnTile) * idxOnTile;
               offsetX = Math.cos(angle) * radius;

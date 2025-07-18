@@ -281,7 +281,6 @@ export default function GameScreen() {
   const [rpsResult, setRpsResult] = useState(null);
   
 
-  // Automatically clear RPS result message after 5 seconds
   useEffect(() => {
     if (rpsResult) {
       const timeout = setTimeout(() => setRpsResult(null), 5000);
@@ -290,13 +289,11 @@ export default function GameScreen() {
   }, [rpsResult]);
   const [rpsTieAmount, setRpsTieAmount] = useState(null);
   const [activeSidePanel, setActiveSidePanel] = useState(null);
-  // Add new state for toggling side panel visibility
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
   const [borrowAmount, setBorrowAmount] = useState(500);
   const [payoffAmount, setPayoffAmount] = useState(500);
   const [gameEvents, setGameEvents] = useState([]);
 
-  // Add socket event listener for borrow response
   useEffect(() => {
     if (!socket) return;
 
@@ -311,16 +308,13 @@ export default function GameScreen() {
     return () => socket.off('borrowResponse', handleBorrowResponse);
   }, [socket]);
 
-  // Add socket event listener for game events
   useEffect(() => {
     if (!socket) return;
 
-    // Handle initial game events history
     socket.on('gameEventsHistory', (events) => {
       setGameEvents(events);
     });
 
-    // Handle new game events
     socket.on('gameEvent', (event) => {
       setGameEvents(prev => [...prev, event]);
     });
@@ -331,46 +325,41 @@ export default function GameScreen() {
     };
   }, [socket]);
 
-  // Define panel configurations
   const panelConfigs = {
     info: {
-      color: '#4CAF50', // Green
+      color: '#4CAF50',
       title: 'Game Events',
       icon: '📋'
     },
     bank: {
-      color: '#2196F3', // Blue
+      color: '#2196F3',
       title: 'Bank',
       icon: '💰'
     },
     chat: {
-      color: '#9C27B0', // Purple
+      color: '#9C27B0',
       title: 'Chat',
       icon: '💬'
     },
     trade: {
-      color: '#FF9800', // Orange
+      color: '#FF9800',
       title: 'Trade',
       icon: '🔄'
     }
   };
 
-  // Determine metadata for the current tile
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
-  // Reset hasChosenCorner when turn ends or tile changes
   useEffect(() => {
     if (!isMyTurn && tileMeta) {
       setHasChosenCorner(false);
     }
   }, [isMyTurn, tileMeta, setHasChosenCorner]);
 
-  // Add keyboard listener for test rolls
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (!isMyTurn) return;
 
-      // Build up the test roll input
       if (e.key === 'Enter' && testRollInput.startsWith('testroll')) {
         const rollNumber = parseInt(testRollInput.slice(8));
         if (!isNaN(rollNumber) && rollNumber >= 2 && rollNumber <= 12) {
@@ -380,7 +369,7 @@ export default function GameScreen() {
         }
       } else if (e.key === 'Backspace') {
         setTestRollInput(prev => prev.slice(0, -1));
-      } else if (e.key.length === 1) { // Regular character
+      } else if (e.key.length === 1) { 
         setTestRollInput(prev => prev + e.key);
       }
     };
@@ -389,7 +378,6 @@ export default function GameScreen() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isMyTurn, testRollInput, socket]);
 
-  // Show current test roll input if active
   useEffect(() => {
     if (testRollInput.startsWith('testroll')) {
       setTestRollMode(true);
@@ -398,11 +386,9 @@ export default function GameScreen() {
     }
   }, [testRollInput]);
 
-  // Debug logging to trace condition
   useEffect(() => {
     }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput, hasRolled]);
 
-  // Listen for purchase events
   useEffect(() => {
     socket.on('purchaseSuccess', ({ socketId, money, properties }) => {
       
@@ -416,7 +402,6 @@ export default function GameScreen() {
       setError(null);
     });
 
-    // Add player disconnect handler
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
         setError(`${playerName} temporarily disconnected. They can rejoin with the same name.`);
@@ -428,10 +413,8 @@ export default function GameScreen() {
       }
     });
 
-    // Add property update handler
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
       
-      // Update players' properties and money
       setPlayers(prevPlayers => {
         return prevPlayers.map(p => {
           if (p.socketId === playerId) {
@@ -440,24 +423,22 @@ export default function GameScreen() {
               properties: action === 'add'
                 ? [...(p.properties || []), propertyId]
                 : (p.properties || []).filter(id => id !== propertyId),
-              money: newMoney // Update the player's money
+              money: newMoney 
             };
           }
           return p;
         });
       });
 
-      // Update current player if they're involved
       if (player.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
           properties: action === 'add'
             ? [...(prev.properties || []), propertyId]
             : (prev.properties || []).filter(id => id !== propertyId),
-          money: newMoney // Update the current player's money
+          money: newMoney 
         }));
 
-        // Show message when selling property
         if (action === 'remove') {
           const property = tiles.find(t => t.id === propertyId);
           setError(`You sold ${property.name} for $${property.cost}`);
@@ -466,10 +447,8 @@ export default function GameScreen() {
       }
     });
 
-    // Add rent payment handler
     socket.on('rentPaid', ({ payerSocketId, payerMoney, payerLoan, ownerSocketId, ownerMoney, amount, baseRent, multiplier, propertyName }) => {
       
-      // Update players' money and loan synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p => {
           if (p.socketId === payerSocketId) {
@@ -481,7 +460,6 @@ export default function GameScreen() {
           return p;
         });
 
-        // Update current player if they're involved
         if (player.socketId === payerSocketId) {
           setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
         } else if (player.socketId === ownerSocketId) {
@@ -491,7 +469,6 @@ export default function GameScreen() {
         return updatedPlayers;
       });
 
-      // Show rent payment notification with stylized multiplier
       setError(
         <div style={{ 
           display: 'flex', 
@@ -521,16 +498,13 @@ export default function GameScreen() {
       setTimeout(() => setError(null), 5000);
     });
 
-    // Add start bonus handler
     socket.on('startBonus', ({ playerSocketId, newMoney, amount, reason }) => {
       
-      // Update players' money synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
         );
 
-        // Update current player if they got the bonus
         if (player.socketId === playerSocketId) {
           setPlayer(prev => ({ ...prev, money: newMoney }));
           setError(`You received $${amount} for ${reason} Start!`);
@@ -540,17 +514,12 @@ export default function GameScreen() {
         return updatedPlayers;
       });
     });
-
-    // Add road cash handler
     socket.on('roadCashResult', ({ playerSocketId, newMoney, amount }) => {
             
-      // Update players' money synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
         );
-
-        // Update current player if they got the money
         if (player.socketId === playerSocketId) {
           setPlayer(prev => ({ ...prev, money: newMoney }));
           setError(`You won $${amount} on the road!`);
@@ -561,16 +530,13 @@ export default function GameScreen() {
       });
     });
 
-    // Add casino result handler
     socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
       
-      // Update players' money synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerId ? { ...p, money: playerMoney } : p
         );
 
-        // Update current player if they're involved
         if (player.socketId === playerId) {
           setPlayer(prev => ({ ...prev, money: playerMoney }));
         } else {
@@ -582,11 +548,9 @@ export default function GameScreen() {
       });
     });
 
-    // Add trade accepted handler
     socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
       console.log('[GameScreen] tradeAccepted', { fromPlayer, toPlayer });
       
-      // Update players' money and properties synchronously
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p => {
           if (p.socketId === fromPlayer.socketId) {
@@ -598,7 +562,6 @@ export default function GameScreen() {
           return p;
         });
 
-        // Update current player if they were involved
         if (player.socketId === fromPlayer.socketId) {
           setPlayer(prev => ({ ...prev, money: fromPlayer.money, properties: fromPlayer.properties }));
         } else if (player.socketId === toPlayer.socketId) {
@@ -609,7 +572,6 @@ export default function GameScreen() {
       });
     });
 
-    // Add playerMoved event handler
     socket.on('playerMoved', ({ playerId, tileId }) => {
       if (playerId === player?.socketId) {
         setPlayer(prev => ({ ...prev, tileId }));
@@ -617,7 +579,6 @@ export default function GameScreen() {
       setPlayers(prev => 
         prev.map(p => p.socketId === playerId ? { ...p, tileId } : p)
       );
-      // Clear any previous messages when a player moves
       setError(null);
     });
 
@@ -630,29 +591,23 @@ export default function GameScreen() {
       } else {
         setError('Cannot buy this property.');
       }
-      // Clear error message after 5 seconds
       setTimeout(() => setError(null), 5000);
     });
 
-    // Add rent bonus handler
     socket.on('rentBonus', ({ playerSocketId, newMoney, amount, propertyName }) => {
       
-      // Update player's money
       const updated = players.map(p =>
         p.socketId === playerSocketId ? { ...p, money: newMoney } : p
       );
       setPlayers(updated);
 
-      // Update current player if they got the bonus
       if (player.socketId === playerSocketId) {
         setPlayer(prev => ({ ...player, money: newMoney }));
         setError(`You received $${amount} bonus for landing on your property ${propertyName}!`);
-        // Clear bonus message after 5 seconds
         setTimeout(() => setError(null), 5000);
       }
     });
 
-    // Add RPS event listeners
     socket.on('stonePaperScissorsStart', (game) => {
       console.log('[RPS] Game started:', game);
       setRpsGame(game);
@@ -665,7 +620,6 @@ export default function GameScreen() {
       console.log('[RPS] Result received:', result);
       setRpsResult(result);
       
-      // Update players' money in the game state
       const updatedPlayers = players.map(p => {
         if (p.socketId === result.landingPlayer.socketId) {
           return { 
@@ -676,7 +630,6 @@ export default function GameScreen() {
               (result.landingPlayer.loan || 0)
           };
         }
-        // Update winners' money and loans
         const winner = result.winners.find(w => w.socketId === p.socketId);
         if (winner) {
           return { 
@@ -687,7 +640,6 @@ export default function GameScreen() {
               (winner.loan || 0)
           };
         }
-        // Update losers' money and loans
         const loser = result.losers.find(l => l.socketId === p.socketId);
         if (loser) {
           return { 
@@ -702,7 +654,6 @@ export default function GameScreen() {
       });
       setPlayers(updatedPlayers);
 
-      // Update current player's money and loan if they were involved
       if (player.socketId === result.landingPlayer.socketId) {
         setPlayer(prev => ({ 
           ...prev, 
@@ -734,7 +685,6 @@ export default function GameScreen() {
         }
       }
 
-      // Add RPS result to game events with loan information
       result.winners.forEach(winner => {
         result.losers.forEach(loser => {
           const message = `${winner.name} won against ${loser.name} in RPS (${winner.choice} vs ${loser.choice}). ${winner.name} now has $${winner.money.toLocaleString()}${winner.loan ? ` and $${winner.loan.toLocaleString()} loan` : ''} and ${loser.name} has $${loser.money.toLocaleString()}${loser.loan ? ` and $${loser.loan.toLocaleString()} loan` : ''}. ${winner.name} drew $${winner.drawnAmount.toLocaleString()} from ${loser.name}.`;
@@ -742,7 +692,6 @@ export default function GameScreen() {
         });
       });
 
-      // Clear game state after a delay to show the result
       setTimeout(() => {
         setRpsGame(null);
         setRpsResult(null);
@@ -760,7 +709,6 @@ export default function GameScreen() {
     socket.on('stonePaperScissorsTieResolved', (result) => {
       console.log('[RPS] Tie resolved:', result);
 
-      // Update players' money in the game state
       const updatedPlayers = players.map(p => {
         if (p.socketId === result.landingPlayer.socketId) {
           return { ...p, money: result.landingPlayer.money };
@@ -772,22 +720,18 @@ export default function GameScreen() {
       });
       setPlayers(updatedPlayers);
 
-      // Update current player's money if they were involved
       if (player?.socketId === result.landingPlayer.socketId) {
         setPlayer(prev => ({ ...prev, money: result.landingPlayer.money }));
       } else if (player?.socketId === result.tiedPlayer.socketId) {
         setPlayer(prev => ({ ...prev, money: result.tiedPlayer.money }));
       }
 
-      // Add tie resolution to game events
       const message = `${result.landingPlayer.name} and ${result.tiedPlayer.name} tied in RPS. ${result.landingPlayer.name} drew $${result.drawnAmount.toLocaleString()} from ${result.tiedPlayer.name}. ${result.landingPlayer.name} now has $${result.landingPlayer.money.toLocaleString()} and ${result.tiedPlayer.name} has $${result.tiedPlayer.money.toLocaleString()}.`;
       setGameEvents(prev => [...prev, { message }]);
 
-      // If there are remaining ties, keep the game state
       if (result.remainingTies > 0) {
         setRpsTieAmount(null);
       } else {
-        // Clear all RPS state if no more ties to resolve
         setRpsGame(null);
         setRpsResult(null);
         setRpsChoice(null);
@@ -812,7 +756,6 @@ export default function GameScreen() {
     };
   }, [socket, player, players, setPlayer, setPlayers]);
 
-  // Update inCasino state when tile changes
   useEffect(() => {
     const isCasinoTile = tileMeta?.id === 16;
     setInCasino(isCasinoTile);
@@ -821,7 +764,6 @@ export default function GameScreen() {
     }
   }, [tileMeta]);
 
-  // Reset casino states when turn ends
   useEffect(() => {
     if (!isMyTurn) {
       setInCasino(false);
@@ -954,11 +896,9 @@ export default function GameScreen() {
                     gap: '15px'
                   }}>
                     {gameEvents.map((event, index) => {
-                      // Process the message to color-code money amounts
                       const message = event.message.replace(
                         /\$(\d+,?\d*)/g,
                         (match, amount) => {
-                          // Determine if this is a gain or loss
                           const isGain = event.message.includes('received') ||
                                          event.message.includes('won') ||
                                          event.message.includes('bonus') ||
@@ -1050,11 +990,10 @@ export default function GameScreen() {
                       {/* Borrow Button with border effect */}
                       <button
                         onClick={async (e) => {
-                          // Add border effect on click
                           e.target.style.border = '2px inset rgb(80, 80, 170)';
                           if (socket) {
                             socket.emit('borrowMoney', { amount: borrowAmount });
-                            setBorrowAmount(500); // Reset to default
+                            setBorrowAmount(500);
                           }
                           setTimeout(() => {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
@@ -1172,11 +1111,10 @@ export default function GameScreen() {
                       {/* Pay Off Button with border effect */}
                       <button
                         onClick={async (e) => {
-                          // Add border effect on click
                           e.target.style.border = '2px inset rgb(80, 80, 170)';
                           if (socket && player?.loan && player?.money >= payoffAmount) {
                             socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
-                            setPayoffAmount(1000); // Reset to default
+                            setPayoffAmount(1000);
                           }
                           setTimeout(() => {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
@@ -1216,7 +1154,7 @@ export default function GameScreen() {
                           if (socket && player?.loan && player?.money) {
                             const payAmount = player.money >= player.loan ? player.loan : player.money;
                             socket.emit('payoffLoan', { amount: payAmount });
-                            setPayoffAmount(1000); // Reset to default
+                            setPayoffAmount(1000);
                           }
                           setTimeout(() => {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
@@ -1455,7 +1393,7 @@ export default function GameScreen() {
           style={{
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between', // changed from center to space-between
+            justifyContent: 'space-between',
             alignItems: 'stretch',
             gap: '0',
             margin: '0 auto',
@@ -1615,7 +1553,6 @@ export default function GameScreen() {
             }}
           >
             {(() => {
-              // Show RPS game if active
               if (rpsGame) {
                 return (
                   <div style={{
@@ -1625,7 +1562,6 @@ export default function GameScreen() {
                     gap: '15px'
                   }}>
                     {rpsResult ? (
-                      // Show result for multiple players
                       <div style={{
                         textAlign: 'center',
                         color: '#fff',
@@ -1646,7 +1582,6 @@ export default function GameScreen() {
                         ))}
                       </div>
                     ) : (
-                      // Show RPS buttons for all involved players
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -1711,7 +1646,6 @@ export default function GameScreen() {
                 );
               }
 
-              // Show "Your Turn" for current player before landing
               if (isMyTurn && !movementDone) {
                 return (
                   <div style={{
@@ -1729,7 +1663,6 @@ export default function GameScreen() {
                 );
               }
 
-              // Buy Property
               if (isMyTurn && tileMeta?.type === 'property' && 
                   !players.some(p => p.properties.includes(tileMeta?.id))) {
                 return (
@@ -1795,7 +1728,6 @@ export default function GameScreen() {
                 );
               }
 
-              // Casino
               if (inCasino && isMyTurn) {
                 return (
                   <CasinoBetting 
@@ -1809,7 +1741,6 @@ export default function GameScreen() {
                 );
               }
 
-              // Corner Choice
               if (isMyTurn && tileMeta?.name?.toLowerCase().includes('choose corner')) {
                 return (
                   <div style={{
@@ -1987,9 +1918,7 @@ export default function GameScreen() {
                 );
               }
 
-              // Show error message if any
               if (error) {
-                // Show green for bonus, Start!, or road cash win messages, else tomato
                 const isGreen = typeof error === 'string' &&
                   (
                     error.includes('bonus') ||
@@ -2019,7 +1948,6 @@ export default function GameScreen() {
                       gap: '15px'
                     }}>
                       {rpsResult ? (
-                        // Show result for multiple players
                         <div style={{
                           textAlign: 'center',
                           color: '#fff',
@@ -2047,7 +1975,7 @@ export default function GameScreen() {
             })()}
           </div>
         </div>
-        
+
         {/* Responsive styles for mobile */}
         <style>{`
           @media (max-width: 900px) {

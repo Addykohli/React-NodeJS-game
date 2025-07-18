@@ -86,7 +86,6 @@ const RoadCash = ({ isMyTurn, socket }) => {
       {cardOrder.map((card, index) => {
         const isSelected = index === selectedIndex;
         
-        // Determine which image to show
         let currentImage = cashBehind;
         if (isSelected) {
           

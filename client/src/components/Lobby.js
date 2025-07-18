@@ -8,6 +8,11 @@ const allPieces = [
   'piece5.png', 'piece6.png', 'piece7.png', 'piece8.png'
 ];
 
+const pieceImages = {};
+for (let i = 1; i <= 8; i++) {
+  pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
+}
+
 const Lobby = () => {
   const {
     player,
@@ -376,7 +381,7 @@ const Lobby = () => {
                 <span>{p.name}</span>
                 {p.piece && (
                   <img
-                    src={`/pieces/${p.piece}`}
+                    src={pieceImages[p.piece]}
                     alt=""
                     width={36}
                     height={36}

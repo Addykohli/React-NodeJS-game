@@ -53,7 +53,7 @@ const TradePanel = () => {
 
     socket.on('activeTradeOffers', (offers) => {
       setIncomingOffers(offers.filter(offer =>
-        offer.to === player.socketId // Only show offers for this player
+        offer.to === player.socketId 
       ));
     });
 
@@ -119,12 +119,10 @@ const TradePanel = () => {
         money: askMoney,
         properties: selectedAskProperties
       },
-      id: Date.now() // Simple unique ID
+      id: Date.now()
     };
 
     socket.emit('tradeRequest', tradeRequest);
-
-    // Reset form
     setOfferMoney(0);
     setSelectedOfferProperties([]);
     setAskMoney(0);

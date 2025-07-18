@@ -2,6 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
+const diceImages = {};
+for (let i = 1; i <= 6; i++) {
+  diceImages[i] = require(`../assets/dice/dice${i}.png`);
+}
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket } = useContext(GameContext);
@@ -35,7 +39,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     const onBranchChoices = ({ options }) => setBranchOptions(options);
     const onMovementDone = () => setDone(true);
 
-    // Add casino result handler
     const onCasinoResult = ({ playerId }) => {
       if (playerId === player?.socketId) {
         setCasinoPlayed(true);
@@ -53,12 +56,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     });
 
     socket.on('stonePaperScissorsResult', (result) => {
-      // Clear RPS game state regardless of who wins
       setRpsGame(null);
     });
 
     socket.on('stonePaperScissorsTieResolved', () => {
-      setRpsGame(null); // <-- This is correct, but only triggers if this event is emitted!
+      setRpsGame(null);
     });
 
     return () => {
@@ -163,13 +165,13 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
           }}
         >
           <img
-            src={`/dice/dice${die1}.png`}
+            src={diceImages[die1]}
             alt={`Die ${die1}`}
             width={100}
             height={100}
           />
           <img
-            src={`/dice/dice${die2}.png`}
+            src={diceImages[die2]}
             alt={`Die ${die2}`}
             width={100}
             height={100}
