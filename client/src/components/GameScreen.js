@@ -1357,7 +1357,6 @@ export default function GameScreen() {
           maxHeight: '40vh',
         }}
       >
-        {/* Quit Game Button - Desktop only */}
         <div
           className="quit-game-button"
           style={{
@@ -1409,7 +1408,7 @@ export default function GameScreen() {
             width: '100%',
             maxWidth: '1200px',
             flexWrap: 'nowrap',
-            height: '240px',
+            height: '260px',
           }}
         >
           {/* Dice Roller Section */}
