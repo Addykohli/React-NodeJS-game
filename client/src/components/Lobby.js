@@ -46,12 +46,10 @@ const Lobby = () => {
         setPlayer(me);
         if (me.piece) setSelectedPiece(me.piece);
       }
-      console.log('[Lobby.js] lobbyUpdate', updatedPlayers);
     };
 
     const handleStart = () => {
       setGameState('playing');
-      console.log('[Lobby.js] gameStart');
     };
 
     const handleJoinError = ({ message }) => {
@@ -83,7 +81,6 @@ const Lobby = () => {
 
     setHasJoined(true);
     socket.emit('joinLobby', { name });
-    console.log('[Lobby.js] joinLobby →', name);
   };
 
   const choosePiece = piece => {
@@ -400,7 +397,6 @@ const Lobby = () => {
         </div>
       </div>
 
-      {/* Add responsive styles */}
       <style>{`
         @media (max-width: 900px) {
           .lobby-container {

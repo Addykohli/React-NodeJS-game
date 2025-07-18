@@ -1158,7 +1158,6 @@ io.on('connection', socket => {
     }
   });
 
-
   socket.on('updateProperty', async ({ playerId, propertyId, action, refundAmount }) => {
     console.log('[updateProperty]', { playerId, propertyId, action, refundAmount });
     

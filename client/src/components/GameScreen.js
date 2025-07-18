@@ -557,9 +557,7 @@ export default function GameScreen() {
       });
     });
 
-    socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
-      console.log('[GameScreen] tradeAccepted', { fromPlayer, toPlayer });
-      
+    socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {      
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p => {
           if (p.socketId === fromPlayer.socketId) {
@@ -592,7 +590,6 @@ export default function GameScreen() {
     });
 
     socket.on('purchaseFailed', ({ reason }) => {
-      console.log('[GameScreen] purchaseFailed', reason);
       if (reason === 'insufficientFunds') {
         setError("You don't have enough money.");
       } else if (reason === 'alreadyOwned') {
@@ -618,7 +615,6 @@ export default function GameScreen() {
     });
 
     socket.on('stonePaperScissorsStart', (game) => {
-      console.log('[RPS] Game started:', game);
       setRpsGame(game);
       setRpsChoice(null);
       setRpsResult(null);
@@ -626,7 +622,6 @@ export default function GameScreen() {
     });
 
     socket.on('stonePaperScissorsResult', (result) => {
-      console.log('[RPS] Result received:', result);
       setRpsResult(result);
       
       const updatedPlayers = players.map(p => {
@@ -709,15 +704,12 @@ export default function GameScreen() {
     });
 
     socket.on('stonePaperScissorsTie', ({ landingPlayerId, tiedPlayerId, tiedPlayerName, maxAmount, gameId }) => {
-      console.log('[RPS] Tie resolution:', { landingPlayerId, tiedPlayerId, tiedPlayerName, maxAmount, gameId });
       if (player?.socketId === landingPlayerId) {
         setRpsTieAmount({ maxAmount, gameId, tiedPlayerId, tiedPlayerName });
       }
     });
 
     socket.on('stonePaperScissorsTieResolved', (result) => {
-      console.log('[RPS] Tie resolved:', result);
-
       const updatedPlayers = players.map(p => {
         if (p.socketId === result.landingPlayer.socketId) {
           return { ...p, money: result.landingPlayer.money };
@@ -799,7 +791,7 @@ export default function GameScreen() {
       marginTop: 0,
       paddingTop: 0
     }}>
-      {/* Side Panel Buttons and Panels - Fixed to right side */}
+      {/* Side Panel Buttons and Panels */}
       {sidePanelVisible && (
         <div style={{
           position: 'fixed',
@@ -853,7 +845,7 @@ export default function GameScreen() {
                     {config.title}
                   </div>
                 </div>
-                {/* Add separator line after each button except the last one */}
+
                 {index < Object.entries(panelConfigs).length - 1 && (
                   <div style={{
                     height: '2px',
@@ -996,7 +988,7 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      {/* Borrow Button with border effect */}
+
                       <button
                         onClick={async (e) => {
                           e.target.style.border = '2px inset rgb(80, 80, 170)';
@@ -1023,7 +1015,6 @@ export default function GameScreen() {
                         Borrow
                       </button>
 
-                      {/* Borrow exact amount for property if needed */}
                       {isMyTurn && tileMeta?.type === 'property' &&
                         !players.some(p => (p.properties || []).includes(tileMeta?.id)) &&
                         tileMeta.cost > (player?.money || 0) && (
@@ -1117,14 +1108,13 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      {/* Pay Off Button with border effect */}
-                      <button
-                        onClick={async (e) => {
-                          e.target.style.border = '2px inset rgb(80, 80, 170)';
-                          if (socket && player?.loan && player?.money >= payoffAmount) {
-                            socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
-                            setPayoffAmount(1000);
-                          }
+                        <button
+                          onClick={async (e) => {
+                            e.target.style.border = '2px inset rgb(80, 80, 170)';
+                            if (socket && player?.loan && player?.money >= payoffAmount) {
+                              socket.emit('payoffLoan', { amount: Math.min(payoffAmount, player.loan) });
+                              setPayoffAmount(1000);
+                            }
                           setTimeout(() => {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);

@@ -44,7 +44,6 @@ socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
 });
 
-
 socket.on('reconnect', (attemptNumber) => {
     console.log('Reconnected after', attemptNumber, 'attempts');
 });

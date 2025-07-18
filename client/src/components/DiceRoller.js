@@ -16,8 +16,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
 
-
-  
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
   const isOnCasino = tileMeta?.id === 16;
@@ -97,7 +95,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setDone(false);
     setBranchOptions(null);
   };
-
 
   return (
     <div

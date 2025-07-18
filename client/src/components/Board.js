@@ -6,12 +6,10 @@ import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
-
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
-
 
 const REFERENCE_HEIGHT = 165;
 
@@ -20,8 +18,6 @@ const Board = () => {
   const [pieceScales, setPieceScales] = useState({});
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
-
-
 
   useEffect(() => {
     const img = new window.Image();

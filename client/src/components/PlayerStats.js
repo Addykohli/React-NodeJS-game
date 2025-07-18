@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
-
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
@@ -14,7 +13,6 @@ const PlayerStats = () => {
   const [diceRolls, setDiceRolls] = useState({});
   const [pieceScales, setPieceScales] = useState({});
 
-  
   useEffect(() => {
     if (!socket) return;
 
@@ -209,7 +207,7 @@ const PlayerStats = () => {
                 fontSize: '1.3em',
                 marginLeft: '70px'
               }}>
-                {/* Insert a line break after 8 characters if name is longer */}
+
                 {p.name && p.name.length > 8
                   ? (
                       <>

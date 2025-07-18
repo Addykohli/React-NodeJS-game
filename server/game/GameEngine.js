@@ -38,7 +38,6 @@ class GameEngine {
     return { die1, die2, total };
   }
 
-
   moveOneStep(socketId, initialTotal) {
     const player = this.getPlayer(socketId);
     if (!player) return null;

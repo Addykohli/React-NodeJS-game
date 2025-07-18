@@ -149,7 +149,6 @@ const PropertyDisplayLeft = ({ player, position }) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-
   const cardWidth = 196; 
   const cardHeight = 147; 
   const cardOverlap = 39; 

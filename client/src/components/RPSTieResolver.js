@@ -3,10 +3,7 @@ import cash500 from '../assets/cash500.png';
 import cash1000 from '../assets/cash1000.png';
 import cash5000 from '../assets/cash5000.png';
 import cash10000 from '../assets/cash10000.png';
-import cashBehind from '../assets/cashBehind.png';
-
-
-const cashAmounts = [
+import cashBehind from '../assets/cashBehind.png';const cashAmounts = [
   { amount: 500, image: cash500 },
   { amount: 1000, image: cash1000 },
   { amount: 5000, image: cash5000 },

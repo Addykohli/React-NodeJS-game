@@ -54,7 +54,6 @@ if (typeof document !== 'undefined' && !document.getElementById('chat-send-style
   document.head.appendChild(style);
 }
 
-
 const Chat = () => {
   const { socket, player, chatMessages } = useContext(GameContext);
   const [inputMessage, setInputMessage] = useState('');
@@ -68,8 +67,6 @@ const Chat = () => {
     scrollToBottom();
   }, [chatMessages]);
 
-
-
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputMessage.trim() || !socket || !player) return;
@@ -80,7 +77,6 @@ const Chat = () => {
     });
     setInputMessage('');
   };
-
 
   return (
     <div style={{
