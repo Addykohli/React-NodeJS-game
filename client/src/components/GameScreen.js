@@ -51,7 +51,16 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   }, [socket, player.socketId, onCasinoPlayed]);
 
   
-  if (!isActive) {
+  const diceImages = {
+  1: require('../assets/dice/dice1.png'),
+  2: require('../assets/dice/dice2.png'),
+  3: require('../assets/dice/dice3.png'),
+  4: require('../assets/dice/dice4.png'),
+  5: require('../assets/dice/dice5.png'),
+  6: require('../assets/dice/dice6.png'),
+};
+
+if (!isActive) {
     if (showResult && diceResult) {
       return (
         <div style={{
@@ -69,13 +78,13 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
             justifyContent: 'center'
           }}>
             <img 
-              src={`/dice/dice${diceResult[0]}.png`} 
+              src={diceImages[diceResult[0]]}
               alt={`Die ${diceResult[0]}`} 
               width={60}
               height={60}
             />
             <img 
-              src={`/dice/dice${diceResult[1]}.png`} 
+              src={diceImages[diceResult[1]]}
               alt={`Die ${diceResult[1]}`} 
               width={60}
               height={60}
