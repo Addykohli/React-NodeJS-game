@@ -19,7 +19,12 @@ const RoadCash = ({ isMyTurn, socket }) => {
   const [showAll, setShowAll] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
-  const [cardOrder] = useState(cashAmounts);
+  const [cardOrder] = useState(() => [
+    { amount: 500, image: cash500 },
+    { amount: 1000, image: cash1000 },
+    { amount: 5000, image: cash5000 },
+    { amount: 10000, image: cash10000 }
+  ].sort(() => Math.random() - 0.5));
   const [hasEntered, setHasEntered] = useState(false);
   const [cashDimensions, setCashDimensions] = useState({ width: 0, height: 0 });
 

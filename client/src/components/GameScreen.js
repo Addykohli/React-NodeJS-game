@@ -1500,6 +1500,7 @@ export default function GameScreen() {
             <div
               style={{
                 fontSize: '1.8em',
+                fontWeight: 'bold',
                 color: '#4CAF50',
                 textAlign: 'center',
                 wordBreak: 'break-word',
@@ -1975,7 +1976,7 @@ export default function GameScreen() {
                             </div>
                           ))}
                         </div>
-                      ) : null /* Remove RPSTieResolver from here */}
+                      ) : null}
                     </div>
                   )}
                 </div>
@@ -1984,7 +1985,6 @@ export default function GameScreen() {
           </div>
         </div>
 
-        {/* Responsive styles for mobile */}
         <style>{`
           @media (max-width: 900px) {
             .footer-bar {
