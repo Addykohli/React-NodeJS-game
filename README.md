@@ -40,7 +40,6 @@ This project is a web-based multiplayer game inspired by an old board game. All 
 - **Database:** PostgreSQL (via Sequelize ORM)
 - **Cache/Health:** Redis
 - **Job Queue:** Bull
-- **Testing:** @testing-library/react (front-end)
 - **Deployment:** Render.com
 
 ---
@@ -81,3 +80,4 @@ This project is a web-based multiplayer game inspired by an old board game. All 
 
 > Users do not need to install anything to play.  
 > One player per browser is possible.
+ 
