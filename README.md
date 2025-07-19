@@ -64,8 +64,6 @@ This project is a web-based multiplayer game inspired by an old board game. All 
 
 ## Screenshots
 
-> Add screenshots to a `screenshots/` folder and update these links.
-
 **Lobby Screen:**  
 ![Lobby Screen](screenshots/lobby.png)
 
@@ -82,4 +80,4 @@ This project is a web-based multiplayer game inspired by an old board game. All 
 ## Development Setup
 
 > Users do not need to install anything to play.  
-
+> One player per browser is possible.
