@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
+import CasinoDice from './CasinoDice';
 
 const diceImages = {};
 for (let i = 1; i <= 6; i++) {
@@ -15,6 +16,9 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
+  const [showDiceRoll, setShowDiceRoll] = useState(false);
+  const [diceValues, setDiceValues] = useState(null);
+  const diceRollRef = useRef(null);
 
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
@@ -28,6 +32,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
+        setDiceValues([die1, die2]);
+        setShowDiceRoll(true);
         setDie1(die1);
         setDie2(die2);
         setDone(false);
@@ -83,9 +89,15 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   const handleRoll = () => {
     if (!testRollMode) {
+      // Show loading state for dice roll
+      setShowDiceRoll(true);
       socket.emit('rollDice', { testRoll: null });
     }
     setBranchOptions(null);
+  };
+
+  const handleDiceAnimationComplete = () => {
+    setShowDiceRoll(false);
   };
 
   const handleDone = () => {
@@ -99,18 +111,41 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   return (
     <div
       style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
+        gap: '1rem',
+        padding: '1rem',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        marginTop: '1rem',
+        zIndex: 100
       }}
     >
+      {/* 3D Dice Animation */}
+      {showDiceRoll && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          zIndex: 1000,
+          pointerEvents: 'none'
+        }}>
+          <CasinoDice 
+            ref={diceRollRef}
+            diceValues={diceValues}
+            onAnimationComplete={handleDiceAnimationComplete}
+          />
+        </div>
+      )}
       {/* Roll button */}
       {!die1 && !hasRolled && !branchOptions && (
         <button
@@ -161,18 +196,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
             margin: '1rem 0',
           }}
         >
-          <img
-            src={diceImages[die1]}
-            alt={`Die ${die1}`}
-            width={100}
-            height={100}
-          />
-          <img
-            src={diceImages[die2]}
-            alt={`Die ${die2}`}
-            width={100}
-            height={100}
-          />
+          {(die1 && die2) && (
+            <div style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
+              <p>Dice roll result: {die1} and {die2}</p>
+            </div>
+          )}
         </div>
       )}
 
