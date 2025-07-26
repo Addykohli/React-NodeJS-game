@@ -8,7 +8,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
   const [showDice, setShowDice] = useState(false);
-  const [diceValues, setDiceValues] = useState({ die1: null, die2: null });
+  const [diceValues, setDiceValues] = useState({ die1: 1, die2: 1 });
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
@@ -24,13 +24,19 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   }, [hasCasinoPlayed]);
 
   useEffect(() => {
-    const onDiceResult = ({ playerId, die1, die2 }) => {
+    const onDiceResult = ({ playerId, die1: newDie1, die2: newDie2 }) => {
       if (playerId === player?.socketId) {
-        setDiceValues({ die1, die2 });
-        setShowDice(true);
-        setDie1(die1);
-        setDie2(die2);
-        setDone(false);
+        // First hide any existing dice
+        setShowDice(false);
+        
+        // After a small delay, show the new dice with the new values
+        setTimeout(() => {
+          setDiceValues({ die1: newDie1, die2: newDie2 });
+          setDie1(newDie1);
+          setDie2(newDie2);
+          setDone(false);
+          setShowDice(true);
+        }, 50);
       }
     };
 
@@ -155,21 +161,19 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       {showDice && (
         <>
           <Dice3D 
+            key="left-die"
             value={diceValues.die1} 
             position="left" 
             onAnimationEnd={() => {
-              // Only hide after both dice have finished animating
-              if (!showDice) return;
-              setShowDice(false);
+              // The dice will handle their own hiding
             }}
           />
           <Dice3D 
+            key="right-die"
             value={diceValues.die2} 
             position="right"
             onAnimationEnd={() => {
-              // Only hide after both dice have finished animating
-              if (!showDice) return;
-              setShowDice(false);
+              // The dice will handle their own hiding
             }}
           />
         </>

@@ -1,47 +1,53 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircle } from '@fortawesome/free-solid-svg-icons';
 import './Dice3D.css';
 
+const angleArray = [
+  [0, 0, 0],
+  [-310, -362, -38],
+  [-400, -320, -2],
+  [135, -217, -88],
+  [-224, -317, 5],
+  [-47, -219, -81],
+  [-133, -360, -53]
+];
+
 const Dice3D = ({ value, position = 'left', onAnimationEnd }) => {
   const cubeRef = useRef(null);
-  const angleArray = [
-    [0, 0, 0],
-    [-310, -362, -38],
-    [-400, -320, -2],
-    [135, -217, -88],
-    [-224, -317, 5],
-    [-47, -219, -81],
-    [-133, -360, -53]
-  ];
+  const animationEndHandler = useCallback(() => {
+    if (onAnimationEnd) onAnimationEnd();
+  }, [onAnimationEnd]);
 
   useEffect(() => {
-    if (cubeRef.current && value) {
-      // Set initial position above the viewport
-      cubeRef.current.style.top = '-200px';
-      cubeRef.current.style.opacity = '1';
-      
-      // Trigger the drop animation
-      setTimeout(() => {
-        if (cubeRef.current) {
-          cubeRef.current.style.top = '50%';
-          cubeRef.current.style.transform = `translateY(-50%) rotateX(${angleArray[value][0]}deg) rotateY(${angleArray[value][1]}deg) rotateZ(${angleArray[value][2]}deg)`;
-          cubeRef.current.style.transition = 'top 1s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1s ease-out';
-        }
-      }, 100);
+    if (!cubeRef.current || !value) return;
+    
+    // Set initial position above the viewport
+    const cube = cubeRef.current;
+    cube.style.top = '-200px';
+    cube.style.opacity = '1';
+    
+    // Trigger the drop animation
+    const dropTimer = setTimeout(() => {
+      if (!cube) return;
+      cube.style.top = '50%';
+      cube.style.transform = `translateY(-50%) rotateX(${angleArray[value][0]}deg) rotateY(${angleArray[value][1]}deg) rotateZ(${angleArray[value][2]}deg)`;
+      cube.style.transition = 'top 1s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1s ease-out';
+    }, 100);
 
-      // Hide after 3 seconds
-      const timer = setTimeout(() => {
-        if (cubeRef.current) {
-          cubeRef.current.style.opacity = '0';
-          cubeRef.current.style.transition = 'opacity 0.5s ease-out';
-          if (onAnimationEnd) onAnimationEnd();
-        }
-      }, 3000);
+    // Hide after 3 seconds
+    const hideTimer = setTimeout(() => {
+      if (!cube) return;
+      cube.style.opacity = '0';
+      cube.style.transition = 'opacity 0.5s ease-out';
+      animationEndHandler();
+    }, 3000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [value]);
+    return () => {
+      clearTimeout(dropTimer);
+      clearTimeout(hideTimer);
+    };
+  }, [value, animationEndHandler]);
 
   return (
     <div 
