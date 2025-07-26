@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, forwardRef } from 'react';
 import './CasinoDice.css';
 
-const CasinoDice = ({ diceValues, onAnimationComplete }) => {
+const CasinoDice = forwardRef(({ diceValues, onAnimationComplete }, ref) => {
   const dice1Ref = useRef(null);
   const dice2Ref = useRef(null);
   const containerRef = useRef(null);
@@ -37,27 +37,77 @@ const CasinoDice = ({ diceValues, onAnimationComplete }) => {
   if (!diceValues) return null;
 
   return (
-    <div className="dice-container" ref={containerRef}>
+    <div className="dice-container" ref={ref || containerRef}>
       <div className="dice-wrapper">
         <div className="dice" ref={dice1Ref}>
-          <div className="side front">1</div>
-          <div className="side back">6</div>
-          <div className="side right">4</div>
-          <div className="side left">3</div>
-          <div className="side top">5</div>
-          <div className="side bottom">2</div>
+          <div className="side front"><div className="dot"></div></div>
+          <div className="side back">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side right">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side left">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side top">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side bottom">
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
         </div>
         <div className="dice" ref={dice2Ref}>
-          <div className="side front">1</div>
-          <div className="side back">6</div>
-          <div className="side right">4</div>
-          <div className="side left">3</div>
-          <div className="side top">5</div>
-          <div className="side bottom">2</div>
+          <div className="side front"><div className="dot"></div></div>
+          <div className="side back">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side right">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side left">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side top">
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
+          <div className="side bottom">
+            <div className="dot"></div>
+            <div className="dot"></div>
+          </div>
         </div>
       </div>
     </div>
   );
-};
+});
 
 export default CasinoDice;
