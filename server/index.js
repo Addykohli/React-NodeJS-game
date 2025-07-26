@@ -839,22 +839,6 @@ io.on('connection', socket => {
   socket.on('chatMessage', (message) => {
     io.emit('chatMessage', message);
   });
-
-  socket.on('casinoRoll', async ({ betAmount, betType }) => {
-    
-    const player = engine.getPlayer(socket.id);
-    if (!player) return;
-    const transaction = await sequelize.transaction();
-
-    try {
-      const die1 = Math.floor(Math.random() * 6) + 1;
-      const die2 = Math.floor(Math.random() * 6) + 1;
-      const total = die1 + die2;
-      let won = false;
-      if (betType === 'above' && total > 7) won = true;
-      else if (betType === 'below' && total < 7) won = true;
-      else if (betType === '7' && total === 7) won = true;
-
       const multiplier = betType === '7' ? 3 : 2;
       const moneyChange = won ? betAmount * multiplier : -betAmount;
       player.money += moneyChange;

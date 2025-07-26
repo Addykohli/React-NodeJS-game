@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<!--Fontawesome-->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="dice.css">
+	<title>Dice</title>
+</head>
+<body>
+	<!-- FIRST WE MAKE SIMPLE CUBE -->
+	<div class="container">
+		<div class="cube" id="cube">
+			<div class="front">
+				<span class="fas fa-circle"></span>
+			</div>
+			<div class="back">
+					<!-- i use pre tag to align dots -->
+					<pre class="firstPre"><span class="fas fa-circle"></span>    <span class="fas fa-circle"></span>    <span class="fas fa-circle"></span></pre><br>
+					<pre class="secondPre"><span class="fas fa-circle"></span>    <span class="fas fa-circle"></span>    <span class="fas fa-circle"></span></pre>
+			</div>
+			<div class="top">
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+			</div>
+			<div class="left">
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+
+			</div>
+			<div class="right">
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+
+			</div>
+			<div class="bottom">
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+				<span class="fas fa-circle"></span>
+
+			</div>
+		</div>
+	</div>
+	<!-- JS CODE -->
+	<script type="text/javascript">
+		let cube = document.getElementById('cube');
+
+		angleArray = [[0,0,0],[-310,-362,-38],[-400,-320,-2],[135,-217,-88],[-224,-317,5],[-47,-219,-81],[-133,-360,-53]];
+		//this array of degree that show the deffrent number 1 2 3 4 5 6 on cube ie
+		cube.addEventListener('click',function(e){
+
+			/*ANIMATION */
+			cube.style.animation = 'animate 1.4s linear';
+
+			const randomAngle = Math.floor(Math.random() * 6) + 1;
+			//console.log(randomAngle);
+			cube.style.transform = 'rotateX('+angleArray[randomAngle][0]+'deg) rotateY('+angleArray[randomAngle][1]+'deg) rotateZ('+angleArray[randomAngle][2]+'deg)';
+			cube.style.transition = '1s linear'
+
+			cube.addEventListener('animationend',function(e){
+				cube.style.animation = '';
+			});
+		});
+	</script>
+</body>
+</html>

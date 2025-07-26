@@ -9,6 +9,7 @@ import DiceRoller from './DiceRoller';
 import PlayerStats from './PlayerStats';
 import RoadCash from './RoadCash';
 import RPSTieResolver from './RPSTieResolver';
+import DiceRoll from './DiceRoll';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 import Chat from './Chat';
@@ -20,9 +21,45 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
   const [isActive, setIsActive] = useState(true);
+  const [showDice, setShowDice] = useState(false);
+  const [diceValues, setDiceValues] = useState([1, 1]);
+  const [isRolling, setIsRolling] = useState(false);
+
+  const rollDice = () => {
+    if (isRolling) return;
+    
+    setIsRolling(true);
+    
+    // Generate random dice values between 1 and 6
+    const newDiceValues = [
+      Math.floor(Math.random() * 6) + 1,
+      Math.floor(Math.random() * 6) + 1
+    ];
+    setDiceValues(newDiceValues);
+    setShowDice(true);
+    
+    // Emit the roll event to the server
+    if (selectedBet && betAmount >= 1000 && betAmount <= currentMoney) {
+      socket.emit('casinoRoll', { 
+        betAmount, 
+        betType: selectedBet,
+        diceValues: newDiceValues
+      });
+    }
+    
+    // Auto-reset rolling state after animation completes
+    setTimeout(() => {
+      setIsRolling(false);
+    }, 3500); // Slightly longer than the animation duration
+  };
+
+  const handleDiceAnimationComplete = () => {
+    setShowDice(false);
+    setIsRolling(false);
+  };
 
   const handleAmountChange = (delta) => {
-    const newAmount = Math.max(1000, Math.min(currentMoney, betAmount + delta));
+    const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
     setBetAmount(newAmount);
   };
 
@@ -32,7 +69,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
 
   const handleRoll = () => {
     if (selectedBet && betAmount >= 1000 && betAmount <= currentMoney) {
-      socket.emit('casinoRoll', { betAmount, betType: selectedBet });
+      rollDice();
     }
   };
 
@@ -40,15 +77,29 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
     const handleCasinoResult = ({ playerId, dice, amount, won, playerMoney }) => {
       if (playerId === player.socketId) {
         setDiceResult(dice);
-        setShowResult({ won, amount });
-        setIsActive(false);
-        onCasinoPlayed();
+        setCurrentMoney(playerMoney);
+        setShowResult({ amount, won });
+        setTimeout(() => setShowResult(null), 3000);
       }
     };
 
+    const handleDiceRolled = ({ playerId, dice }) => {
+      setDiceValues(dice);
+      setShowDice(true);
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        setShowDice(false);
+      }, 3000);
+    };
+
     socket.on('casinoResult', handleCasinoResult);
-    return () => socket.off('casinoResult', handleCasinoResult);
-  }, [socket, player.socketId, onCasinoPlayed]);
+    socket.on('diceRolled', handleDiceRolled);
+    
+    return () => {
+      socket.off('casinoResult', handleCasinoResult);
+      socket.off('diceRolled', handleDiceRolled);
+    };
+  }, [player.socketId]);
 
   
   const diceImages = {
@@ -994,7 +1045,6 @@ export default function GameScreen() {
                           e.target.style.border = '2px inset rgb(80, 80, 170)';
                           if (socket) {
                             socket.emit('borrowMoney', { amount: borrowAmount });
-                            setBorrowAmount(500);
                           }
                           setTimeout(() => {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
@@ -1025,7 +1075,6 @@ export default function GameScreen() {
                              if (socket) {
                                const amountNeeded = tileMeta.cost - (player?.money || 0);
                                socket.emit('borrowMoney', { amount: amountNeeded });
-                               setBorrowAmount(500);
                              }
                              setTimeout(() => {
                                e.target.style.border = '2px outset rgb(80, 80, 170)';
