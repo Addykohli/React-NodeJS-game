@@ -1,0 +1,154 @@
+.dice-container {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(135deg) rotateY(-217deg) rotateZ(-88deg);
+  transition: transform 1s ease-out;
+}
+
+.face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  border: 2px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+  padding: 10px;
+  backface-visibility: hidden;
+}
+
+.face svg {
+  color: white;
+  font-size: 12px;
+}
+
+.front {
+  transform: translateZ(50px);
+}
+
+.back {
+  transform: translateZ(-50px) rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.right {
+  transform: rotateY(-270deg) translateX(50px);
+  transform-origin: top right;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  padding: 5px;
+}
+
+.left {
+  transform: rotateY(270deg) translateX(-50px);
+  transform-origin: center left;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  padding: 5px;
+}
+
+.top {
+  transform: rotateX(-270deg) translateY(-50px);
+  transform-origin: top center;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.bottom {
+  transform: rotateX(270deg) translateY(50px);
+  transform-origin: bottom center;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+/* Dice face dot positioning */
+.front svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.back .firstPre,
+.back .secondPre {
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
+}
+
+/* Dice face 2 */
+.top svg:first-child {
+  margin-right: auto;
+}
+
+.top svg:last-child {
+  margin-left: auto;
+}
+
+/* Dice face 3 */
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.left svg:first-child {
+  align-self: flex-start;
+}
+
+.left svg:nth-child(2) {
+  align-self: center;
+}
+
+.left svg:last-child {
+  align-self: flex-end;
+}
+
+/* Dice face 4 */
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* Dice face 5 */
+.right {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  padding: 5px;
+}
+
+.right svg:nth-child(1) { grid-area: 1 / 1; }
+.right svg:nth-child(2) { grid-area: 1 / 3; }
+.right svg:nth-child(3) { grid-area: 2 / 2; }
+.right svg:nth-child(4) { grid-area: 3 / 1; }
+.right svg:nth-child(5) { grid-area: 3 / 3; }

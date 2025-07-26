@@ -9,7 +9,6 @@ import DiceRoller from './DiceRoller';
 import PlayerStats from './PlayerStats';
 import RoadCash from './RoadCash';
 import RPSTieResolver from './RPSTieResolver';
-import CasinoDice from './CasinoDice';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 import Chat from './Chat';
@@ -21,8 +20,6 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
   const [isActive, setIsActive] = useState(true);
-  const [showDice, setShowDice] = useState(false);
-  const [currentDice, setCurrentDice] = useState(null);
 
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
@@ -41,19 +38,13 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
 
   useEffect(() => {
     const handleCasinoResult = ({ playerId, dice, amount, won, playerMoney }) => {
-    if (playerId === player.socketId) {
-      setCurrentDice(dice);
-      setShowDice(true);
-      
-      // Show result after dice animation
-      setTimeout(() => {
+      if (playerId === player.socketId) {
         setDiceResult(dice);
         setShowResult({ won, amount });
         setIsActive(false);
         onCasinoPlayed();
-      }, 3500); // Slightly longer than the dice animation
-    }
-  };
+      }
+    };
 
     socket.on('casinoResult', handleCasinoResult);
     return () => socket.off('casinoResult', handleCasinoResult);
@@ -269,12 +260,6 @@ if (!isActive) {
           Your Money: ${currentMoney.toLocaleString()}
         </div>
       </div>
-      {showDice && (
-        <CasinoDice 
-          diceValues={currentDice} 
-          onAnimationComplete={() => setShowDice(false)}
-        />
-      )}
     </div>
   );
 };

@@ -1,24 +1,18 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
-import CasinoDice from './CasinoDice';
-
-const diceImages = {};
-for (let i = 1; i <= 6; i++) {
-  diceImages[i] = require(`../assets/dice/dice${i}.png`);
-}
+import Dice3D from './Dice3D';
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
+  const [showDice, setShowDice] = useState(false);
+  const [diceValues, setDiceValues] = useState({ die1: null, die2: null });
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
-  const [showDiceRoll, setShowDiceRoll] = useState(false);
-  const [diceValues, setDiceValues] = useState(null);
-  const diceRollRef = useRef(null);
 
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
@@ -32,8 +26,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
-        setDiceValues([die1, die2]);
-        setShowDiceRoll(true);
+        setDiceValues({ die1, die2 });
+        setShowDice(true);
         setDie1(die1);
         setDie2(die2);
         setDone(false);
@@ -89,15 +83,9 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   const handleRoll = () => {
     if (!testRollMode) {
-      // Show loading state for dice roll
-      setShowDiceRoll(true);
       socket.emit('rollDice', { testRoll: null });
     }
     setBranchOptions(null);
-  };
-
-  const handleDiceAnimationComplete = () => {
-    setShowDiceRoll(false);
   };
 
   const handleDone = () => {
@@ -111,41 +99,18 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   return (
     <div
       style={{
-        position: 'relative',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '1rem',
-        padding: '1rem',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-        marginTop: '1rem',
-        zIndex: 100
+        justifyContent: 'center',
+        textAlign: 'center',
       }}
     >
-      {/* 3D Dice Animation */}
-      {showDiceRoll && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          zIndex: 1000,
-          pointerEvents: 'none'
-        }}>
-          <CasinoDice 
-            ref={diceRollRef}
-            diceValues={diceValues}
-            onAnimationComplete={handleDiceAnimationComplete}
-          />
-        </div>
-      )}
       {/* Roll button */}
       {!die1 && !hasRolled && !branchOptions && (
         <button
@@ -187,21 +152,27 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
 
-      {die1 && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '20px',
-            margin: '1rem 0',
-          }}
-        >
-          {(die1 && die2) && (
-            <div style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}>
-              <p>Dice roll result: {die1} and {die2}</p>
-            </div>
-          )}
-        </div>
+      {showDice && (
+        <>
+          <Dice3D 
+            value={diceValues.die1} 
+            position="left" 
+            onAnimationEnd={() => {
+              // Only hide after both dice have finished animating
+              if (!showDice) return;
+              setShowDice(false);
+            }}
+          />
+          <Dice3D 
+            value={diceValues.die2} 
+            position="right"
+            onAnimationEnd={() => {
+              // Only hide after both dice have finished animating
+              if (!showDice) return;
+              setShowDice(false);
+            }}
+          />
+        </>
       )}
 
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
