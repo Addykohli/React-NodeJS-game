@@ -1,7 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import './Dice.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCircle } from '@fortawesome/free-solid-svg-icons';
 
 const Dice = ({ value, position, animationComplete }) => {
   const cubeRef = useRef(null);
@@ -75,54 +73,54 @@ const Dice = ({ value, position, animationComplete }) => {
     <div className="dice-container">
       <div className="cube" ref={cubeRef}>
         {/* Front face (1) */}
-        <div className="front">
-          <FontAwesomeIcon icon={faCircle} className="dot" />
+        <div className="face front">
+          <div className="dot"></div>
         </div>
         
         {/* Back face (6) */}
-        <div className="back">
+        <div className="face back">
           <div className="dot-row">
-            <FontAwesomeIcon icon={faCircle} className="dot" />
-            <FontAwesomeIcon icon={faCircle} className="dot" />
+            <div className="dot"></div>
+            <div className="dot"></div>
           </div>
           <div className="dot-row">
-            <FontAwesomeIcon icon={faCircle} className="dot" />
-            <FontAwesomeIcon icon={faCircle} className="dot" />
+            <div className="dot"></div>
+            <div className="dot"></div>
           </div>
           <div className="dot-row">
-            <FontAwesomeIcon icon={faCircle} className="dot" />
-            <FontAwesomeIcon icon={faCircle} className="dot" />
+            <div className="dot"></div>
+            <div className="dot"></div>
           </div>
         </div>
         
         {/* Top face (2) */}
-        <div className="top">
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', right: '25%' }} />
+        <div className="face top">
+          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
         </div>
         
         {/* Left face (3) */}
-        <div className="left">
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', right: '25%' }} />
+        <div className="face left">
+          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
+          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
         </div>
         
         {/* Right face (4) */}
-        <div className="right">
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', right: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', right: '25%' }} />
+        <div className="face right">
+          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ top: '25%', right: '25%' }}></div>
+          <div className="dot" style={{ bottom: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
         </div>
         
         {/* Bottom face (5) */}
-        <div className="bottom">
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '25%', right: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', left: '25%' }} />
-          <FontAwesomeIcon icon={faCircle} className="dot" style={{ bottom: '25%', right: '25%' }} />
+        <div className="face bottom">
+          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ top: '25%', right: '25%' }}></div>
+          <div className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
+          <div className="dot" style={{ bottom: '25%', left: '25%' }}></div>
+          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
         </div>
       </div>
     </div>

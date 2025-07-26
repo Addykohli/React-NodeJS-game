@@ -55,11 +55,12 @@
 
 .dot {
   position: absolute;
-  color: white;
-  font-size: 16px;
   width: 16px;
   height: 16px;
+  background-color: white;
+  border-radius: 50%;
   transform: translate(-50%, -50%);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .dot-row {
@@ -70,11 +71,21 @@
 }
 
 /* Dice face specific styles */
-.dice-container .cube .front {
-  transform: translateZ(50px);
+.face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #eee;
+  border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
+  backface-visibility: hidden;
+}
+
+.dice-container .cube .front {
+  transform: translateZ(50px);
 }
 
 .dice-container .cube .back {

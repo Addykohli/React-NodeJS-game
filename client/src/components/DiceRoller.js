@@ -87,9 +87,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   const handleRoll = () => {
     if (!testRollMode) {
-      // Show the dice animation
+      // Show the dice animation with random initial values
+      const newDie1 = Math.ceil(Math.random() * 6);
+      const newDie2 = Math.ceil(Math.random() * 6);
+      setDiceValues([newDie1, newDie2]);
       setShowDice(true);
-      setDiceValues([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
       
       // Emit the roll to the server after a short delay to allow animation to start
       setTimeout(() => {
@@ -114,8 +116,22 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   // Show dice animation when rolling
   const diceAnimation = showDice && (
     <div className="dice-animation-container" key="dice-animation">
-      <Dice value={diceValues[0]} position={0} animationComplete={handleDiceAnimationComplete} />
-      <Dice value={diceValues[1]} position={1} animationComplete={handleDiceAnimationComplete} />
+      <Dice 
+        value={diceValues[0]} 
+        position={0} 
+        animationComplete={() => {
+          // Only hide the dice after both animations complete
+          setTimeout(() => setShowDice(false), 500);
+        }} 
+      />
+      <Dice 
+        value={diceValues[1]} 
+        position={1} 
+        animationComplete={() => {
+          // Only hide the dice after both animations complete
+          setTimeout(() => setShowDice(false), 500);
+        }} 
+      />
     </div>
   );
 
