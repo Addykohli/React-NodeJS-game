@@ -7,10 +7,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  pointer-events: none;
   z-index: 1000;
+  pointer-events: none;
   perspective: 1000px;
-  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .dice-container {
@@ -18,207 +17,149 @@
   width: 200px;
   height: 200px;
   margin: 0 50px;
-  transform-style: preserve-3d;
-  transition: transform 1s, top 1s, opacity 0.5s;
-  transform-origin: center center;
 }
 
 .dice-container .cube {
   position: absolute;
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   transform-style: preserve-3d;
-  transition: transform 1s, top 1s, opacity 0.5s;
-  transform-origin: center center;
+  transition: transform 1s ease-out;
   top: 50%;
   left: 50%;
-  margin: -50px 0 0 -50px;
-  transform: translateZ(50px);
+  margin: -40px 0 0 -40px;
 }
 
-.dice-container .cube div {
-  position: absolute;
-  box-sizing: border-box;
-  height: 100%;
-  width: 100%;
-  border: 2px solid #eee;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  border-radius: 10px;
-  backface-visibility: hidden;
-  overflow: hidden;
-}
-
-.dot {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background-color: white;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-}
-
-.dot-row {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  margin: 5px 0;
-}
-
-/* Dice face specific styles */
 .face {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
-  border: 2px solid #eee;
+  background: white;
+  border: 2px solid #333;
   border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
   backface-visibility: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  padding: 10px;
 }
 
-.dice-container .cube .front {
-  transform: translateZ(50px);
+/* Dice faces */
+.front { transform: translateZ(40px); }
+.back { transform: rotateY(180deg) translateZ(40px); }
+.right { transform: rotateY(90deg) translateZ(40px); }
+.left { transform: rotateY(-90deg) translateZ(40px); }
+.top { transform: rotateX(90deg) translateZ(40px); }
+.bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+/* Dot styling */
+.dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: #333;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.dice-container .cube .back {
-  transform: translateZ(-50px) rotateY(180deg);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
+/* Dot positioning for each face */
+/* Front (1) */
+.front .dot {
+  top: 50%;
+  left: 50%;
+}
+
+/* Back (6) */
+.back {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 10px;
   padding: 15px;
 }
 
-.dice-container .cube .right {
-  transform: rotateY(90deg) translateZ(50px);
+.back .dot {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
+}
+
+/* Right (4) */
+.right {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  padding: 15px;
   gap: 10px;
-}
-
-.dice-container .cube .left {
-  transform: rotateY(-90deg) translateZ(50px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
   padding: 15px;
 }
 
-.dice-container .cube .top {
-  transform: rotateX(90deg) translateZ(50px);
+.right .dot {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
+}
+
+/* Left (3) */
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.left .dot {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
+}
+
+/* Top (2) */
+.top {
   display: flex;
   justify-content: space-between;
-  padding: 30px;
+  padding: 20px;
 }
 
-.dice-container .cube .bottom {
-  transform: rotateX(-90deg) translateZ(50px);
+.top .dot:first-child {
+  top: 25%;
+  left: 25%;
+}
+
+.top .dot:last-child {
+  bottom: 25%;
+  right: 25%;
+}
+
+/* Bottom (5) */
+.bottom {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  padding: 15px;
   gap: 10px;
+  padding: 15px;
 }
 
-.dice-container .cube .front {
-  transform: translateZ(50px);
+.bottom .dot {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  margin: 0 auto;
 }
 
-.dice-container .cube .back {
-  transform: translateZ(-50px) rotateY(180deg);
-}
-
-.dice-container .cube .right {
-  transform-origin: right center;
-  transform: rotateY(-90deg) translateX(50px);
-}
-
-.dice-container .cube .left {
-  transform-origin: left center;
-  transform: rotateY(90deg) translateX(-50px);
-}
-
-.dice-container .cube .top {
-  transform-origin: top center;
-  transform: rotateX(-90deg) translateY(-50px);
-}
-
-.dice-container .cube .bottom {
-  transform-origin: bottom center;
-  transform: rotateX(90deg) translateY(50px);
-}
-
-/* Dot alignment */
-.dice-container .cube .front span,
-.dice-container .cube .left span:nth-child(1),
-.dice-container .cube .right span:nth-child(1) {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.dice-container .cube .top span:nth-child(1),
-.dice-container .cube .left span:nth-child(2),
-.dice-container .cube .right span:nth-child(2),
-.dice-container .cube .bottom span:nth-child(1) {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-}
-
-.dice-container .cube .top span:nth-child(2),
-.dice-container .cube .left span:nth-child(3),
-.dice-container .cube .right span:nth-child(3),
-.dice-container .cube .bottom span:nth-child(2) {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-}
-
-.dice-container .cube .right span:nth-child(4),
-.dice-container .cube .bottom span:nth-child(3) {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-}
-
-.dice-container .cube .right span:nth-child(5),
-.dice-container .cube .bottom span:nth-child(4) {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-}
-
-.dice-container .cube .back pre {
-  font-size: 16px;
-  margin: 0;
-  line-height: 1;
-}
-
-.dice-container .cube .back .firstPre {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.dice-container .cube .back .secondPre {
-  display: none; /* We'll handle the dots with firstPre */
+/* Center dot for 5 */
+.bottom .dot:nth-child(3) {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: auto;
 }
 
 @keyframes drop {

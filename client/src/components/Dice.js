@@ -1,22 +1,26 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './Dice.css';
 
 const Dice = ({ value, position, animationComplete }) => {
   const cubeRef = useRef(null);
-  const angleArray = [
-    [0, 0, 0],
-    [-310, -362, -38],
-    [-400, -320, -2],
-    [135, -217, -88],
-    [-224, -317, 5],
-    [-47, -219, -81],
-    [-133, -360, -53]
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  // Angles for each face (1-6)
+  const faceAngles = [
+    [0, 0, 0],          // 1 (front)
+    [90, 0, 0],         // 2 (top)
+    [0, 0, -90],        // 3 (right)
+    [0, 0, 90],         // 4 (left)
+    [-90, 0, 0],        // 5 (bottom)
+    [0, 180, 0]         // 6 (back)
   ];
 
   useEffect(() => {
     const cube = cubeRef.current;
-    if (!cube) return;
+    if (!cube || value < 1 || value > 6) return;
 
+    setIsAnimating(true);
+    
     // Set initial position above the viewport
     cube.style.top = `-200px`;
     cube.style.left = `${position * 120 - 60}px`; // Center the dice based on position
@@ -26,49 +30,62 @@ const Dice = ({ value, position, animationComplete }) => {
     
     // Add a slight delay between dice animations
     const delay = position * 100;
-
+    const animationDuration = 1000; // ms
+    
+    // Initial random rotation for the drop
+    const startRotation = {
+      x: Math.random() * 360,
+      y: Math.random() * 360,
+      z: Math.random() * 360
+    };
+    
+    // Set initial rotation
+    cube.style.transition = 'none';
+    cube.style.transform = `translate(-50%, -50%) rotateX(${startRotation.x}deg) rotateY(${startRotation.y}deg) rotateZ(${startRotation.z}deg)`;
+    
     // Trigger the drop animation
     setTimeout(() => {
-      cube.style.transition = 'top 1s cubic-bezier(0.2, 0.7, 0.3, 1.2)';
+      cube.style.transition = `top 0.8s cubic-bezier(0.2, 0.7, 0.3, 1.2), transform 0.8s ease-out`;
       cube.style.top = '50%';
       
       // Add a bouncing effect
       setTimeout(() => {
-        cube.style.transition = 'top 0.2s ease-out';
+        cube.style.transition = 'top 0.2s ease-out, transform 0.2s ease-out';
         cube.style.top = '48%';
         
         setTimeout(() => {
-          cube.style.transition = 'top 0.3s ease-out';
+          cube.style.transition = 'top 0.3s ease-out, transform 0.3s ease-out';
           cube.style.top = '50%';
         }, 200);
-      }, 1000);
+      }, 800);
     }, delay);
-
-    // Set the dice face based on the value with a spinning effect
+    
+    // Set the dice to show the correct face after the drop
     setTimeout(() => {
-      // First, spin the dice randomly
-      cube.style.transition = 'transform 0.5s ease-out';
-      cube.style.transform = `rotateX(${Math.random() * 360}deg) rotateY(${Math.random() * 360}deg) rotateZ(${Math.random() * 360}deg)`;
-      
-      // Then set to the final value
-      setTimeout(() => {
-        cube.style.transition = 'transform 1s ease-out';
-        cube.style.transform = `rotateX(${angleArray[value][0]}deg) rotateY(${angleArray[value][1]}deg) rotateZ(${angleArray[value][2]}deg)`;
-      }, 500);
-    }, delay + 100);
-
+      const [x, y, z] = faceAngles[value - 1];
+      cube.style.transition = 'transform 1s ease-out';
+      cube.style.transform = `translate(-50%, -50%) rotateX(${x}deg) rotateY(${y}deg) rotateZ(${z}deg)`;
+    }, delay + 1000);
+    
     // Remove dice after delay
     const timer = setTimeout(() => {
-      cube.style.opacity = '0';
       cube.style.transition = 'opacity 0.5s ease-out';
+      cube.style.opacity = '0';
+      
       setTimeout(() => {
+        setIsAnimating(false);
         if (animationComplete) animationComplete();
       }, 500);
     }, 3000 + delay);
+    
+    return () => {
+      clearTimeout(timer);
+      setIsAnimating(false);
+    };
+  }, [value, position, animationComplete]);
 
-    return () => clearTimeout(timer);
-  }, [value, position, angleArray, animationComplete]);
-
+  if (!isAnimating) return null;
+  
   return (
     <div className="dice-container">
       <div className="cube" ref={cubeRef}>
@@ -79,48 +96,36 @@ const Dice = ({ value, position, animationComplete }) => {
         
         {/* Back face (6) */}
         <div className="face back">
-          <div className="dot-row">
-            <div className="dot"></div>
-            <div className="dot"></div>
-          </div>
-          <div className="dot-row">
-            <div className="dot"></div>
-            <div className="dot"></div>
-          </div>
-          <div className="dot-row">
-            <div className="dot"></div>
-            <div className="dot"></div>
-          </div>
+          {[...Array(6)].map((_, i) => (
+            <div key={`back-${i}`} className="dot"></div>
+          ))}
         </div>
         
         {/* Top face (2) */}
         <div className="face top">
-          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
         </div>
         
         {/* Left face (3) */}
         <div className="face left">
-          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
-          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
         </div>
         
         {/* Right face (4) */}
         <div className="face right">
-          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ top: '25%', right: '25%' }}></div>
-          <div className="dot" style={{ bottom: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
+          {[...Array(4)].map((_, i) => (
+            <div key={`right-${i}`} className="dot"></div>
+          ))}
         </div>
         
         {/* Bottom face (5) */}
         <div className="face bottom">
-          <div className="dot" style={{ top: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ top: '25%', right: '25%' }}></div>
-          <div className="dot" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}></div>
-          <div className="dot" style={{ bottom: '25%', left: '25%' }}></div>
-          <div className="dot" style={{ bottom: '25%', right: '25%' }}></div>
+          {[...Array(5)].map((_, i) => (
+            <div key={`bottom-${i}`} className="dot"></div>
+          ))}
         </div>
       </div>
     </div>
