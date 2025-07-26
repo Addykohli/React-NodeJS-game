@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
-import { DiceAnimation } from './CasinoDice';
 
-import './DiceRoller.css';
+const diceImages = {};
+for (let i = 1; i <= 6; i++) {
+  diceImages[i] = require(`../assets/dice/dice${i}.png`);
+}
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
-  const [showDice, setShowDice] = useState(false);
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
@@ -29,7 +30,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       if (playerId === player?.socketId) {
         setDie1(die1);
         setDie2(die2);
-        setShowDice(true);
         setDone(false);
       }
     };
@@ -96,19 +96,21 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
-  // Don't show the dice roll button if we're showing the 3D animation
-  const showRollButton = !showDice && !done && (!hasRolled || testRollMode);
-  const showDoneButton = !showDice && (done || hasRolled) && !testRollMode;
-
   return (
-    <div className="dice-roller-container">
-      {showDice && die1 !== null && die2 !== null && (
-        <DiceAnimation 
-          values={[die1, die2]} 
-          onComplete={() => setShowDice(false)}
-        />
-      )}
-      <div className="dice-controls">
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+      }}
+    >
       {/* Roll button */}
       {!die1 && !hasRolled && !branchOptions && (
         <button
@@ -150,27 +152,30 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
 
-      {showRollButton && (
-        <button
-          onClick={handleRoll}
-          className={`roll-button ${testRollMode ? 'disabled' : ''}`}
-          disabled={testRollMode}
+      {die1 && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '20px',
+            margin: '1rem 0',
+          }}
         >
-          {testRollMode ? 'Type testroll#' : 'Roll Dice'}
-        </button>
+          <img
+            src={diceImages[die1]}
+            alt={`Die ${die1}`}
+            width={100}
+            height={100}
+          />
+          <img
+            src={diceImages[die2]}
+            alt={`Die ${die2}`}
+            width={100}
+            height={100}
+          />
+        </div>
       )}
 
-      {showDoneButton && (
-        <button
-          onClick={handleDone}
-          className="done-button"
-        >
-          Done
-        </button>
-      )}
-    </div>
-  );
-}
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
         <button
           onClick={handleDone}
