@@ -90,8 +90,15 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       // Show the dice animation with random initial values
       const newDie1 = Math.ceil(Math.random() * 6);
       const newDie2 = Math.ceil(Math.random() * 6);
-      setDiceValues([newDie1, newDie2]);
-      setShowDice(true);
+      
+      // Reset animation state
+      setShowDice(false);
+      
+      // Force re-render with new values
+      requestAnimationFrame(() => {
+        setDiceValues([newDie1, newDie2]);
+        setShowDice(true);
+      });
       
       // Emit the roll to the server after a short delay to allow animation to start
       setTimeout(() => {
@@ -114,24 +121,48 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   };
 
   // Show dice animation when rolling
-  const diceAnimation = showDice && (
-    <div className="dice-animation-container" key="dice-animation">
-      <Dice 
-        value={diceValues[0]} 
-        position={0} 
-        animationComplete={() => {
-          // Only hide the dice after both animations complete
-          setTimeout(() => setShowDice(false), 500);
-        }} 
-      />
-      <Dice 
-        value={diceValues[1]} 
-        position={1} 
-        animationComplete={() => {
-          // Only hide the dice after both animations complete
-          setTimeout(() => setShowDice(false), 500);
-        }} 
-      />
+  const diceAnimation = (
+    <div 
+      key="dice-animation" 
+      className="dice-animation-container"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none',
+        zIndex: 1000,
+        opacity: showDice ? 1 : 0,
+        transition: 'opacity 0.3s ease',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+      }}
+    >
+      <div style={{
+        display: 'flex',
+        gap: '50px',
+        transform: 'scale(1.5)'
+      }}>
+        <Dice 
+          value={diceValues[0]} 
+          position={1} 
+          animationComplete={() => {
+            // Only hide the dice after both animations complete
+            setTimeout(() => setShowDice(false), 1000);
+          }} 
+        />
+        <Dice 
+          value={diceValues[1]} 
+          position={2} 
+          animationComplete={() => {
+            // Only hide the dice after both animations complete
+            setTimeout(() => setShowDice(false), 1000);
+          }} 
+        />
+      </div>
     </div>
   );
 
