@@ -1,0 +1,220 @@
+.dice-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1000;
+  perspective: 1000px;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dice-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 50px;
+  transform-style: preserve-3d;
+  transition: transform 1s, top 1s, opacity 0.5s;
+  transform-origin: center center;
+}
+
+.dice-container .cube {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  transform-style: preserve-3d;
+  transition: transform 1s, top 1s, opacity 0.5s;
+  transform-origin: center center;
+  top: 50%;
+  left: 50%;
+  margin: -50px 0 0 -50px;
+  transform: translateZ(50px);
+}
+
+.dice-container .cube div {
+  position: absolute;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  border: 2px solid #eee;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+
+.dot {
+  position: absolute;
+  color: white;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+}
+
+.dot-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin: 5px 0;
+}
+
+/* Dice face specific styles */
+.dice-container .cube .front {
+  transform: translateZ(50px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dice-container .cube .back {
+  transform: translateZ(-50px) rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 15px;
+}
+
+.dice-container .cube .right {
+  transform: rotateY(90deg) translateZ(50px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  padding: 15px;
+  gap: 10px;
+}
+
+.dice-container .cube .left {
+  transform: rotateY(-90deg) translateZ(50px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 15px;
+}
+
+.dice-container .cube .top {
+  transform: rotateX(90deg) translateZ(50px);
+  display: flex;
+  justify-content: space-between;
+  padding: 30px;
+}
+
+.dice-container .cube .bottom {
+  transform: rotateX(-90deg) translateZ(50px);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  padding: 15px;
+  gap: 10px;
+}
+
+.dice-container .cube .front {
+  transform: translateZ(50px);
+}
+
+.dice-container .cube .back {
+  transform: translateZ(-50px) rotateY(180deg);
+}
+
+.dice-container .cube .right {
+  transform-origin: right center;
+  transform: rotateY(-90deg) translateX(50px);
+}
+
+.dice-container .cube .left {
+  transform-origin: left center;
+  transform: rotateY(90deg) translateX(-50px);
+}
+
+.dice-container .cube .top {
+  transform-origin: top center;
+  transform: rotateX(-90deg) translateY(-50px);
+}
+
+.dice-container .cube .bottom {
+  transform-origin: bottom center;
+  transform: rotateX(90deg) translateY(50px);
+}
+
+/* Dot alignment */
+.dice-container .cube .front span,
+.dice-container .cube .left span:nth-child(1),
+.dice-container .cube .right span:nth-child(1) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.dice-container .cube .top span:nth-child(1),
+.dice-container .cube .left span:nth-child(2),
+.dice-container .cube .right span:nth-child(2),
+.dice-container .cube .bottom span:nth-child(1) {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.dice-container .cube .top span:nth-child(2),
+.dice-container .cube .left span:nth-child(3),
+.dice-container .cube .right span:nth-child(3),
+.dice-container .cube .bottom span:nth-child(2) {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+}
+
+.dice-container .cube .right span:nth-child(4),
+.dice-container .cube .bottom span:nth-child(3) {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.dice-container .cube .right span:nth-child(5),
+.dice-container .cube .bottom span:nth-child(4) {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
+.dice-container .cube .back pre {
+  font-size: 16px;
+  margin: 0;
+  line-height: 1;
+}
+
+.dice-container .cube .back .firstPre {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.dice-container .cube .back .secondPre {
+  display: none; /* We'll handle the dots with firstPre */
+}
+
+@keyframes drop {
+  0% {
+    transform: translateY(-100px) rotateX(0) rotateY(0) rotateZ(0);
+  }
+  100% {
+    transform: translateY(0) rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+  }
+}

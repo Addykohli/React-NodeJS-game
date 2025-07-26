@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
-import Dice3D from './Dice3D';
+import Dice from './Dice';
+
+const diceImages = {};
+for (let i = 1; i <= 6; i++) {
+  diceImages[i] = require(`../assets/dice/dice${i}.png`);
+}
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
   const [showDice, setShowDice] = useState(false);
-  const [diceValues, setDiceValues] = useState({ die1: 1, die2: 1 });
+  const [diceValues, setDiceValues] = useState([1, 1]);
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
@@ -24,19 +29,12 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   }, [hasCasinoPlayed]);
 
   useEffect(() => {
-    const onDiceResult = ({ playerId, die1: newDie1, die2: newDie2 }) => {
+    const onDiceResult = ({ playerId, die1, die2 }) => {
       if (playerId === player?.socketId) {
-        // First hide any existing dice
-        setShowDice(false);
-        
-        // After a small delay, show the new dice with the new values
-        setTimeout(() => {
-          setDiceValues({ die1: newDie1, die2: newDie2 });
-          setDie1(newDie1);
-          setDie2(newDie2);
-          setDone(false);
-          setShowDice(true);
-        }, 50);
+        setDie1(die1);
+        setDie2(die2);
+        setDiceValues([die1, die2]);
+        setDone(false);
       }
     };
 
@@ -89,9 +87,20 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   const handleRoll = () => {
     if (!testRollMode) {
-      socket.emit('rollDice', { testRoll: null });
+      // Show the dice animation
+      setShowDice(true);
+      setDiceValues([Math.ceil(Math.random() * 6), Math.ceil(Math.random() * 6)]);
+      
+      // Emit the roll to the server after a short delay to allow animation to start
+      setTimeout(() => {
+        socket.emit('rollDice', { testRoll: null });
+      }, 100);
     }
     setBranchOptions(null);
+  };
+
+  const handleDiceAnimationComplete = () => {
+    setShowDice(false);
   };
 
   const handleDone = () => {
@@ -102,8 +111,18 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
+  // Show dice animation when rolling
+  const diceAnimation = showDice && (
+    <div className="dice-animation-container">
+      <Dice value={diceValues[0]} position={0} animationComplete={handleDiceAnimationComplete} />
+      <Dice value={diceValues[1]} position={1} animationComplete={handleDiceAnimationComplete} />
+    </div>
+  );
+
   return (
-    <div
+    <>
+      {diceAnimation}
+      <div
       style={{
         position: 'absolute',
         top: 0,
@@ -158,25 +177,28 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
 
-      {showDice && (
-        <>
-          <Dice3D 
-            key="left-die"
-            value={diceValues.die1} 
-            position="left" 
-            onAnimationEnd={() => {
-              // The dice will handle their own hiding
-            }}
+      {die1 && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '20px',
+            margin: '1rem 0',
+          }}
+        >
+          <img
+            src={diceImages[die1]}
+            alt={`Die ${die1}`}
+            width={100}
+            height={100}
           />
-          <Dice3D 
-            key="right-die"
-            value={diceValues.die2} 
-            position="right"
-            onAnimationEnd={() => {
-              // The dice will handle their own hiding
-            }}
+          <img
+            src={diceImages[die2]}
+            alt={`Die ${die2}`}
+            width={100}
+            height={100}
           />
-        </>
+        </div>
       )}
 
       {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
@@ -218,6 +240,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
     </div>
+    </>
   );
 }
 
