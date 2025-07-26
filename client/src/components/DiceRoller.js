@@ -113,29 +113,29 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   // Show dice animation when rolling
   const diceAnimation = showDice && (
-    <div className="dice-animation-container">
+    <div className="dice-animation-container" key="dice-animation">
       <Dice value={diceValues[0]} position={0} animationComplete={handleDiceAnimationComplete} />
       <Dice value={diceValues[1]} position={1} animationComplete={handleDiceAnimationComplete} />
     </div>
   );
 
   return (
-    <>
+    <div style={{ position: 'relative' }}>
       {diceAnimation}
       <div
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-      }}
-    >
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+        }}
+      >
       {/* Roll button */}
       {!die1 && !hasRolled && !branchOptions && (
         <button
@@ -239,8 +239,8 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
           Done
         </button>
       )}
+      </div>
     </div>
-    </>
   );
 }
 
