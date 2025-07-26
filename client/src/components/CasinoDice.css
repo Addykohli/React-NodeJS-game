@@ -57,22 +57,49 @@
 .dice .bottom { transform: rotateX(-90deg) translateZ(40px); }
 
 /* Dice face dots */
-.dice .side::before {
-  content: '';
+.dice .dot {
   position: absolute;
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   background: #333;
   border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Dice face patterns */
-.dice .front::before { content: '1'; background: transparent; }
-.dice .back::before { content: '6'; background: transparent; }
-.dice .right::before { content: '4'; background: transparent; }
-.dice .left::before { content: '3'; background: transparent; }
-.dice .top::before { content: '5'; background: transparent; }
-.dice .bottom::before { content: '2'; background: transparent; }
+.dice .front .dot { display: none; }
+.dice .front .dot.center { display: block; left: 50%; top: 50%; }
+
+.dice .back .dot { display: block; }
+.dice .back .dot:nth-child(1) { left: 25%; top: 25%; }
+.dice .back .dot:nth-child(2) { left: 75%; top: 25%; }
+.dice .back .dot:nth-child(3) { left: 50%; top: 50%; }
+.dice .back .dot:nth-child(4) { left: 25%; top: 75%; }
+.dice .back .dot:nth-child(5) { left: 75%; top: 75%; }
+
+.dice .right .dot { display: block; }
+.dice .right .dot:nth-child(1) { left: 25%; top: 25%; }
+.dice .right .dot:nth-child(2) { left: 75%; top: 25%; }
+.dice .right .dot:nth-child(3) { left: 25%; top: 75%; }
+.dice .right .dot:nth-child(4) { left: 75%; top: 75%; }
+
+.dice .left .dot { display: block; }
+.dice .left .dot:nth-child(1) { left: 50%; top: 25%; }
+.dice .left .dot:nth-child(2) { left: 25%; top: 50%; }
+.dice .left .dot:nth-child(3) { left: 75%; top: 50%; }
+.dice .left .dot:nth-child(4) { left: 33%; top: 75%; }
+.dice .left .dot:nth-child(5) { left: 66%; top: 75%; }
+
+.dice .top .dot { display: block; }
+.dice .top .dot:nth-child(1) { left: 25%; top: 25%; }
+.dice .top .dot:nth-child(2) { left: 75%; top: 25%; }
+.dice .top .dot:nth-child(3) { left: 50%; top: 50%; }
+.dice .top .dot:nth-child(4) { left: 25%; top: 75%; }
+.dice .top .dot:nth-child(5) { left: 75%; top: 75%; }
+
+.dice .bottom .dot { display: block; }
+.dice .bottom .dot:nth-child(1) { left: 25%; top: 25%; }
+.dice .bottom .dot:nth-child(2) { left: 75%; top: 75%; }
 
 /* Dice animations */
 @keyframes roll {
