@@ -1,0 +1,94 @@
+/* Dice container styling */
+.dice-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.dice-wrapper {
+  transform: translateY(-100px);
+  animation: dropIn 1s ease-out forwards;
+  display: flex;
+  gap: 40px;
+  perspective: 1000px;
+}
+
+/* Dice styling */
+.dice {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0);
+  transition: transform 1s ease-out;
+  animation: roll 1.5s ease-out forwards;
+}
+
+.dice .side {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border: 2px solid #333;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: bold;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Dice sides */
+.dice .front { transform: translateZ(40px); }
+.dice .back { transform: rotateY(180deg) translateZ(40px); }
+.dice .right { transform: rotateY(90deg) translateZ(40px); }
+.dice .left { transform: rotateY(-90deg) translateZ(40px); }
+.dice .top { transform: rotateX(90deg) translateZ(40px); }
+.dice .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+/* Dice face dots */
+.dice .side::before {
+  content: '';
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background: #333;
+  border-radius: 50%;
+}
+
+/* Dice face patterns */
+.dice .front::before { content: '1'; background: transparent; }
+.dice .back::before { content: '6'; background: transparent; }
+.dice .right::before { content: '4'; background: transparent; }
+.dice .left::before { content: '3'; background: transparent; }
+.dice .top::before { content: '5'; background: transparent; }
+.dice .bottom::before { content: '2'; background: transparent; }
+
+/* Dice animations */
+@keyframes roll {
+  0% { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+  100% { transform: translateZ(-40px) rotateX(720deg) rotateY(720deg) rotateZ(720deg); }
+}
+
+@keyframes dropIn {
+  0% { transform: translateY(-100px); }
+  100% { transform: translateY(0); }
+}
+
+/* Dice result states */
+.dice.show-1 { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(0); }
+.dice.show-2 { transform: translateZ(-40px) rotateX(0) rotateY(0) rotateZ(90deg); }
+.dice.show-3 { transform: translateZ(-40px) rotateX(0) rotateY(90deg) rotateZ(0); }
+.dice.show-4 { transform: translateZ(-40px) rotateX(0) rotateY(-90deg) rotateZ(0); }
+.dice.show-5 { transform: translateZ(-40px) rotateX(-90deg) rotateY(0) rotateZ(0); }
+.dice.show-6 { transform: translateZ(-40px) rotateX(180deg) rotateY(0) rotateZ(0); }
