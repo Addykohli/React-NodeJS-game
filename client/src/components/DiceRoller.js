@@ -30,12 +30,12 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
-      if (playerId === player?.socketId) {
-        setDie1(die1);
-        setDie2(die2);
-        setDiceValues([die1, die2]);
-        setDone(false);
-      }
+      // Show animation for all players when any player rolls
+      setDie1(die1);
+      setDie2(die2);
+      setDiceValues([die1, die2]);
+      setShowDice(true);
+      setDone(false);
     };
 
     const onBranchChoices = ({ options }) => setBranchOptions(options);
@@ -102,7 +102,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       
       // Emit the roll to the server after a short delay to allow animation to start
       setTimeout(() => {
-        socket.emit('rollDice', { testRoll: null });
+        socket.emit('rollDice', { 
+          testRoll: null,
+          die1: newDie1,
+          die2: newDie2
+        });
       }, 100);
     }
     setBranchOptions(null);
@@ -138,13 +142,14 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)'
+        backgroundColor: 'transparent',
+        willChange: 'opacity' // Optimize for animations
       }}
     >
       <div style={{
         display: 'flex',
-        gap: '50px',
-        transform: 'scale(1.5)'
+        gap: '120px', // Increased gap between dice
+        transform: 'scale(1.2)' // Slightly smaller scale for better fit
       }}>
         <Dice 
           value={diceValues[0]} 

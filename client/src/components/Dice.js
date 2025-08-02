@@ -90,22 +90,25 @@ const Dice = ({ value, position, animationComplete }) => {
   return (
     <div className="dice-container" style={{
       position: 'absolute',
-      left: position === 1 ? '40%' : '60%',
-      top: '40%',
+      left: position === 1 ? 'calc(50% - 60px)' : 'calc(50% + 60px)', // Position dice with proper spacing
+      top: '50%',
       transform: 'translate(-50%, -50%)',
-      width: '100px',
-      height: '100px',
+      width: '80px', // Slightly smaller dice
+      height: '80px',
       perspective: '1000px',
       opacity: isAnimating ? 1 : 0,
       transition: 'opacity 0.3s ease',
-      pointerEvents: 'none'
+      pointerEvents: 'none',
+      zIndex: 1001 // Ensure dice are above other elements
     }}>
       <div className="cube" ref={cubeRef} style={{
         width: '100%',
         height: '100%',
         position: 'relative',
         transformStyle: 'preserve-3d',
-        transform: 'translateZ(-50px)'
+        transform: 'translateZ(-40px)', // Adjusted for smaller dice
+        animation: isAnimating ? 'spin 1.5s ease-out' : 'none',
+        animationFillMode: 'forwards'
       }}>
         {/* Front face (1) */}
         <div className="face front" style={{
