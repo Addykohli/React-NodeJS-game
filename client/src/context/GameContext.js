@@ -48,15 +48,25 @@ export function GameProvider({ children }) {
   
   useEffect(() => {
     if (!socket) return;
+    
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
+    const handlePlayerDiceRoll = (data) => {
+      console.log('GameContext: Received playerDiceRoll event:', data);
+      // Forward the event to all components that might be interested
+      socket.emit('forwardedPlayerDiceRoll', data);
+    };
+
     socket.on('rpsStarted', handleRpsStarted);
     socket.on('rpsEnded', handleRpsEnded);
+    socket.on('playerDiceRoll', handlePlayerDiceRoll);
+    
     return () => {
       socket.off('rpsStarted', handleRpsStarted);
       socket.off('rpsEnded', handleRpsEnded);
+      socket.off('playerDiceRoll', handlePlayerDiceRoll);
     };
-  }, []); 
+  }, []);
 
   
   useEffect(() => {

@@ -31,31 +31,57 @@ export default function OtherPlayerDice() {
     console.log('Setting up dice roll listener for player:', player.socketId, 'currentPlayerId:', currentPlayerId);
 
     const handleDiceRoll = (data) => {
-      console.log('Received dice roll event:', data);
-      console.log('Current player socket ID:', player.socketId, 'Event player ID:', data.playerId, 'Current player ID:', currentPlayerId);
+      console.log('=== DICE ROLL EVENT RECEIVED ===');
+      console.log('Event data:', data);
+      console.log('Current player socket ID:', player.socketId);
+      console.log('Current player ID from context:', currentPlayerId);
       
-      if (data.playerId !== player.socketId && data.playerId !== currentPlayerId) {
-        console.log('Processing dice roll from other player:', data.playerId);
-        const newRoll = {
-          die1: data.die1,
-          die2: data.die2,
-          playerName: players.find(p => p.socketId === data.playerId)?.name || 'Player',
-          timestamp: Date.now()
-        };
-        console.log('Adding new roll to state:', newRoll);
-        setRolls(prev => ({
+      // Log all players for debugging
+      console.log('All players:', players);
+      
+      // First, check if this is a roll from another player
+      if (data.playerId === player.socketId) {
+        console.log('Ignoring roll - from current player');
+        return;
+      }
+      
+      if (data.playerId === currentPlayerId) {
+        console.log('Ignoring roll - from current turn player');
+        return;
+      }
+      
+      console.log('Processing roll from other player:', data.playerId);
+      
+      // Find the player who rolled
+      const rollingPlayer = players.find(p => p.socketId === data.playerId);
+      console.log('Found rolling player:', rollingPlayer);
+      
+      const newRoll = {
+        die1: data.die1,
+        die2: data.die2,
+        playerName: rollingPlayer?.name || `Player ${data.playerId.slice(0, 5)}`,
+        timestamp: Date.now()
+      };
+      
+      console.log('Adding new roll to state:', newRoll);
+      
+      setRolls(prev => {
+        const updated = {
           ...prev,
           [data.playerId]: newRoll
-        }));
-      } else {
-        console.log('Ignoring roll - either from current player or already processed');
-      }
+        };
+        console.log('Updated rolls state:', updated);
+        return updated;
+      });
     };
 
+    // Listen for both the original and forwarded events for debugging
     player.socket.on('playerDiceRoll', handleDiceRoll);
+    player.socket.on('forwardedPlayerDiceRoll', handleDiceRoll);
 
     return () => {
       player.socket.off('playerDiceRoll', handleDiceRoll);
+      player.socket.off('forwardedPlayerDiceRoll', handleDiceRoll);
     };
   }, [player, players, currentPlayerId]);
 
