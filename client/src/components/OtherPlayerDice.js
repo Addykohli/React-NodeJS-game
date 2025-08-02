@@ -14,6 +14,7 @@ export default function OtherPlayerDice() {
     if (!player?.socket) return;
 
     const handleDiceRoll = (data) => {
+      console.log('Received dice roll:', data);
       if (data.playerId !== player.socketId && data.playerId !== currentPlayerId) {
         setRolls(prev => ({
           ...prev,
@@ -52,8 +53,6 @@ export default function OtherPlayerDice() {
     return () => clearInterval(interval);
   }, []);
 
-  if (Object.keys(rolls).length === 0) return null;
-
   return (
     <div style={{
       position: 'fixed',
@@ -64,36 +63,50 @@ export default function OtherPlayerDice() {
       gap: '10px',
       zIndex: 1000
     }}>
-      {Object.entries(rolls).map(([playerId, roll]) => (
-        <div key={playerId} style={{
+      {Object.keys(rolls).length === 0 ? (
+        <div style={{
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: '10px',
+          padding: '15px',
           borderRadius: '8px',
           color: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          textAlign: 'center',
+          minWidth: '150px',
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
         }}>
-          <div style={{ marginBottom: '5px', fontWeight: 'bold' }}>
-            {roll.playerName} rolled:
-          </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <img 
-              src={diceImages[roll.die1].default} 
-              alt={`Die ${roll.die1}`} 
-              width={40} 
-              height={40} 
-            />
-            <img 
-              src={diceImages[roll.die2].default} 
-              alt={`Die ${roll.die2}`} 
-              width={40} 
-              height={40} 
-            />
-          </div>
+          Waiting for your turn...
         </div>
-      ))}
+      ) : (
+        Object.entries(rolls).map(([playerId, roll]) => (
+          <div key={playerId} style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: '10px',
+            borderRadius: '8px',
+            color: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ marginBottom: '5px', fontWeight: 'bold' }}>
+              {roll.playerName} rolled:
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <img 
+                src={diceImages[roll.die1]?.default || ''} 
+                alt={`Die ${roll.die1}`} 
+                width={40} 
+                height={40} 
+              />
+              <img 
+                src={diceImages[roll.die2]?.default || ''} 
+                alt={`Die ${roll.die2}`} 
+                width={40} 
+                height={40} 
+              />
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
