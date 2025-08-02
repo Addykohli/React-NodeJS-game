@@ -1211,8 +1211,6 @@ export default function GameScreen() {
                     padding: '20px'
                   }}>
                     <Chat />
-                    <TradePanel />
-                    <OtherPlayerDice />
                   </div>
                 )}
                 {panelId === 'trade' && (
@@ -1443,11 +1441,15 @@ export default function GameScreen() {
                   )}
                 </>
               )}
-              <DiceRoller
-                testRollMode={testRollMode}
-                hasCasinoPlayed={hasCasinoPlayed}
-                style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
-              />
+              {isMyTurn ? (
+                <DiceRoller
+                  testRollMode={testRollMode}
+                  hasCasinoPlayed={hasCasinoPlayed}
+                  style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
+                />
+              ) : (
+                <OtherPlayerDice />
+              )}
             </div>
           </div>
 
@@ -1726,11 +1728,11 @@ export default function GameScreen() {
                     )}
                     <div style={{
                       color: '#fff',
-                      fontSize: '1.2em',
+                      fontSize: '1.6em',
                       marginTop: '10px',
                       textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
                     }}>
-                      Rent: (${tileMeta.rent})
+                      Rent: ${tileMeta.rent}
                     </div>
                   </div>
 
