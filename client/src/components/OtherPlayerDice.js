@@ -1,30 +1,54 @@
 import React from 'react';
 import { GameContext } from '../context/GameContext';
 
-const diceImages = {};
-for (let i = 1; i <= 6; i++) {
-  diceImages[i] = require(`../assets/dice/dice${i}.png`);
-}
+// Import dice images
+import dice1 from '../assets/dice/dice1.png';
+import dice2 from '../assets/dice/dice2.png';
+import dice3 from '../assets/dice/dice3.png';
+import dice4 from '../assets/dice/dice4.png';
+import dice5 from '../assets/dice/dice5.png';
+import dice6 from '../assets/dice/dice6.png';
+
+const diceImages = {
+  1: dice1,
+  2: dice2,
+  3: dice3,
+  4: dice4,
+  5: dice5,
+  6: dice6
+};
 
 export default function OtherPlayerDice() {
   const { players, player, currentPlayerId } = React.useContext(GameContext);
   const [rolls, setRolls] = React.useState({});
 
   React.useEffect(() => {
-    if (!player?.socket) return;
+    if (!player?.socket) {
+      console.log('No player socket available');
+      return;
+    }
+
+    console.log('Setting up dice roll listener for player:', player.socketId, 'currentPlayerId:', currentPlayerId);
 
     const handleDiceRoll = (data) => {
-      console.log('Received dice roll:', data);
+      console.log('Received dice roll event:', data);
+      console.log('Current player socket ID:', player.socketId, 'Event player ID:', data.playerId, 'Current player ID:', currentPlayerId);
+      
       if (data.playerId !== player.socketId && data.playerId !== currentPlayerId) {
+        console.log('Processing dice roll from other player:', data.playerId);
+        const newRoll = {
+          die1: data.die1,
+          die2: data.die2,
+          playerName: players.find(p => p.socketId === data.playerId)?.name || 'Player',
+          timestamp: Date.now()
+        };
+        console.log('Adding new roll to state:', newRoll);
         setRolls(prev => ({
           ...prev,
-          [data.playerId]: {
-            die1: data.die1,
-            die2: data.die2,
-            playerName: players.find(p => p.socketId === data.playerId)?.name || 'Player',
-            timestamp: Date.now()
-          }
+          [data.playerId]: newRoll
         }));
+      } else {
+        console.log('Ignoring roll - either from current player or already processed');
       }
     };
 
@@ -53,9 +77,17 @@ export default function OtherPlayerDice() {
     return () => clearInterval(interval);
   }, []);
 
+  // Log the current state for debugging
+  console.log('Current rolls state:', rolls);
+  console.log('Dice images loaded:', Object.entries(diceImages).map(([key, value]) => ({
+    key,
+    path: value.default || value,
+    exists: !!value
+  })));
+
   return (
     <div style={{
-      position: 'fixed',
+      position: 'absolute',
       top: '20px',
       right: '20px',
       display: 'flex',
@@ -92,16 +124,18 @@ export default function OtherPlayerDice() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <img 
-                src={diceImages[roll.die1]?.default || ''} 
+                src={diceImages[roll.die1]} 
                 alt={`Die ${roll.die1}`} 
                 width={40} 
                 height={40} 
+                onError={(e) => console.error('Error loading die image:', e.target.src)}
               />
               <img 
-                src={diceImages[roll.die2]?.default || ''} 
+                src={diceImages[roll.die2]} 
                 alt={`Die ${roll.die2}`} 
                 width={40} 
-                height={40} 
+                height={40}
+                onError={(e) => console.error('Error loading die image:', e.target.src)}
               />
             </div>
           </div>
