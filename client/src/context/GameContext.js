@@ -47,14 +47,28 @@ export function GameProvider({ children }) {
 
   
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('GameContext: Socket not available');
+      return;
+    }
     
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
+    
     const handlePlayerDiceRoll = (data) => {
       console.log('GameContext: Received playerDiceRoll event:', data);
+      console.log('GameContext: Current socket ID:', socket.id);
+      console.log('GameContext: Event player ID:', data.playerId);
+      
       // Forward the event to all components that might be interested
+      console.log('GameContext: Forwarding as forwardedPlayerDiceRoll');
       socket.emit('forwardedPlayerDiceRoll', data);
+      
+      // Also log all socket event listeners for debugging
+      console.log('GameContext: Current socket event listeners:', {
+        events: socket._callbacks ? Object.keys(socket._callbacks) : 'No callbacks',
+        hasForwardedListener: socket._callbacks?.forwardedPlayerDiceRoll ? 'Yes' : 'No'
+      });
     };
 
     socket.on('rpsStarted', handleRpsStarted);

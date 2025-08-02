@@ -13,7 +13,6 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
-import OtherPlayerDice from './OtherPlayerDice';
 
 const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
@@ -1441,15 +1440,11 @@ export default function GameScreen() {
                   )}
                 </>
               )}
-              {isMyTurn ? (
-                <DiceRoller
+            <DiceRoller
                   testRollMode={testRollMode}
                   hasCasinoPlayed={hasCasinoPlayed}
                   style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
                 />
-              ) : (
-                <OtherPlayerDice />
-              )}
             </div>
           </div>
 
