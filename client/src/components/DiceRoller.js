@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
-import Dice from './Dice';
 
 const diceImages = {};
 for (let i = 1; i <= 6; i++) {
@@ -12,8 +11,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const { player, players, currentPlayerId, socket } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
-  const [showDice, setShowDice] = useState(false);
-  const [diceValues, setDiceValues] = useState([1, 1]);
   const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
@@ -30,12 +27,11 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   useEffect(() => {
     const onDiceResult = ({ playerId, die1, die2 }) => {
-      // Show animation for all players when any player rolls
-      setDie1(die1);
-      setDie2(die2);
-      setDiceValues([die1, die2]);
-      setShowDice(true);
-      setDone(false);
+      if (playerId === player?.socketId) {
+        setDie1(die1);
+        setDie2(die2);
+        setDone(false);
+      }
     };
 
     const onBranchChoices = ({ options }) => setBranchOptions(options);
@@ -87,33 +83,9 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
   const handleRoll = () => {
     if (!testRollMode) {
-      // Show the dice animation with random initial values
-      const newDie1 = Math.ceil(Math.random() * 6);
-      const newDie2 = Math.ceil(Math.random() * 6);
-      
-      // Reset animation state
-      setShowDice(false);
-      
-      // Force re-render with new values
-      requestAnimationFrame(() => {
-        setDiceValues([newDie1, newDie2]);
-        setShowDice(true);
-      });
-      
-      // Emit the roll to the server after a short delay to allow animation to start
-      setTimeout(() => {
-        socket.emit('rollDice', { 
-          testRoll: null,
-          die1: newDie1,
-          die2: newDie2
-        });
-      }, 100);
+      socket.emit('rollDice', { testRoll: null });
     }
     setBranchOptions(null);
-  };
-
-  const handleDiceAnimationComplete = () => {
-    setShowDice(false);
   };
 
   const handleDone = () => {
@@ -124,70 +96,21 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setBranchOptions(null);
   };
 
-  // Show dice animation when rolling
-  const diceAnimation = (
-    <div 
-      key="dice-animation" 
-      className="dice-animation-container"
+  return (
+    <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none',
-        zIndex: 1000,
-        opacity: showDice ? 1 : 0,
-        transition: 'opacity 0.3s ease',
+        right: 0,
+        bottom: 0,
         display: 'flex',
-        justifyContent: 'center',
+        flexDirection: 'column',
         alignItems: 'center',
-        backgroundColor: 'transparent',
-        willChange: 'opacity' // Optimize for animations
+        justifyContent: 'center',
+        textAlign: 'center',
       }}
     >
-      <div style={{
-        display: 'flex',
-        gap: '120px', // Increased gap between dice
-        transform: 'scale(1.2)' // Slightly smaller scale for better fit
-      }}>
-        <Dice 
-          value={diceValues[0]} 
-          position={1} 
-          animationComplete={() => {
-            // Only hide the dice after both animations complete
-            setTimeout(() => setShowDice(false), 1000);
-          }} 
-        />
-        <Dice 
-          value={diceValues[1]} 
-          position={2} 
-          animationComplete={() => {
-            // Only hide the dice after both animations complete
-            setTimeout(() => setShowDice(false), 1000);
-          }} 
-        />
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ position: 'relative' }}>
-      {diceAnimation}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
       {/* Roll button */}
       {!die1 && !hasRolled && !branchOptions && (
         <button
@@ -291,7 +214,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
           Done
         </button>
       )}
-      </div>
     </div>
   );
 }
