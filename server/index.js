@@ -296,6 +296,15 @@ io.on('connection', socket => {
         );
       }
       await transaction.commit();
+      
+      // Emit the dice roll to all clients
+      io.emit('playerDiceRoll', {
+        playerId: socket.id,
+        playerName: currentPlayer.name,
+        die1: roll.die1,
+        die2: roll.die2,
+        total: roll.total
+      });
     } catch (err) {
       console.error('Error updating hasRolled state:', err);
     }

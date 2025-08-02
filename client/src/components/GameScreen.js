@@ -13,6 +13,7 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
+import OtherPlayerDice from './OtherPlayerDice';
 
 const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
@@ -1210,6 +1211,8 @@ export default function GameScreen() {
                     padding: '20px'
                   }}>
                     <Chat />
+                    <TradePanel />
+                    <OtherPlayerDice />
                   </div>
                 )}
                 {panelId === 'trade' && (
@@ -1721,7 +1724,16 @@ export default function GameScreen() {
                     {(player.loan || 0) > 10000 && (
                       <p style={{ color: 'tomato', margin: 0 }}>Cannot buy property when loan exceeds $10,000</p>
                     )}
+                    <div style={{
+                      color: '#fff',
+                      fontSize: '1.2em',
+                      marginTop: '10px',
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
+                    }}>
+                      Rent: (${tileMeta.rent})
+                    </div>
                   </div>
+
                 );
               }
 
