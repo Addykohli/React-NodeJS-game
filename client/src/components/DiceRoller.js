@@ -151,6 +151,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </button>
       )}
 
+      {/* Dice image display */}
       {die1 && (
         <div
           style={{

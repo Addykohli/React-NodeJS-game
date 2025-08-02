@@ -14,6 +14,12 @@ import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
 
+// Import dice images
+const diceImages = {};
+for (let i = 1; i <= 6; i++) {
+  diceImages[i] = require(`../assets/dice/dice${i}.png`);
+}
+
 const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
@@ -274,7 +280,8 @@ export default function GameScreen() {
     socket,
     movementDone,
     handleQuit,
-    isRpsActive
+    isRpsActive,
+    diceRoll
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -1440,12 +1447,55 @@ export default function GameScreen() {
                   )}
                 </>
               )}
-            <DiceRoller
+                <DiceRoller
                   testRollMode={testRollMode}
                   hasCasinoPlayed={hasCasinoPlayed}
                   style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
                 />
             </div>
+            {/* Other Player Dice Display */}
+          {!isMyTurn && diceRoll && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '10px',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: '8px',
+              margin: '0 10px',
+              minWidth: '120px'
+            }}>
+              <div style={{ 
+                color: 'white', 
+                marginBottom: '8px',
+                fontSize: '0.9em',
+                textAlign: 'center'
+              }}>
+                {players.find(p => p.socketId === currentPlayerId)?.name || 'Player'}'s Roll
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '10px',
+              }}>
+                <img
+                  src={diceImages[diceRoll.die1]}
+                  alt={`Die ${diceRoll.die1}`}
+                  width={40}
+                  height={40}
+                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                />
+                <img
+                  src={diceImages[diceRoll.die2]}
+                  alt={`Die ${diceRoll.die2}`}
+                  width={40}
+                  height={40}
+                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                />
+              </div>
+            </div>
+          )}
           </div>
 
           {/* Vertical Gradient Separator */}
