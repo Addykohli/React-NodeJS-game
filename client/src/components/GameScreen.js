@@ -1505,7 +1505,7 @@ export default function GameScreen() {
                       height={80}
                       style={{ 
                         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
-                        transform: 'scale(1.5)'
+                        transform: 'scale(1.05)' // Reduced from 1.5 to 1.05 (30% reduction)
                       }}
                     />
                     <img
@@ -1515,7 +1515,7 @@ export default function GameScreen() {
                       height={80}
                       style={{ 
                         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
-                        transform: 'scale(1.5)'
+                        transform: 'scale(1.05)' // Reduced from 1.5 to 1.05 (30% reduction)
                       }}
                     />
                   </div>
