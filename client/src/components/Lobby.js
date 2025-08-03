@@ -308,7 +308,7 @@ const Lobby = () => {
                   }}>
                     Welcome, <strong>{thisPlayer.name}</strong>! You've selected:
                     <img
-                      src={pieceImages[p.piece]}
+                      src={`/pieces/${selectedPiece}`}
                       alt=""
                       width={45}
                       style={{ marginLeft: '15px', verticalAlign: 'middle' }}
