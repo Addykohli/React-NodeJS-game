@@ -1407,96 +1407,113 @@ export default function GameScreen() {
           }}
         >
           {/* Dice Roller Section */}
-          <div
-            className="footer-section"
-            style={{
-              flex: '1 1 0',
-              minWidth: 0,
-              position: 'relative',
-              padding: '10px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              height: '100%',
-              minHeight: '120px',
-              width: '100%',
-              maxWidth: '100%',
-            }}
-          >
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-              {isMyTurn && (
-                <>
-                  {testRollMode && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        zIndex: 100,
-                        fontSize: '1em',
-                      }}
-                    >
-                      {testRollInput}
-                    </div>
-                  )}
-                </>
-              )}
+          {isMyTurn ? (
+            <div
+              className="footer-section"
+              style={{
+                flex: '1 1 0',
+                minWidth: 0,
+                position: 'relative',
+                padding: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                height: '100%',
+                minHeight: '120px',
+                width: '100%',
+                maxWidth: '100%',
+              }}
+            >
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                {testRollMode && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      zIndex: 100,
+                      fontSize: '1em',
+                    }}
+                  >
+                    {testRollInput}
+                  </div>
+                )}
                 <DiceRoller
                   testRollMode={testRollMode}
                   hasCasinoPlayed={hasCasinoPlayed}
                   style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', maxWidth: '100%' }}
                 />
+              </div>
             </div>
-            {/* Other Player Dice Display */}
-          {!isMyTurn && diceRoll && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '10px',
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              borderRadius: '8px',
-              margin: '0 10px',
-              minWidth: '120px'
-            }}>
-              <div style={{ 
-                color: 'white', 
-                marginBottom: '8px',
-                fontSize: '0.9em',
-                textAlign: 'center'
-              }}>
-                {players.find(p => p.socketId === currentPlayerId)?.name || 'Player'}'s Roll
-              </div>
-              <div style={{
+          ) : (
+            <div
+              className="footer-section"
+              style={{
+                flex: '1 1 0',
+                minWidth: 0,
+                position: 'relative',
+                padding: '10px',
                 display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
                 justifyContent: 'center',
-                gap: '10px',
-              }}>
-                <img
-                  src={diceImages[diceRoll.die1]}
-                  alt={`Die ${diceRoll.die1}`}
-                  width={40}
-                  height={40}
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
-                />
-                <img
-                  src={diceImages[diceRoll.die2]}
-                  alt={`Die ${diceRoll.die2}`}
-                  width={40}
-                  height={40}
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
-                />
-              </div>
+                overflow: 'hidden',
+                height: '100%',
+                minHeight: '120px',
+                width: '100%',
+                maxWidth: '100%',
+              }}
+            >
+              {diceRoll && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '10px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                  borderRadius: '8px',
+                  margin: '0 10px',
+                  minWidth: '120px'
+                }}>
+                  <div style={{ 
+                    color: 'white', 
+                    marginBottom: '8px',
+                    fontSize: '0.9em',
+                    textAlign: 'center'
+                  }}>
+                    {players.find(p => p.socketId === currentPlayerId)?.name || 'Player'}'s Roll
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '10px',
+                  }}>
+                    <img
+                      src={diceImages[diceRoll.die1]}
+                      alt={`Die ${diceRoll.die1}`}
+                      width={40}
+                      height={40}
+                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                    />
+                    <img
+                      src={diceImages[diceRoll.die2]}
+                      alt={`Die ${diceRoll.die2}`}
+                      width={40}
+                      height={40}
+                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          </div>
 
           {/* Vertical Gradient Separator */}
           <div className="footer-separator" style={{
