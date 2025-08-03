@@ -1476,38 +1476,47 @@ export default function GameScreen() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '10px',
+                  padding: '20px',
                   backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                  borderRadius: '8px',
-                  margin: '0 10px',
-                  minWidth: '120px'
+                  borderRadius: '16px',
+                  margin: '0 20px',
+                  minWidth: '240px',
+                  transform: 'scale(1.5)',
+                  transformOrigin: 'center'
                 }}>
                   <div style={{ 
                     color: 'white', 
-                    marginBottom: '8px',
-                    fontSize: '0.9em',
-                    textAlign: 'center'
+                    marginBottom: '16px',
+                    fontSize: '1.2em',
+                    textAlign: 'center',
+                    fontWeight: 'bold'
                   }}>
                     {players.find(p => p.socketId === currentPlayerId)?.name || 'Player'}'s Roll
                   </div>
                   <div style={{
                     display: 'flex',
                     justifyContent: 'center',
-                    gap: '10px',
+                    gap: '20px',
                   }}>
                     <img
                       src={diceImages[diceRoll.die1]}
                       alt={`Die ${diceRoll.die1}`}
-                      width={40}
-                      height={40}
-                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                      width={80}
+                      height={80}
+                      style={{ 
+                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                        transform: 'scale(1.5)'
+                      }}
                     />
                     <img
                       src={diceImages[diceRoll.die2]}
                       alt={`Die ${diceRoll.die2}`}
-                      width={40}
-                      height={40}
-                      style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                      width={80}
+                      height={80}
+                      style={{ 
+                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                        transform: 'scale(1.5)'
+                      }}
                     />
                   </div>
                 </div>
