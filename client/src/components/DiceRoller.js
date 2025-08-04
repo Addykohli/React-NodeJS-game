@@ -176,45 +176,58 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
         </div>
       )}
 
-      {done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled &&(
-        <button
-          onClick={handleDone}
-          style={{
-            padding: '17px 40px',
-            borderRadius: '10px',
-            border: 0,
-            backgroundColor: 'rgb(76, 175, 80)',
-            letterSpacing: '1.5px',
-            fontSize: '1.5em',
-            transition: 'all 0.3s ease',
-            boxShadow: 'rgb(46, 115, 0) 0px 10px 0px 0px',
-            color: 'hsl(0, 0%, 100%)',
-            cursor: 'pointer',
-            marginTop: '16px',
-          }}
-          onMouseOver={e => {
-            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 7px 0px 0px';
-          }}
-          onMouseOut={e => {
-            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
-          }}
-          onMouseDown={e => {
-            e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
-            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 0px 0px 0px';
-            e.currentTarget.style.transform = 'translateY(5px)';
-            e.currentTarget.style.transition = '200ms';
-          }}
-          onMouseUp={e => {
-            e.currentTarget.style.backgroundColor = '#4CAF50';
-            e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.transition = 'all 0.3s ease';
-          }}
-        >
-          Done
-        </button>
-      )}
+      {(() => {
+        // Debug logging for button visibility
+        const showButton = done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled;
+        console.log('=== Done Button Debug ===');
+        console.log('done:', done);
+        console.log('isOnCasino:', isOnCasino);
+        console.log('casinoPlayed:', casinoPlayed);
+        console.log('!isOnCasino || casinoPlayed:', (!isOnCasino || casinoPlayed));
+        console.log('!rpsGame:', !rpsGame);
+        console.log('hasRolled:', hasRolled);
+        console.log('Show Done Button:', showButton);
+        console.log('======================');
+        
+        return showButton ? (
+          <button
+            onClick={handleDone}
+            style={{
+              padding: '17px 40px',
+              borderRadius: '10px',
+              border: 0,
+              backgroundColor: 'rgb(76, 175, 80)',
+              letterSpacing: '1.5px',
+              fontSize: '1.5em',
+              transition: 'all 0.3s ease',
+              boxShadow: 'rgb(46, 115, 0) 0px 10px 0px 0px',
+              color: 'hsl(0, 0%, 100%)',
+              cursor: 'pointer',
+              marginTop: '16px',
+            }}
+            onMouseOver={e => {
+              e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 7px 0px 0px';
+            }}
+            onMouseOut={e => {
+              e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
+            }}
+            onMouseDown={e => {
+              e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+              e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 0px 0px 0px';
+              e.currentTarget.style.transform = 'translateY(5px)';
+              e.currentTarget.style.transition = '200ms';
+            }}
+            onMouseUp={e => {
+              e.currentTarget.style.backgroundColor = 'rgb(76, 175, 80)';
+              e.currentTarget.style.boxShadow = 'rgb(46, 115, 0) 0px 10px 0px 0px';
+              e.currentTarget.style.transform = 'translateY(0px)';
+              e.currentTarget.style.transition = '200ms';
+            }}
+          >
+            Done
+          </button>
+        ) : null;
+      })()}
     </div>
   );
 }
-

@@ -255,6 +255,23 @@ io.on('connection', socket => {
       engine.session.players            = arr;
       engine.session.currentPlayerIndex = 0;
 
+      // Clean up players not in the current lobby
+      try {
+        const allPlayers = await Player.findAll();
+        const lobbyPlayerIds = arr.map(p => p.socketId);
+        const playersToRemove = allPlayers.filter(p => !lobbyPlayerIds.includes(p.socketId));
+        
+        if (playersToRemove.length > 0) {
+          console.log(`Cleaning up ${playersToRemove.length} players not in the current lobby:`);
+          for (const player of playersToRemove) {
+            console.log(`- ${player.name} (${player.socketId})`);
+            await player.destroy();
+          }
+        }
+      } catch (error) {
+        console.error('Error cleaning up players:', error);
+      }
+
       const s = new GameSession({
         players: arr.map(pl => ({
           socketId: pl.socketId,
