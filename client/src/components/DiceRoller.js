@@ -30,7 +30,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       if (playerId === player?.socketId) {
         setDie1(die1);
         setDie2(die2);
-        setDone(false);
+        //setDone(false);
       }
     };
 
