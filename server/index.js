@@ -1101,56 +1101,6 @@ io.on('connection', socket => {
         
         disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
         
-        const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
-        if (isCurrentPlayer) {
-          console.log(`Current player ${disconnectingPlayer.name} disconnected during their turn`);
-          const currentPlayer = engine.getPlayer(socket.id);
-          if (currentPlayer && (currentPlayer.hasMoved || currentPlayer.hasRolled)) {
-            console.log(`[disconnect] Player had already moved or rolled, auto-advancing turn`);
-            currentPlayer.hasRolled = false;
-            currentPlayer.hasMoved = false;
-            currentPlayer.pickedRoadCash = true;
-
-            const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
-            engine.session.currentPlayerIndex = nextPlayerIndex;
-            const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
-
-            engine.session.players = engine.session.players.map(p => ({
-              ...p,
-              hasRolled: false
-            }));
-
-            try {
-              const transaction = await sequelize.transaction();
-              try {
-                await Player.update(
-                  { hasRolled: false },
-                  { where: {}, transaction }
-                );
-                if (currentSessionId) {
-                  await GameSession.update(
-                    { 
-                      currentPlayerIndex: nextPlayerIndex,
-                      players: engine.session.players
-                    },
-                    { where: { id: currentSessionId }, transaction }
-                  );
-                }
-                await transaction.commit();
-              } catch (err) {
-                await transaction.rollback();
-                console.error('Error updating DB on disconnect turn advance:', err);
-              }
-            } catch (err) {
-              console.error('Error starting transaction for disconnect turn advance:', err);
-            }
-
-            io.emit('turnEnded', { nextPlayerId });
-            console.log('Turn advanced to next player:', nextPlayerId);
-          } else {
-            console.log(`[disconnect] Player had not moved or rolled yet, keeping their turn`);
-          }
-        }
       }
     } else if (!hasStarted) {
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);

@@ -448,7 +448,7 @@ export const tiles = [
       { from: 37, roll: 'any', to: 39 },
       { from: 39, roll: 'any', to: 37 }
           ],
-      cost: 8000,
+      cost: 8500,
       rent: 2500
     },
   
