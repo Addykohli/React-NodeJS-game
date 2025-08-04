@@ -412,17 +412,17 @@ const PropertyDisplay = () => {
       case 1: 
         return [{ position: 'left' }];
       case 2: 
-        return [{ position: 'left', top: '25%' }, { position: 'left', top: '75%' }];
+        return [{ position: 'left', top: '50%' }, { position: 'right', top: '50%' }];
       case 3: 
         return [
-          { position: 'left', top: '100%' },
-          { position: 'left', top: '75%' },
+          { position: 'left', top: '50%' },
+          { position: 'right', top: '50%' },
           { position: 'top' }
         ];
       case 4: 
         return [
-          { position: 'left', top: '25%' },
-          { position: 'left', top: '75%' },
+          { position: 'left', top: '50%' },
+          { position: 'right', top: '50%' },
           { position: 'top' },
           { position: 'top' }
         ];

@@ -8,10 +8,16 @@ for (let i = 1; i <= 6; i++) {
 }
 
 export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
-  const { player, players, currentPlayerId, socket } = useContext(GameContext);
+  const { 
+    player, 
+    players, 
+    currentPlayerId, 
+    socket, 
+    done, 
+    setDone 
+  } = useContext(GameContext);
   const [die1, setDie1] = useState(null);
   const [die2, setDie2] = useState(null);
-  const [done, setDone] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
@@ -35,7 +41,10 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     };
 
     const onBranchChoices = ({ options }) => setBranchOptions(options);
-    const onMovementDone = () => setDone(true);
+    const onMovementDone = () => {
+    setDone(true);
+    localStorage.setItem('gameDoneState', 'true');
+  };
 
     const onCasinoResult = ({ playerId }) => {
       if (playerId === player?.socketId) {
@@ -92,6 +101,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setDie1(null);
     setDie2(null);
     setDone(false);
+    localStorage.setItem('gameDoneState', 'false');
     setBranchOptions(null);
   };
 

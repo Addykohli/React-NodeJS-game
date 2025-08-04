@@ -31,6 +31,11 @@ export function GameProvider({ children }) {
     const savedMovementDone = localStorage.getItem('gameMovementDone');
     return savedMovementDone ? JSON.parse(savedMovementDone) : false;
   });
+  
+  const [done, setDone] = useState(() => {
+    const savedDone = localStorage.getItem('gameDoneState');
+    return savedDone ? JSON.parse(savedDone) : false;
+  });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
 
   
@@ -486,6 +491,8 @@ export function GameProvider({ children }) {
         setDiceRoll,
         movementDone,
         setMovementDone,
+        done,
+        setDone,
         insufficientFunds,
         setInsufficientFunds,
         chatMessages,

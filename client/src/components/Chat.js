@@ -59,12 +59,17 @@ const Chat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const messagesContainerRef = useRef(null);
+
+  // Scroll to top when chat messages change
+  const scrollToTop = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = 0;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToTop();
   }, [chatMessages]);
 
   const handleSendMessage = (e) => {
@@ -85,17 +90,24 @@ const Chat = () => {
       height: 'calc(100vh - 400px)',
       gap: '15px'
     }}>
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '8px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
-      }}>
-        {chatMessages.map((msg, index) => (
+      <div 
+        ref={messagesContainerRef}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          borderRadius: '8px',
+          padding: '15px',
+          display: 'flex',
+          flexDirection: 'column-reverse',
+          gap: '10px',
+          // Enable flex reverse scrolling
+          '& > *': {
+            flexShrink: 0
+          }
+        }}
+      >
+        {[...chatMessages].reverse().map((msg, index) => (
           <div 
             key={index}
             style={{
@@ -126,7 +138,8 @@ const Chat = () => {
             </div>
           </div>
         ))}
-        <div ref={messagesEndRef} />
+        {/* Empty div at the top to maintain scroll position */}
+        <div style={{ height: 0 }} />
       </div>
 
       <form 
