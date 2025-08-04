@@ -127,7 +127,6 @@ io.on('connection', socket => {
             await Player.update(
               { 
                 socketId: socket.id,
-                hasRolled: false
               },
               { where: { socketId: oldSocketId } }
             );
@@ -181,9 +180,6 @@ io.on('connection', socket => {
           
           if (!isCurrentPlayer || currentPlayer.hasMoved) {
             socket.emit('movementDone');
-          }
-          else {
-            currentPlayer.hasRolled = false
           }
         }
         return;
