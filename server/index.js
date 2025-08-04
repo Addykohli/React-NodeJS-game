@@ -114,6 +114,24 @@ io.on('connection', socket => {
     }
     
     if (hasStarted) {
+      // Log all player values for debugging
+      console.log('=== PLAYER STATES ===');
+      const allPlayers = await Player.findAll();
+      allPlayers.forEach(player => {
+        console.log(`\nPlayer: ${player.name} (${player.socketId})`);
+        console.log('------------------------');
+        console.log(`- Piece: ${player.piece}`);
+        console.log(`- Money: $${player.money}`);
+        console.log(`- Tile ID: ${player.tileId}`);
+        console.log(`- Previous Tile: ${player.prevTile}`);
+        console.log(`- Loan: $${player.loan}`);
+        console.log(`- Has Moved: ${player.hasMoved}`);
+        console.log(`- Has Rolled: ${player.hasRolled}`);
+        console.log(`- Picked Road Cash: ${player.pickedRoadCash}`);
+        console.log(`- Ready: ${player.ready}`);
+        console.log(`- Properties: ${JSON.stringify(player.properties, null, 2)}`);
+      });
+      console.log('======================');
       const disconnectedPlayer = disconnectedPlayers.get(name);
       if (disconnectedPlayer) {
         const oldSocketId = disconnectedPlayer.socketId;
