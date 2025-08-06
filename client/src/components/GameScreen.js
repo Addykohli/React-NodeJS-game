@@ -309,6 +309,7 @@ export default function GameScreen() {
   const [borrowAmount, setBorrowAmount] = useState(500);
   const [payoffAmount, setPayoffAmount] = useState(500);
   const [gameEvents, setGameEvents] = useState([]);
+  const eventsEndRef = useRef(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -324,20 +325,30 @@ export default function GameScreen() {
     return () => socket.off('borrowResponse', handleBorrowResponse);
   }, [socket]);
 
+  // Auto-scroll to top when game events change or panel is opened
+  useEffect(() => {
+    if (activeSidePanel === 'info' && eventsEndRef.current) {
+      eventsEndRef.current.scrollTop = 0;
+    }
+  }, [gameEvents, activeSidePanel]);
+
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('gameEventsHistory', (events) => {
+    const handleGameEventsHistory = (events) => {
       setGameEvents(events);
-    });
+    };
 
-    socket.on('gameEvent', (event) => {
-      setGameEvents(prev => [...prev, event]);
-    });
+    const handleGameEvent = (event) => {
+      setGameEvents(prev => [event, ...prev]);
+    };
+
+    socket.on('gameEventsHistory', handleGameEventsHistory);
+    socket.on('gameEvent', handleGameEvent);
 
     return () => {
-      socket.off('gameEventsHistory');
-      socket.off('gameEvent');
+      socket.off('gameEventsHistory', handleGameEventsHistory);
+      socket.off('gameEvent', handleGameEvent);
     };
   }, [socket]);
 
@@ -893,16 +904,20 @@ export default function GameScreen() {
                 <h1 style={{ marginBottom: '20px' }}>{config.title}</h1>
                 {/* Panel specific content */}
                 {panelId === 'info' && (
-                  <div style={{
-                    height: 'calc(100vh - 250px)',
-                    overflowY: 'auto',
-                    padding: '15px',
-                    display: 'flex',
-                    flexDirection: 'column-reverse',
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    borderRadius: '8px',
-                    gap: '15px'
-                  }}>
+                  <div 
+                    ref={eventsEndRef}
+                    style={{
+                      height: 'calc(100vh - 250px)',
+                      overflowY: 'auto',
+                      padding: '15px',
+                      display: 'flex',
+                      flexDirection: 'column-reverse',
+                      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                      borderRadius: '8px',
+                      gap: '15px',
+                      scrollBehavior: 'smooth'
+                    }}
+                  >
                     {gameEvents.map((event, index) => {
                       const message = event.message.replace(
                         /\$(\d+,?\d*)/g,

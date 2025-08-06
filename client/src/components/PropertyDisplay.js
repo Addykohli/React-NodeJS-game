@@ -162,7 +162,7 @@ const PropertyDisplayLeft = ({ player, position }) => {
     <div style={{
       position: 'absolute',
       right: '100%',
-      top: position === 'top' ? '55%' : '100%',
+      top: position === 'top' ? '60%' : '108%',
       transform: `translate(5px, calc(${position === 'top' ? '-50%' : '-135%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 100px' : '+ -200px'}))`,
       width: cardWidth + 'px',
       display: 'flex',
@@ -252,7 +252,7 @@ const PropertyDisplayRight = ({ player, position }) => {
     <div style={{
       position: 'absolute',
       left: '100%',
-      top: position === 'top' ? '50%' : '100%',
+      top: position === 'top' ? '60%' : '108%',
       transform: `translate(-5px, calc(${position === 'top' ? '-50%' : '-75%'} + ${centerOffset}px - ${(ownedProperties.length - 1) * cardOverlap / 2}px ${position === 'top' ? '- 100px' : '+ -200px'}))`,
       width: cardWidth + 'px',
       display: 'flex',
@@ -640,7 +640,7 @@ const PropertyDisplay = () => {
         <PropertyDisplayLeft 
           key={leftPlayer.socketId} 
           player={leftPlayer}
-          position={idx === 0 ? 'top' : 'bottom'}
+          position={idx === 0 ? 'bottom' : 'top'}
         />
       ))}
 
@@ -649,7 +649,7 @@ const PropertyDisplay = () => {
         <PropertyDisplayRight
           key={rightPlayer.socketId}
           player={rightPlayer}
-          position={idx === 0 ? 'top' : 'bottom'}
+          position={idx === 0 ? 'bottom' : 'top'}
         />
       ))}
     </>
