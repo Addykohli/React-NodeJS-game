@@ -74,10 +74,22 @@ const Board = () => {
   }, [socket]);
   
   // Get the current player's properties
-  const playerProperties = player?.properties || [];
+  const playerProperties = player?.properties?.map(propId => ({
+    id: propId,
+    tileId: propId, // For backward compatibility
+    ownerId: player?.socketId
+  })) || [];
+  
+  // Get other players' properties
   const otherPlayersProperties = players
     .filter(p => p.socketId !== player?.socketId)
-    .reduce((acc, p) => [...acc, ...(p.properties || [])], []);
+    .flatMap(p => 
+      (p.properties || []).map(propId => ({
+        id: propId,
+        tileId: propId, // For backward compatibility
+        ownerId: p.socketId
+      }))
+    );
     
   // Debug: Log ownership data
   useEffect(() => {
@@ -85,25 +97,35 @@ const Board = () => {
     
     console.log('Ownership visualization data:', {
       showOwnership,
-      playerProperties: playerProperties.map(p => ({
-        tileId: p.tileId,
-        name: p.name,
-        owner: player?.name || 'unknown'
-      })),
-      otherPlayersProperties: otherPlayersProperties.map(p => ({
-        tileId: p.tileId,
-        name: p.name,
-        owner: players.find(pl => pl.socketId === p.ownerId)?.name || 'unknown'
-      })),
+      player: {
+        id: player?.socketId,
+        name: player?.name,
+        propertyCount: playerProperties.length,
+        properties: playerProperties
+      },
+      otherPlayers: players
+        .filter(p => p.socketId !== player?.socketId)
+        .map(p => ({
+          id: p.socketId,
+          name: p.name,
+          propertyCount: p.properties?.length || 0,
+          properties: p.properties || []
+        })),
       tilesWithLocations: tiles
         .filter(t => t.location)
-        .map(t => ({
-          id: t.id,
-          name: t.name,
-          location: t.location,
-          isOwned: playerProperties.some(p => p.tileId === t.id) || 
-                   otherPlayersProperties.some(p => p.tileId === t.id)
-        }))
+        .map(tile => {
+          const owner = players.find(p => 
+            p.properties && p.properties.includes(tile.id)
+          );
+          return {
+            id: tile.id,
+            name: tile.name,
+            location: tile.location,
+            ownedBy: owner ? owner.socketId : null,
+            ownedByName: owner ? owner.name : 'unowned',
+            isPlayerOwned: playerProperties.some(p => p.id === tile.id)
+          };
+        })
     });
   }, [showOwnership, playerProperties, otherPlayersProperties, player, players]);
 
@@ -125,17 +147,25 @@ const Board = () => {
       
       {/* Ownership visualization */}
       {showOwnership && tiles.filter(tile => tile.location).map(tile => {
-        const isOwnedByPlayer = playerProperties.some(prop => prop.tileId === tile.id);
-        const isOwnedByOther = otherPlayersProperties.some(prop => prop.tileId === tile.id);
-        const owner = isOwnedByPlayer ? 'player' : isOwnedByOther ? 'other' : 'none';
+        // Find the owner of this tile
+        const owner = players.find(p => 
+          p.properties && p.properties.includes(tile.id)
+        );
+        
+        const isOwnedByPlayer = owner && owner.socketId === player?.socketId;
+        const isOwnedByOther = owner && owner.socketId !== player?.socketId;
         
         // Debug: Log each tile being rendered
-        console.log(`Rendering tile ${tile.id} (${tile.name}): owner=${owner}`, {
+        console.log(`Rendering tile ${tile.id} (${tile.name || 'unnamed'})`, {
           location: tile.location,
-          playerProperties: playerProperties.filter(p => p.tileId === tile.id),
-          otherProperties: otherPlayersProperties.filter(p => p.tileId === tile.id)
+          ownedBy: owner ? owner.name : 'no one',
+          isOwnedByPlayer,
+          isOwnedByOther,
+          playerProperties: playerProperties,
+          allProperties: players.flatMap(p => p.properties || [])
         });
         
+        // Set color based on ownership
         let color = 'rgba(255, 255, 255, 0.4)'; // White for unowned
         if (isOwnedByPlayer) {
           color = 'rgba(0, 255, 0, 0.6)'; // Green for owned by player
