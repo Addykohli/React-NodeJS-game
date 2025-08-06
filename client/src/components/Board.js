@@ -128,12 +128,12 @@ const Board = () => {
         {/* Ownership indicators */}
         {showOwnership && propertyTiles.map((tile) => {
           const owner = getTileOwner(tile);
-          let fillColor = 'rgba(255, 255, 255, 0.4)'; // Default: unowned
+          let fillColor = 'rgba(255, 255, 255, 0.7)'; // Default: unowned (white with 0.7 opacity)
           
           if (owner) {
             fillColor = owner.socketId === player?.socketId 
-              ? 'rgba(0, 255, 0, 0.4)' // Owned by current player (green)
-              : 'rgba(255, 0, 0, 0.4)'; // Owned by other player (red)
+              ? 'rgba(0, 255, 0, 0.7)' // Owned by current player (green with 0.7 opacity)
+              : 'rgba(255, 0, 0, 0.7)'; // Owned by other player (red with 0.7 opacity)
           }
           
           return (
@@ -141,14 +141,16 @@ const Board = () => {
               key={`ownership-${tile.id}`}
               style={{
                 position: 'absolute',
-                left: `${tile.position.x - 5}px`,
-                top: `${tile.position.y - 5}px`,
-                width: '10px',
-                height: '10px',
+                left: `${tile.position.x - 45}px`, // Center the 90px square on the tile
+                top: `${tile.position.y - 45}px`,
+                width: '90px',
+                height: '90px',
                 backgroundColor: fillColor,
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                zIndex: 10,
-                pointerEvents: 'none'
+                border: '2px solid rgba(255, 255, 255, 0.8)',
+                borderRadius: '8px',
+                zIndex: 5, // Slightly lower than player pieces
+                pointerEvents: 'none',
+                boxShadow: '0 0 15px rgba(0,0,0,0.3)' // Add subtle shadow for better visibility
               }}
             />
           );

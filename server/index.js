@@ -639,8 +639,8 @@ io.on('connection', socket => {
     //implement stomp check, exeptions, and transactions, db updates
 
     
-    if (finalTile?.name === 'Stone Paper Scissors') {
-      console.log('\nLanded on Stone Paper Scissors! Finding shortest paths to other players...');
+    if (finalTile?.name === 'RPS') {
+      console.log('\nLanded on RPS! Finding shortest paths to other players...');
       const pathInfo = engine.findShortestPathsToPlayers(finalTileId);
       
       

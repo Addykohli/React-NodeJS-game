@@ -213,7 +213,7 @@ export const tiles = [
     },
   
     { id: 19,
-      name: 'Stone Paper Scissors',
+      name: 'RPS',
       type: 'event',
       position: { x: 1955, y: 580 },
       next: [
@@ -352,7 +352,7 @@ export const tiles = [
     },
   
   { id: 31,
-      name: 'Stone Paper Scissors',
+      name: 'RPS',
       type: 'event',
       position: { x: 260, y: 860 },
       next: [

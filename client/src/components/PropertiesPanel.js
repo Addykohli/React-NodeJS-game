@@ -32,16 +32,7 @@ const PropertiesPanel = () => {
       padding: '20px',
       color: 'white',
       overflowY: 'auto'
-    }}>
-      <h2 style={{ 
-        color: 'white',
-        borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
-        paddingBottom: '10px',
-        marginBottom: '20px'
-      }}>
-        Properties
-      </h2>
-      
+    }}>     
       <div style={{ marginBottom: '20px' }}>
         <button
           onClick={toggleOwnershipView}
@@ -49,55 +40,105 @@ const PropertiesPanel = () => {
             backgroundColor: showOwnership ? '#4CAF50' : '#f44336',
             color: 'white',
             border: 'none',
-            padding: '10px 20px',
-            borderRadius: '4px',
+            padding: '15px 30px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontSize: '16px',
-            transition: 'background-color 0.3s',
+            fontSize: '24px',
+            transition: 'all 0.3s',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px'
+            gap: '15px',
+            margin: '20px 0'
           }}
         >
           <span>Toggle Ownership View</span>
-          <span>{showOwnership ? 'ON' : 'OFF'}</span>
+          <span style={{ 
+            fontSize: '28px',
+            fontWeight: 'bold',
+            padding: '0 10px',
+            borderRadius: '4px',
+            backgroundColor: 'rgba(0,0,0,0.2)'
+          }}>
+            {showOwnership ? 'ON' : 'OFF'}
+          </span>
         </button>
-        <p style={{ marginTop: '10px', fontSize: '14px', opacity: 0.8 }}>
+        <p style={{ 
+          margin: '15px 0', 
+          fontSize: '20px', 
+          opacity: 0.9,
+          lineHeight: '1.5',
+          padding: '10px',
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          borderRadius: '6px'
+        }}>
           {showOwnership 
             ? 'Ownership view is enabled. Property indicators are shown on the board.'
             : 'Ownership view is disabled. Enable to see property indicators.'}
         </p>
       </div>
       
-      <div style={{ marginTop: '30px' }}>
-        <h3 style={{ color: '#fff', marginBottom: '15px' }}>Legend</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ 
+        marginTop: '40px',
+        padding: '20px',
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        borderRadius: '10px'
+      }}>
+        <h3 style={{ 
+          color: '#fff', 
+          margin: '0 0 20px 0',
+          fontSize: '26px',
+          fontWeight: 'bold',
+          paddingBottom: '10px',
+          borderBottom: '2px solid rgba(255,255,255,0.2)'
+        }}>
+          LEGEND
+        </h3>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '20px' 
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '20px' 
+          }}>
             <div style={{ 
-              width: '20px', 
-              height: '20px', 
+              width: '40px', 
+              height: '40px', 
               backgroundColor: 'rgba(0, 255, 0, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.5)'
+              border: '2px solid rgba(255, 255, 255, 0.7)',
+              borderRadius: '4px'
             }}></div>
-            <span>Your Properties</span>
+            <span style={{ fontSize: '22px' }}>Your Properties</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '20px' 
+          }}>
             <div style={{ 
-              width: '20px', 
-              height: '20px', 
+              width: '40px', 
+              height: '40px', 
               backgroundColor: 'rgba(255, 0, 0, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.5)'
+              border: '2px solid rgba(255, 255, 255, 0.7)',
+              borderRadius: '4px'
             }}></div>
-            <span>Other Players' Properties</span>
+            <span style={{ fontSize: '22px' }}>Other Players' Properties</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '20px' 
+          }}>
             <div style={{ 
-              width: '20px', 
-              height: '20px', 
+              width: '40px', 
+              height: '40px', 
               backgroundColor: 'rgba(255, 255, 255, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.5)'
+              border: '2px solid rgba(255, 255, 255, 0.7)',
+              borderRadius: '4px'
             }}></div>
-            <span>Unowned Properties</span>
+            <span style={{ fontSize: '22px' }}>Unowned Properties</span>
           </div>
         </div>
       </div>
