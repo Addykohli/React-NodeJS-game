@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { GameContext } from './GameContext';
+import { GameContext } from '../context/GameContext';
 
 const PropertiesPanel = () => {
   const { socket, player } = useContext(GameContext);

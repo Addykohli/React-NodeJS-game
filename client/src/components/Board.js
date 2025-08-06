@@ -5,7 +5,7 @@ import outerBoardImage from '../assets/outerBoard.png';
 import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
-import { SocketContext } from '../context/SocketContext';
+
 
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
@@ -20,7 +20,7 @@ const Board = () => {
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
   const [showOwnership, setShowOwnership] = useState(false);
-  const socketContext = useContext(SocketContext);
+  // Using socket from GameContext
 
   useEffect(() => {
     const img = new window.Image();
