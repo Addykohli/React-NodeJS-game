@@ -1823,7 +1823,14 @@ io.on('connection', socket => {
     setRpsResult(result);
     
     const updatedPlayers = players.map(p => {
-      if (p.socketId === result.landingPlayer.socketId) {
+      // Only update the landing player's money if they won against at least one player
+      // Check if the landing player has any wins in the results
+      const didWin = result.results?.some(r => 
+        r.winner === 'landingPlayer' || 
+        (r.winner === 'tie' && r.landingPlayerChoice && r.closestPlayerChoice)
+      );
+      
+      if (p.socketId === result.landingPlayer.socketId && didWin) {
         let newMoney = result.landingPlayer.money;
         let newLoan = result.landingPlayer.loan || 0;
         
