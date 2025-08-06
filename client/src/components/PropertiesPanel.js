@@ -1,37 +1,12 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 
 const PropertiesPanel = () => {
-  const { socket, player } = useContext(GameContext);
-  const [showOwnership, setShowOwnership] = useState(false);
-
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handleOwnershipView = ({ show }) => {
-      console.log('Received ownership view update:', show);
-      setShowOwnership(show);
-    };
-
-    socket.on('toggleOwnershipView', handleOwnershipView);
-    
-    return () => {
-      socket.off('toggleOwnershipView', handleOwnershipView);
-    };
-  }, [socket]);
-
-  const toggleOwnershipView = () => {
-    const newState = !showOwnership;
-    console.log('Toggling ownership view to:', newState);
-    setShowOwnership(newState);
-    
-    if (socket) {
-      console.log('Emitting toggleOwnershipView event');
-      socket.emit('toggleOwnershipView', { 
-        show: newState, 
-        playerId: player?.socketId 
-      });
-    }
+  const { showOwnership, toggleOwnershipView } = useContext(GameContext);
+  
+  const handleToggle = () => {
+    console.log('Toggling ownership view');
+    toggleOwnershipView();
   };
 
   return (
@@ -39,7 +14,7 @@ const PropertiesPanel = () => {
       <h3>Property View</h3>
       <div style={{ marginTop: '15px' }}>
         <button 
-          onClick={toggleOwnershipView}
+          onClick={handleToggle}
           style={{
             backgroundColor: showOwnership ? '#4CAF50' : '#f44336',
             color: 'white',
