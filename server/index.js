@@ -1771,18 +1771,23 @@ io.on('connection', socket => {
     });
 
     if (currentSessionId) {
-      GameSession.findByIdAndUpdate(
-        currentSessionId,
-        { $set: { 'players.$[player].money': player.money, 'players.$[player].loan': player.loan } },
-        { 
-          arrayFilters: [{ 'player.socketId': socket.id }],
-          new: true
-        }
-      ).then(() => {
+      // Get current game session
+      const session = await GameSession.findByPk(currentSessionId);
+      if (session) {
+        // Update the specific player in the players array
+        const updatedPlayers = session.players.map(p => 
+          p.socketId === socket.id 
+            ? { ...p, money: player.money, loan: player.loan }
+            : p
+        );
+        
+        // Update the session with the modified players array
+        await session.update({
+          players: updatedPlayers
+        });
+        
         console.log('[payoffLoan] Game session updated successfully');
-      }).catch(err => {
-        console.error('[payoffLoan] Error updating game session:', err);
-      });
+      }
     }
   });
 
