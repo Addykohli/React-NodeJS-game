@@ -1094,7 +1094,7 @@ export default function GameScreen() {
                       }}>
                         <button
                           onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
-                          disabled={!player?.loan || isRpsActive}
+                          disabled={!player?.loan || rpsGame}
                           style={{
                             padding: '8px 12px',
                             cursor: player?.loan ? 'pointer' : 'not-allowed',
@@ -1120,7 +1120,7 @@ export default function GameScreen() {
                         </div>
                         <button
                           onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
-                          disabled={!player?.loan || isRpsActive}
+                          disabled={!player?.loan || rpsGame}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
@@ -1185,7 +1185,7 @@ export default function GameScreen() {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);
                         }}
-                        disabled={!player?.loan || !player?.money || isRpsActive}
+                        disabled={!player?.loan || !player?.money || rpsGame}
                         style={{
                           width: '100%',
                           marginTop: '10px',
