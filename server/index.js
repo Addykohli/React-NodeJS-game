@@ -479,9 +479,127 @@ io.on('connection', socket => {
       remaining--;
       await new Promise(r => setTimeout(r, 500));
     }
-
+    const { tiles } = require('./data/tiles.cjs');
     const finalPlayer = engine.getPlayer(socket.id);
     const finalTileId = finalPlayer.tileId;
+
+    // Implement stomp mechanic
+    if (finalTileId !== 7) {  // No stomping on tile ID 7 (Hotel)
+      const playersOnTile = engine.session.players.filter(p => 
+        p.tileId === finalTileId && 
+        p.socketId !== socket.id  // Don't count the current player
+      );
+
+      if (playersOnTile.length > 0) {
+        const tile = tiles.find(t => t.id === finalTileId);
+        const tileOwner = engine.session.players.find(p => 
+          p.properties && p.properties.includes(finalTileId)
+        );
+
+        for (const targetPlayer of playersOnTile) {
+          // Skip if the target player owns the property
+          if (tileOwner && targetPlayer.socketId === tileOwner.socketId) {
+            console.log(`Skipping stomp - target player owns the property`);
+            continue;
+          }
+
+          const stompAmount = 2000;
+          const transaction = await sequelize.transaction();
+          
+          try {
+            // Calculate how much the target player can pay
+            const amountPaid = Math.min(targetPlayer.money, stompAmount);
+            const loanIncrease = Math.max(0, stompAmount - amountPaid);
+            
+            // Update target player's money and loan
+            targetPlayer.money -= amountPaid;
+            if (loanIncrease > 0) {
+              targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
+            }
+            
+            // Update final player's money
+            finalPlayer.money += amountPaid;
+            
+            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
+                       (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
+            
+            // Update database
+            await Player.update(
+              { 
+                money: targetPlayer.money,
+                loan: targetPlayer.loan || 0
+              },
+              { 
+                where: { socketId: targetPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            await Player.update(
+              { money: finalPlayer.money },
+              { 
+                where: { socketId: finalPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            // Update session state
+            engine.session.players = engine.session.players.map(p => {
+              if (p.socketId === targetPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: targetPlayer.money, 
+                  loan: targetPlayer.loan || 0 
+                };
+              }
+              if (p.socketId === finalPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: finalPlayer.money 
+                };
+              }
+              return p;
+            });
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction 
+                }
+              );
+            }
+            
+            await transaction.commit();
+            
+            // Notify all clients about the money transfer
+            io.emit('playerMoneyUpdate', {
+              playerId: targetPlayer.socketId,
+              newBalance: targetPlayer.money,
+              loan: targetPlayer.loan || 0
+            });
+            
+            io.emit('playerMoneyUpdate', {
+              playerId: finalPlayer.socketId,
+              newBalance: finalPlayer.money
+            });
+            
+            // Log the stomp event
+            const message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
+            if (loanIncrease > 0) {
+              message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
+            }
+            broadcastGameEvent(message);
+            
+          } catch (err) {
+            await transaction.rollback();
+            console.error('Error processing stomp payment:', err);
+            broadcastGameEvent(`Error processing stomp payment between ${finalPlayer.name} and ${targetPlayer.name}.`);
+          }
+        }
+      }
+    }
 
     if (finalTileId <= 30) {
       finalPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
@@ -509,8 +627,6 @@ io.on('connection', socket => {
         console.error('Error updating player state:', err);
       }
     }
-
-    const { tiles } = require('./data/tiles.cjs');
     const finalTile = tiles.find(t => t.id === finalTileId);
     
     console.log('Final position for rent check:', { 
@@ -519,6 +635,8 @@ io.on('connection', socket => {
       tileName: finalTile?.name,
       tileType: finalTile?.type
     });
+
+    //implement stomp check, exeptions, and transactions, db updates
 
     
     if (finalTile?.name === 'Stone Paper Scissors') {
