@@ -1,16 +1,36 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { GameContext } from '../context/GameContext';
 
 const PropertiesPanel = () => {
   const { socket, player } = useContext(GameContext);
   const [showOwnership, setShowOwnership] = useState(false);
 
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleOwnershipView = ({ show }) => {
+      console.log('Received ownership view update:', show);
+      setShowOwnership(show);
+    };
+
+    socket.on('toggleOwnershipView', handleOwnershipView);
+    
+    return () => {
+      socket.off('toggleOwnershipView', handleOwnershipView);
+    };
+  }, [socket]);
+
   const toggleOwnershipView = () => {
     const newState = !showOwnership;
+    console.log('Toggling ownership view to:', newState);
     setShowOwnership(newState);
-    // Emit an event to update the board's ownership view
+    
     if (socket) {
-      socket.emit('toggleOwnershipView', { show: newState, playerId: player?.socketId });
+      console.log('Emitting toggleOwnershipView event');
+      socket.emit('toggleOwnershipView', { 
+        show: newState, 
+        playerId: player?.socketId 
+      });
     }
   };
 

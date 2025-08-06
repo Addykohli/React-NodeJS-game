@@ -20,7 +20,22 @@ const Board = () => {
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
   const [showOwnership, setShowOwnership] = useState(false);
-  // Using socket from GameContext
+  
+  // Listen for ownership view toggle events
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleOwnershipView = ({ show }) => {
+      console.log('Board received ownership view update:', show);
+      setShowOwnership(show);
+    };
+
+    socket.on('toggleOwnershipView', handleOwnershipView);
+    
+    return () => {
+      socket.off('toggleOwnershipView', handleOwnershipView);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const img = new window.Image();
@@ -63,6 +78,13 @@ const Board = () => {
   const otherPlayersProperties = players
     .filter(p => p.socketId !== player?.socketId)
     .reduce((acc, p) => [...acc, ...(p.properties || [])], []);
+    
+  console.log('Ownership visualization:', {
+    showOwnership,
+    playerProperties,
+    otherPlayersProperties,
+    tiles: tiles.map(t => ({ id: t.id, location: t.location }))
+  });
 
   const chooseBranch = (idx) => {
     socket.emit('branchChoice', idx);
@@ -79,7 +101,7 @@ const Board = () => {
       <TopPropertyDisplay />
       
       {/* Ownership visualization */}
-      {showOwnership && tiles.map(tile => {
+      {showOwnership && tiles.filter(tile => tile.location).map(tile => {
         if (!tile.location) return null;
         
         const isOwnedByPlayer = playerProperties.some(prop => prop.tileId === tile.id);
@@ -128,7 +150,9 @@ const Board = () => {
       {/* Main board image */}
       <div style={{
         position: 'relative',
-        zIndex: 4
+        zIndex: 4,
+        width: '100%',
+        height: '100%'
       }}>
         <img
           src={boardImage}
