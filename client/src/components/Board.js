@@ -17,13 +17,25 @@ const REFERENCE_HEIGHT = 165;
 const Board = () => {
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
-  const { player, players, showOwnership } = useContext(GameContext);
+  const { player, players, showOwnership, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
   
   // Debug: Log when showOwnership changes
   useEffect(() => {
     console.log('Board: showOwnership changed to', showOwnership);
   }, [showOwnership]);
+  
+  // Handle branch choices
+  useEffect(() => {
+    if (!socket) return;
+    
+    const onBranchChoices = ({ options }) => setBranchOptions(options);
+    socket.on('branchChoices', onBranchChoices);
+    
+    return () => {
+      socket.off('branchChoices', onBranchChoices);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const img = new window.Image();
@@ -96,8 +108,10 @@ const Board = () => {
   }, [showOwnership, playerProperties, otherPlayersProperties, player, players]);
 
   const chooseBranch = (idx) => {
-    socket.emit('branchChoice', idx);
-    setBranchOptions(null);
+    if (socket) {
+      socket.emit('branchChoice', idx);
+      setBranchOptions(null);
+    }
   };
 
   return (
