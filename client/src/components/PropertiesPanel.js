@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { SocketContext } from '../context/socket';
 import { GameContext } from '../context/GameContext';
 
 const PropertiesPanel = () => {
   const [showOwnership, setShowOwnership] = useState(false);
-  const socket = useContext(SocketContext);
+  const { socket } = useContext(GameContext);
   const { player } = useContext(GameContext);
   
   const toggleOwnershipView = () => {
