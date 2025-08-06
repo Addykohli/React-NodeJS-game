@@ -13,11 +13,41 @@ for (let i = 1; i <= 8; i++) {
 
 const REFERENCE_HEIGHT = 165;
 
-const Board = ({ showOwnership = false, currentPlayer }) => {
+const Board = () => {
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
+  const [showOwnership, setShowOwnership] = useState(() => {
+    // Load the saved state from localStorage or default to false
+    const saved = localStorage.getItem('showOwnershipView');
+    return saved === 'true';
+  });
+
+  // Listen for ownership view toggle event
+  useEffect(() => {
+    const handleOwnershipToggle = (event) => {
+      setShowOwnership(event.detail.show);
+    };
+
+    window.addEventListener('ownershipViewToggle', handleOwnershipToggle);
+    return () => {
+      window.removeEventListener('ownershipViewToggle', handleOwnershipToggle);
+    };
+  }, []);
+
+  // Get all property tiles
+  const propertyTiles = tiles.filter(tile => tile.type === 'property');
+
+  // Function to determine if a tile is owned by the current player
+  const isOwnedByCurrentPlayer = (tile) => {
+    return player?.properties?.includes(tile.id);
+  };
+
+  // Function to determine if a tile is owned by any player
+  const getTileOwner = (tile) => {
+    return players.find(p => p.properties?.includes(tile.id));
+  };
 
   useEffect(() => {
     const img = new window.Image();
@@ -80,47 +110,6 @@ const Board = ({ showOwnership = false, currentPlayer }) => {
         }}
       />
 
-      {/* Ownership squares */}
-      {showOwnership && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 3 }}>
-          {tiles
-            .filter(tile => tile.type === 'property')
-            .map((tile) => {
-              // Find the owner of this tile
-              const owner = players.find(p => 
-                p.properties && p.properties.includes(tile.id)
-              );
-              
-              // Determine the color based on ownership
-              let color = 'rgba(255, 255, 255, 0.4)'; // White for unowned
-              if (owner) {
-                if (owner.socketId === currentPlayer?.socketId) {
-                  color = 'rgba(0, 255, 0, 0.4)'; // Green for owned by current player
-                } else {
-                  color = 'rgba(255, 0, 0, 0.4)'; // Red for owned by others
-                }
-              }
-              
-              return (
-                <div
-                  key={`ownership-${tile.id}`}
-                  style={{
-                    position: 'absolute',
-                    left: tile.position.x - 5,
-                    top: tile.position.y - 5,
-                    width: 10,
-                    height: 10,
-                    backgroundColor: color,
-                    borderRadius: '2px',
-                    pointerEvents: 'none',
-                    zIndex: 5
-                  }}
-                />
-              );
-            })}
-        </div>
-      )}
-      
       {/* Main board image */}
       <div style={{
         position: 'relative',
@@ -135,6 +124,35 @@ const Board = ({ showOwnership = false, currentPlayer }) => {
             zIndex: 4
           }}
         />
+
+        {/* Ownership indicators */}
+        {showOwnership && propertyTiles.map((tile) => {
+          const owner = getTileOwner(tile);
+          let fillColor = 'rgba(255, 255, 255, 0.4)'; // Default: unowned
+          
+          if (owner) {
+            fillColor = owner.socketId === player?.socketId 
+              ? 'rgba(0, 255, 0, 0.4)' // Owned by current player (green)
+              : 'rgba(255, 0, 0, 0.4)'; // Owned by other player (red)
+          }
+          
+          return (
+            <div
+              key={`ownership-${tile.id}`}
+              style={{
+                position: 'absolute',
+                left: `${tile.position.x - 5}px`,
+                top: `${tile.position.y - 5}px`,
+                width: '10px',
+                height: '10px',
+                backgroundColor: fillColor,
+                border: '1px solid rgba(255, 255, 255, 0.5)',
+                zIndex: 10,
+                pointerEvents: 'none'
+              }}
+            />
+          );
+        })}
 
         {/* Branch options */}
         {branchOptions && (

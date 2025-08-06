@@ -1197,11 +1197,6 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('toggleOwnershipView', ({ playerId, show }) => {
-    // Broadcast to all players that someone toggled ownership view
-    io.emit('ownershipViewToggled', { playerId, show });
-  });
-
   socket.on('disconnect', async () => {
     console.log('[disconnect]', socket.id);
     

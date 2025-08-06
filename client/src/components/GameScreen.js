@@ -364,11 +364,6 @@ export default function GameScreen() {
       title: 'Bank',
       icon: '💰'
     },
-    properties: {
-      color: '#FF5722',
-      title: 'Properties',
-      icon: '🏠'
-    },
     chat: {
       color: '#9C27B0',
       title: 'Chat',
@@ -378,6 +373,11 @@ export default function GameScreen() {
       color: '#FF9800',
       title: 'Trade',
       icon: '🔄'
+    },
+    properties: {
+      color: '#795548',
+      title: 'Properties',
+      icon: '🏠'
     }
   };
 
@@ -801,23 +801,6 @@ export default function GameScreen() {
     socket.emit('buyProperty');
   };
 
-  const renderPanelContent = () => {
-    switch (activeSidePanel) {
-      case 'info':
-        return <GameEvents events={gameEvents} />;
-      case 'bank':
-        return <Bank player={player} />;
-      case 'properties':
-        return <PropertiesPanel />;
-      case 'chat':
-        return <Chat />;
-      case 'trade':
-        return <TradePanel />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div style={{
       display: 'flex',
@@ -925,7 +908,18 @@ export default function GameScreen() {
                 }}
               >
                 <h1 style={{ marginBottom: '20px' }}>{config.title}</h1>
-                {/* Panel specific content */}
+                {panelId === 'trade' && <TradePanel />}
+                {panelId === 'chat' && (
+                  <Chat
+                    messages={chatMessages}
+                    onSendMessage={handleSendMessage}
+                    onKeyDown={handleChatKeyDown}
+                    message={message}
+                    setMessage={setMessage}
+                    messageEndRef={messageEndRef}
+                  />
+                )}
+                {panelId === 'properties' && <PropertiesPanel />}
                 {panelId === 'info' && (
                   <div 
                     ref={eventsEndRef}
