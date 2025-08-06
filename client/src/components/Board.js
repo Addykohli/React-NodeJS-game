@@ -60,18 +60,18 @@ const Board = () => {
 
     calculateScales();
   }, []);
+  // Handle branch choices
   useEffect(() => {
+    if (!socket) return;
+    
     const onBranchChoices = ({ options }) => setBranchOptions(options);
-    const onToggleOwnershipView = ({ show }) => setShowOwnership(show);
     
     socket.on('branchChoices', onBranchChoices);
-    socket.on('toggleOwnershipView', onToggleOwnershipView);
-
+    
     return () => {
       socket.off('branchChoices', onBranchChoices);
-      socket.off('toggleOwnershipView', onToggleOwnershipView);
     };
-  }, [player, socket]);
+  }, [socket]);
   
   // Get the current player's properties
   const playerProperties = player?.properties || [];
