@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useRef } from 'react';
 import bgImage from '../assets/bg.png';
 import startIcon from '../assets/start.png';
 import hotelIcon from '../assets/hotel.png';
