@@ -5,6 +5,7 @@ import outerBoardImage from '../assets/outerBoard.png';
 import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
+import { SocketContext } from '../context/SocketContext';
 
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
@@ -18,6 +19,8 @@ const Board = () => {
   const [pieceScales, setPieceScales] = useState({});
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
+  const [showOwnership, setShowOwnership] = useState(false);
+  const socketContext = useContext(SocketContext);
 
   useEffect(() => {
     const img = new window.Image();
@@ -44,12 +47,22 @@ const Board = () => {
   }, []);
   useEffect(() => {
     const onBranchChoices = ({ options }) => setBranchOptions(options);
+    const onToggleOwnershipView = ({ show }) => setShowOwnership(show);
+    
     socket.on('branchChoices', onBranchChoices);
+    socket.on('toggleOwnershipView', onToggleOwnershipView);
 
     return () => {
       socket.off('branchChoices', onBranchChoices);
+      socket.off('toggleOwnershipView', onToggleOwnershipView);
     };
   }, [player, socket]);
+  
+  // Get the current player's properties
+  const playerProperties = player?.properties || [];
+  const otherPlayersProperties = players
+    .filter(p => p.socketId !== player?.socketId)
+    .reduce((acc, p) => [...acc, ...(p.properties || [])], []);
 
   const chooseBranch = (idx) => {
     socket.emit('branchChoice', idx);
@@ -64,6 +77,38 @@ const Board = () => {
       margin: '0 auto'
     }}>
       <TopPropertyDisplay />
+      
+      {/* Ownership visualization */}
+      {showOwnership && tiles.map(tile => {
+        if (!tile.location) return null;
+        
+        const isOwnedByPlayer = playerProperties.some(prop => prop.tileId === tile.id);
+        const isOwnedByOther = otherPlayersProperties.some(prop => prop.tileId === tile.id);
+        
+        let color = 'rgba(255, 255, 255, 0.4)'; // White for unowned
+        if (isOwnedByPlayer) {
+          color = 'rgba(0, 255, 0, 0.4)'; // Green for owned by player
+        } else if (isOwnedByOther) {
+          color = 'rgba(255, 0, 0, 0.4)'; // Red for owned by others
+        }
+        
+        return (
+          <div
+            key={`ownership-${tile.id}`}
+            style={{
+              position: 'absolute',
+              left: `${tile.location.x - 5}px`,
+              top: `${tile.location.y - 5}px`,
+              width: '20px',
+              height: '20px',
+              backgroundColor: color,
+              borderRadius: '2px',
+              zIndex: 10,
+              pointerEvents: 'none'
+            }}
+          />
+        );
+      })}
       
       {/* Outer board image */}
       <img

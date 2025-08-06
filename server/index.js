@@ -37,7 +37,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const io     = new Server(server, {
+const io = new Server(server, {
   cors: corsOptions
 });
 
@@ -96,6 +96,13 @@ io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
 
   socket.emit('gameEventsHistory', gameEvents);
+  
+  // Handle ownership view toggle
+  socket.on('toggleOwnershipView', ({ show, playerId }) => {
+    // Broadcast to all clients that the ownership view has been toggled
+    socket.broadcast.emit('toggleOwnershipView', { show });
+    console.log(`Player ${playerId} ${show ? 'enabled' : 'disabled'} ownership view`);
+  });
 
   socket.on('joinLobby', async ({ name }) => {
     console.log('[joinLobby] name:', name);

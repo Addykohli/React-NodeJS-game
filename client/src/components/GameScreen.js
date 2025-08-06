@@ -13,6 +13,7 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
+import PropertiesPanel from './PropertiesPanel';
 
 // Import dice images
 const diceImages = {};
@@ -372,6 +373,11 @@ export default function GameScreen() {
       color: '#FF9800',
       title: 'Trade',
       icon: '🔄'
+    },
+    properties: {
+      color: '#FF3838',
+      title: 'Properties',
+      icon: '🏘️'
     }
   };
 
@@ -1236,6 +1242,9 @@ export default function GameScreen() {
                 )}
                 {panelId === 'trade' && (
                   <TradePanel />
+                )}
+                {panelId === 'properties' && (
+                  <PropertiesPanel />
                 )}
               </div>
             ))}
