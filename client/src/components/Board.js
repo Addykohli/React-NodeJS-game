@@ -6,7 +6,6 @@ import { tiles } from '../data/tiles';
 import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
-
 const pieceImages = {};
 for (let i = 1; i <= 8; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
@@ -14,28 +13,11 @@ for (let i = 1; i <= 8; i++) {
 
 const REFERENCE_HEIGHT = 165;
 
-const Board = () => {
+const Board = ({ showOwnership = false, currentPlayer }) => {
   const [boardSize, setBoardSize] = useState({ width: 600, height: 600 });
   const [pieceScales, setPieceScales] = useState({});
-  const { player, players, showOwnership, socket } = useContext(GameContext);
+  const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
-  
-  // Debug: Log when showOwnership changes
-  useEffect(() => {
-    console.log('Board: showOwnership changed to', showOwnership);
-  }, [showOwnership]);
-  
-  // Handle branch choices
-  useEffect(() => {
-    if (!socket) return;
-    
-    const onBranchChoices = ({ options }) => setBranchOptions(options);
-    socket.on('branchChoices', onBranchChoices);
-    
-    return () => {
-      socket.off('branchChoices', onBranchChoices);
-    };
-  }, [socket]);
 
   useEffect(() => {
     const img = new window.Image();
@@ -60,80 +42,18 @@ const Board = () => {
 
     calculateScales();
   }, []);
-  // Handle branch choices
   useEffect(() => {
-    if (!socket) return;
-    
     const onBranchChoices = ({ options }) => setBranchOptions(options);
-    
     socket.on('branchChoices', onBranchChoices);
-    
+
     return () => {
       socket.off('branchChoices', onBranchChoices);
     };
-  }, [socket]);
-  
-  // Get the current player's properties
-  const playerProperties = player?.properties?.map(propId => ({
-    id: propId,
-    tileId: propId, // For backward compatibility
-    ownerId: player?.socketId
-  })) || [];
-  
-  // Get other players' properties
-  const otherPlayersProperties = players
-    .filter(p => p.socketId !== player?.socketId)
-    .flatMap(p => 
-      (p.properties || []).map(propId => ({
-        id: propId,
-        tileId: propId, // For backward compatibility
-        ownerId: p.socketId
-      }))
-    );
-    
-  // Debug: Log ownership data
-  useEffect(() => {
-    if (!showOwnership) return;
-    
-    console.log('Ownership visualization data:', {
-      showOwnership,
-      player: {
-        id: player?.socketId,
-        name: player?.name,
-        propertyCount: playerProperties.length,
-        properties: playerProperties
-      },
-      otherPlayers: players
-        .filter(p => p.socketId !== player?.socketId)
-        .map(p => ({
-          id: p.socketId,
-          name: p.name,
-          propertyCount: p.properties?.length || 0,
-          properties: p.properties || []
-        })),
-      tilesWithLocations: tiles
-        .filter(t => t.location)
-        .map(tile => {
-          const owner = players.find(p => 
-            p.properties && p.properties.includes(tile.id)
-          );
-          return {
-            id: tile.id,
-            name: tile.name,
-            location: tile.location,
-            ownedBy: owner ? owner.socketId : null,
-            ownedByName: owner ? owner.name : 'unowned',
-            isPlayerOwned: playerProperties.some(p => p.id === tile.id)
-          };
-        })
-    });
-  }, [showOwnership, playerProperties, otherPlayersProperties, player, players]);
+  }, [player, socket]);
 
   const chooseBranch = (idx) => {
-    if (socket) {
-      socket.emit('branchChoice', idx);
-      setBranchOptions(null);
-    }
+    socket.emit('branchChoice', idx);
+    setBranchOptions(null);
   };
 
   return (
@@ -144,52 +64,6 @@ const Board = () => {
       margin: '0 auto'
     }}>
       <TopPropertyDisplay />
-      
-      {/* Ownership visualization */}
-      {showOwnership && tiles.filter(tile => tile.location).map(tile => {
-        // Find the owner of this tile
-        const owner = players.find(p => 
-          p.properties && p.properties.includes(tile.id)
-        );
-        
-        const isOwnedByPlayer = owner && owner.socketId === player?.socketId;
-        const isOwnedByOther = owner && owner.socketId !== player?.socketId;
-        
-        // Debug: Log each tile being rendered
-        console.log(`Rendering tile ${tile.id} (${tile.name || 'unnamed'})`, {
-          location: tile.location,
-          ownedBy: owner ? owner.name : 'no one',
-          isOwnedByPlayer,
-          isOwnedByOther,
-          playerProperties: playerProperties,
-          allProperties: players.flatMap(p => p.properties || [])
-        });
-        
-        // Set color based on ownership
-        let color = 'rgba(255, 255, 255, 0.4)'; // White for unowned
-        if (isOwnedByPlayer) {
-          color = 'rgba(0, 255, 0, 0.6)'; // Green for owned by player
-        } else if (isOwnedByOther) {
-          color = 'rgba(255, 0, 0, 0.6)'; // Red for owned by others
-        }
-        
-        return (
-          <div
-            key={`ownership-${tile.id}`}
-            style={{
-              position: 'absolute',
-              left: `${tile.location.x - 5}px`,
-              top: `${tile.location.y - 5}px`,
-              width: '20px',
-              height: '20px',
-              backgroundColor: color,
-              borderRadius: '2px',
-              zIndex: 10,
-              pointerEvents: 'none'
-            }}
-          />
-        );
-      })}
       
       {/* Outer board image */}
       <img
@@ -206,12 +80,51 @@ const Board = () => {
         }}
       />
 
+      {/* Ownership squares */}
+      {showOwnership && (
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 3 }}>
+          {tiles
+            .filter(tile => tile.type === 'property')
+            .map((tile) => {
+              // Find the owner of this tile
+              const owner = players.find(p => 
+                p.properties && p.properties.includes(tile.id)
+              );
+              
+              // Determine the color based on ownership
+              let color = 'rgba(255, 255, 255, 0.4)'; // White for unowned
+              if (owner) {
+                if (owner.socketId === currentPlayer?.socketId) {
+                  color = 'rgba(0, 255, 0, 0.4)'; // Green for owned by current player
+                } else {
+                  color = 'rgba(255, 0, 0, 0.4)'; // Red for owned by others
+                }
+              }
+              
+              return (
+                <div
+                  key={`ownership-${tile.id}`}
+                  style={{
+                    position: 'absolute',
+                    left: tile.position.x - 5,
+                    top: tile.position.y - 5,
+                    width: 10,
+                    height: 10,
+                    backgroundColor: color,
+                    borderRadius: '2px',
+                    pointerEvents: 'none',
+                    zIndex: 5
+                  }}
+                />
+              );
+            })}
+        </div>
+      )}
+      
       {/* Main board image */}
       <div style={{
         position: 'relative',
-        zIndex: 4,
-        width: '100%',
-        height: '100%'
+        zIndex: 4
       }}>
         <img
           src={boardImage}

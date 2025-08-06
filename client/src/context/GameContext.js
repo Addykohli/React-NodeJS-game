@@ -37,17 +37,6 @@ export function GameProvider({ children }) {
     return savedDone ? JSON.parse(savedDone) : false;
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
-  const [showOwnership, setShowOwnership] = useState(false);
-
-  // Toggle ownership view
-  const toggleOwnershipView = (show) => {
-    const newState = show !== undefined ? show : !showOwnership;
-    setShowOwnership(newState);
-    if (socket) {
-      socket.emit('toggleOwnershipView', { show: newState, playerId: player?.socketId });
-    }
-    return newState;
-  };
 
   
   useEffect(() => {
@@ -491,12 +480,13 @@ export function GameProvider({ children }) {
         setPlayer,
         players,
         setPlayers,
-        gameState,
-        setGameState,
-        sessionId,
-        setSessionId,
         currentPlayerId,
         setCurrentPlayerId,
+        sessionId,
+        setSessionId,
+        socket,
+        gameState,
+        setGameState,
         diceRoll,
         setDiceRoll,
         movementDone,
@@ -505,13 +495,10 @@ export function GameProvider({ children }) {
         setDone,
         insufficientFunds,
         setInsufficientFunds,
-        isRpsActive,
-        setIsRpsActive,
         chatMessages,
         setChatMessages,
-        showOwnership,
-        toggleOwnershipView,
-        socket,
+        isRpsActive,
+        setIsRpsActive,
         handleQuit
       }}
     >

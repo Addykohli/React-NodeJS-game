@@ -364,6 +364,11 @@ export default function GameScreen() {
       title: 'Bank',
       icon: '💰'
     },
+    properties: {
+      color: '#FF5722',
+      title: 'Properties',
+      icon: '🏠'
+    },
     chat: {
       color: '#9C27B0',
       title: 'Chat',
@@ -373,11 +378,6 @@ export default function GameScreen() {
       color: '#FF9800',
       title: 'Trade',
       icon: '🔄'
-    },
-    properties: {
-      color: '#FF3838',
-      title: 'Properties',
-      icon: '🏘️'
     }
   };
 
@@ -799,6 +799,23 @@ export default function GameScreen() {
   const handleBuy = () => {
     setError(null);
     socket.emit('buyProperty');
+  };
+
+  const renderPanelContent = () => {
+    switch (activeSidePanel) {
+      case 'info':
+        return <GameEvents events={gameEvents} />;
+      case 'bank':
+        return <Bank player={player} />;
+      case 'properties':
+        return <PropertiesPanel />;
+      case 'chat':
+        return <Chat />;
+      case 'trade':
+        return <TradePanel />;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -1242,9 +1259,6 @@ export default function GameScreen() {
                 )}
                 {panelId === 'trade' && (
                   <TradePanel />
-                )}
-                {panelId === 'properties' && (
-                  <PropertiesPanel />
                 )}
               </div>
             ))}

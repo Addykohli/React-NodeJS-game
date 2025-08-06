@@ -1,37 +1,40 @@
-import React, { useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { SocketContext } from '../context/socket';
 import { GameContext } from '../context/GameContext';
 
 const PropertiesPanel = () => {
-  const { showOwnership, toggleOwnershipView } = useContext(GameContext);
+  const [showOwnership, setShowOwnership] = useState(false);
+  const socket = useContext(SocketContext);
+  const { player } = useContext(GameContext);
   
-  const handleToggle = () => {
-    console.log('Toggling ownership view');
-    toggleOwnershipView();
+  const toggleOwnershipView = () => {
+    const newValue = !showOwnership;
+    setShowOwnership(newValue);
+    // Emit the toggle state to the server so it can be broadcast to all players
+    socket.emit('toggleOwnershipView', { playerId: player?.socketId, show: newValue });
   };
 
   return (
     <div style={{ padding: '10px' }}>
-      <h3>Property View</h3>
-      <div style={{ marginTop: '15px' }}>
-        <button 
-          onClick={handleToggle}
-          style={{
-            backgroundColor: showOwnership ? '#4CAF50' : '#f44336',
-            color: 'white',
-            border: 'none',
-            padding: '10px 15px',
-            textAlign: 'center',
-            textDecoration: 'none',
-            display: 'inline-block',
-            fontSize: '14px',
-            margin: '4px 2px',
-            cursor: 'pointer',
-            borderRadius: '4px',
-          }}
-        >
-          {showOwnership ? 'Ownership View: ON' : 'Ownership View: OFF'}
-        </button>
-      </div>
+      <h3>Properties</h3>
+      <button 
+        onClick={toggleOwnershipView}
+        style={{
+          backgroundColor: showOwnership ? '#4CAF50' : '#f44336',
+          color: 'white',
+          border: 'none',
+          padding: '8px 16px',
+          textAlign: 'center',
+          textDecoration: 'none',
+          display: 'inline-block',
+          fontSize: '14px',
+          margin: '4px 2px',
+          cursor: 'pointer',
+          borderRadius: '4px',
+        }}
+      >
+        {showOwnership ? 'Hide Ownership' : 'Show Ownership'}
+      </button>
     </div>
   );
 };

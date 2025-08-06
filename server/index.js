@@ -96,13 +96,6 @@ io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
 
   socket.emit('gameEventsHistory', gameEvents);
-  
-  // Handle ownership view toggle
-  socket.on('toggleOwnershipView', ({ show, playerId }) => {
-    // Broadcast to all clients that the ownership view has been toggled
-    socket.broadcast.emit('toggleOwnershipView', { show });
-    console.log(`Player ${playerId} ${show ? 'enabled' : 'disabled'} ownership view`);
-  });
 
   socket.on('joinLobby', async ({ name }) => {
     console.log('[joinLobby] name:', name);
@@ -1202,6 +1195,11 @@ io.on('connection', socket => {
     } catch (err) {
       console.error('Error in road cash transaction:', err);
     }
+  });
+
+  socket.on('toggleOwnershipView', ({ playerId, show }) => {
+    // Broadcast to all players that someone toggled ownership view
+    io.emit('ownershipViewToggled', { playerId, show });
   });
 
   socket.on('disconnect', async () => {
