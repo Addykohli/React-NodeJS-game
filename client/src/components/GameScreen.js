@@ -908,18 +908,7 @@ export default function GameScreen() {
                 }}
               >
                 <h1 style={{ marginBottom: '20px' }}>{config.title}</h1>
-                {panelId === 'trade' && <TradePanel />}
-                {panelId === 'chat' && (
-                  <Chat
-                    messages={chatMessages}
-                    onSendMessage={handleSendMessage}
-                    onKeyDown={handleChatKeyDown}
-                    message={message}
-                    setMessage={setMessage}
-                    messageEndRef={messageEndRef}
-                  />
-                )}
-                {panelId === 'properties' && <PropertiesPanel />}
+
                 {panelId === 'info' && (
                   <div 
                     ref={eventsEndRef}
@@ -1254,6 +1243,7 @@ export default function GameScreen() {
                 {panelId === 'trade' && (
                   <TradePanel />
                 )}
+                {panelId === 'properties' && <PropertiesPanel />}
               </div>
             ))}
         </div>
