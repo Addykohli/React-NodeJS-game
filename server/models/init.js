@@ -1,6 +1,7 @@
 const sequelize = require('../config/database');
 const Player = require('./Player');
 const GameSession = require('./GameSession');
+const Loan = require('./Loan');
 
 async function initDatabase() {
   try {

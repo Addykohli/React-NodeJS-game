@@ -26,6 +26,14 @@ const TradePanel = () => {
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
+  // Personal Loan States
+  const [loanAmount, setLoanAmount] = useState(0);
+  const [returnAmount, setReturnAmount] = useState(0);
+  const [selectedLender, setSelectedLender] = useState(null);
+  const [activeLoans, setActiveLoans] = useState([]);
+  const [loanRequests, setLoanRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState('request'); // 'request' or 'active'
+
   React.useEffect(() => {
     if (!socket) return;
 
@@ -73,6 +81,36 @@ const TradePanel = () => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
+  // Fetch active loans and requests
+  React.useEffect(() => {
+    if (!socket) return;
+
+    const fetchLoans = () => {
+      socket.emit('getActiveLoans');
+      socket.emit('getLoanRequests');
+    };
+
+    socket.on('activeLoans', (loans) => {
+      setActiveLoans(loans);
+    });
+
+    socket.on('loanRequests', (requests) => {
+      setLoanRequests(requests);
+    });
+
+    // Initial fetch
+    fetchLoans();
+
+    // Set up periodic refresh
+    const interval = setInterval(fetchLoans, 5000);
+
+    return () => {
+      clearInterval(interval);
+      socket.off('activeLoans');
+      socket.off('loanRequests');
+    };
+  }, [socket]);
+
   const handleMoneyChange = (section, amount) => {
     if (section === 'offer') {
       const newAmount = Math.max(0, Math.min(offerMoney + amount, player.money));
@@ -81,6 +119,40 @@ const TradePanel = () => {
       const newAmount = Math.max(0, askMoney + amount);
       setAskMoney(newAmount);
     }
+  };
+
+  // Personal Loan Handlers
+  const handleRequestLoan = () => {
+    if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
+      alert('Please select a player and enter valid loan/return amounts');
+      return;
+    }
+    
+    socket.emit('requestLoan', {
+      to: selectedLender.socketId,
+      amount: parseInt(loanAmount),
+      returnAmount: parseInt(returnAmount)
+    });
+    
+    // Reset form
+    setLoanAmount(0);
+    setReturnAmount(0);
+  };
+
+  const handleAcceptLoan = (requestId) => {
+    socket.emit('acceptLoan', { requestId });
+  };
+
+  const handleRejectLoan = (requestId) => {
+    socket.emit('rejectLoan', { requestId });
+  };
+
+  const handleRepayLoan = (loanId) => {
+    socket.emit('repayLoan', { loanId });
+  };
+
+  const handleClaimLoan = (loanId) => {
+    socket.emit('claimLoan', { loanId });
   };
 
   const handlePropertyToggle = (section, propertyId) => {
@@ -591,6 +663,267 @@ const TradePanel = () => {
           })}
         </div>
       )}
+
+      {/* Personal Loans Section */}
+      <div style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        borderRadius: '10px',
+        padding: '15px',
+        marginTop: '20px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: '15px',
+          borderBottom: '1px solid #444',
+          paddingBottom: '10px'
+        }}>
+          <button 
+            onClick={() => setActiveTab('request')}
+            style={{
+              flex: 1,
+              padding: '10px',
+              backgroundColor: activeTab === 'request' ? '#4CAF50' : '#2E7D32',
+              border: 'none',
+              borderRadius: '5px 0 0 5px',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '1.2em'
+            }}
+          >
+            Request Loan
+          </button>
+          <button 
+            onClick={() => setActiveTab('active')}
+            style={{
+              flex: 1,
+              padding: '10px',
+              backgroundColor: activeTab === 'active' ? '#2196F3' : '#1565C0',
+              border: 'none',
+              borderRadius: '0 5px 5px 0',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '1.2em'
+            }}
+          >
+            My Loans ({activeLoans.length})
+          </button>
+        </div>
+
+        {activeTab === 'request' ? (
+          <div>
+            {/* Request Loan Form */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
+                  Select Player to Request From:
+                </label>
+                <select 
+                  value={selectedLender?.socketId || ''}
+                  onChange={(e) => {
+                    const lender = players.find(p => p.socketId === e.target.value);
+                    setSelectedLender(lender);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '5px',
+                    fontSize: '1.1em'
+                  }}
+                >
+                  <option value="">Select a player</option>
+                  {players
+                    .filter(p => p.socketId !== player.socketId)
+                    .map(p => (
+                      <option key={p.socketId} value={p.socketId}>
+                        {p.name} (${p.money})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
+                  Loan Amount:
+                </label>
+                <input
+                  type="number"
+                  value={loanAmount}
+                  onChange={(e) => setLoanAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '5px',
+                    border: '1px solid #ccc',
+                    fontSize: '1.1em'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
+                  Return Amount (must be more than loan amount):
+                </label>
+                <input
+                  type="number"
+                  value={returnAmount}
+                  onChange={(e) => setReturnAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '5px',
+                    border: '1px solid #ccc',
+                    fontSize: '1.1em'
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={handleRequestLoan}
+                disabled={!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  backgroundColor: returnAmount > loanAmount ? '#4CAF50' : '#888',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: returnAmount > loanAmount ? 'pointer' : 'not-allowed',
+                  fontSize: '1.2em'
+                }}
+              >
+                Request ${loanAmount} (Pay back ${returnAmount})
+              </button>
+            </div>
+
+            {/* Loan Requests */}
+            {loanRequests.length > 0 && (
+              <div>
+                <h3 style={{ color: 'white', borderBottom: '1px solid #444', paddingBottom: '5px' }}>
+                  Pending Requests
+                </h3>
+                {loanRequests.map(request => (
+                  <div key={request.id} style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    padding: '10px',
+                    borderRadius: '5px',
+                    marginBottom: '10px',
+                    color: 'white'
+                  }}>
+                    <div><strong>From:</strong> {request.from.name}</div>
+                    <div><strong>Amount:</strong> ${request.amount}</div>
+                    <div><strong>Return:</strong> ${request.returnAmount}</div>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button
+                        onClick={() => handleAcceptLoan(request.id)}
+                        disabled={player.money < request.amount}
+                        style={{
+                          flex: 1,
+                          padding: '5px',
+                          backgroundColor: player.money >= request.amount ? '#4CAF50' : '#888',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: player.money >= request.amount ? 'pointer' : 'not-allowed',
+                          fontSize: '1em'
+                        }}
+                      >
+                        Lend ${request.amount}
+                      </button>
+                      <button
+                        onClick={() => handleRejectLoan(request.id)}
+                        style={{
+                          flex: 1,
+                          padding: '5px',
+                          backgroundColor: '#f44336',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '3px',
+                          cursor: 'pointer',
+                          fontSize: '1em'
+                        }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Active Loans Tab */
+          <div>
+            {activeLoans.length === 0 ? (
+              <div style={{ color: 'white', textAlign: 'center', padding: '20px' }}>
+                No active loans
+              </div>
+            ) : (
+              activeLoans.map(loan => (
+                <div key={loan.id} style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '15px',
+                  borderRadius: '5px',
+                  marginBottom: '15px',
+                  color: 'white'
+                }}>
+                  <div style={{ marginBottom: '10px' }}>
+                    <div><strong>Amount:</strong> ${loan.amount}</div>
+                    <div><strong>To Return:</strong> ${loan.returnAmount}</div>
+                    <div><strong>Status:</strong> {loan.status}</div>
+                    <div><strong>With:</strong> {loan.lenderId === player.socketId ? loan.borrowerName : loan.lenderName}</div>
+                  </div>
+                  
+                  {loan.status === 'active' && (
+                    <div>
+                      {loan.borrowerId === player.socketId ? (
+                        <button
+                          onClick={() => handleRepayLoan(loan.id)}
+                          disabled={player.money < loan.returnAmount}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            backgroundColor: player.money >= loan.returnAmount ? '#4CAF50' : '#888',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: player.money >= loan.returnAmount ? 'pointer' : 'not-allowed',
+                            fontSize: '1.1em'
+                          }}
+                        >
+                          Repay ${loan.returnAmount}
+                        </button>
+                      ) : (
+                        <div style={{ color: '#4CAF50' }}>
+                          Waiting for {loan.borrowerName} to repay
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {loan.status === 'pending_payment' && loan.lenderId === player.socketId && (
+                    <button
+                      onClick={() => handleClaimLoan(loan.id)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#2196F3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        fontSize: '1.1em'
+                      }}
+                    >
+                      Claim ${loan.returnAmount} from {loan.borrowerName}
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
