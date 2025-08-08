@@ -129,7 +129,7 @@ const TradePanel = () => {
     }
     
     socket.emit('requestLoan', {
-      to: selectedLender.socketId,
+      lenderId: selectedLender.socketId,
       amount: parseInt(loanAmount),
       returnAmount: parseInt(returnAmount)
     });
