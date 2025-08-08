@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import styled from 'styled-components';
 import PersonalLoans from './PersonalLoans';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';

@@ -1,95 +1,72 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 
-const LoansSection = styled.div`
-  margin-top: 15px;
-  color: #333;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 15px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: white;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: #333;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
-  color: #333;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  margin-right: 10px;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: #0056b3;
+const styles = {
+  loansSection: {
+    marginTop: '15px',
+    color: '#333'
+  },
+  formGroup: {
+    marginBottom: '15px'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '5px',
+    fontWeight: 500,
+    color: 'white'
+  },
+  input: {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #ced4da',
+    borderRadius: '4px',
+    fontSize: '16px',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', 
+    color: '#333'
+  },
+  select: {
+    width: '100%',
+    padding: '8px 12px',
+    border: '1px solid #ced4da',
+    borderRadius: '4px',
+    fontSize: '16px',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    color: '#333'
+  },
+  button: {
+    padding: '8px 16px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    transition: 'background-color 0.2s',
+  },
+  secondaryButton: {
+    backgroundColor: '#6c757d',
+  },
+  successButton: {
+    backgroundColor: '#28a745',
+  },
+  dangerButton: {
+    backgroundColor: '#dc3545',
+  },
+  loanCard: {
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '8px',
+    padding: '15px',
+    marginBottom: '15px',
+  },
+  activeLoanCard: {
+    borderLeft: '4px solid #17a2b8',
+  },
+  loanActions: {
+    display: 'flex',
+    gap: '10px',
+    marginTop: '10px'
   }
-  
-  &:disabled {
-    background-color: #6c757d;
-    cursor: not-allowed;
-  }
-`;
-
-const DangerButton = styled(Button)`
-  background-color: #dc3545;
-  
-  &:hover {
-    background-color: #a71d2a;
-  }
-`;
-
-const SuccessButton = styled(Button)`
-  background-color: #28a745;
-  
-  &:hover {
-    background-color: #1e7e34;
-  }
-`;
-
-const LoanRequest = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-`;
-
-const ActiveLoan = styled(LoanRequest)`
-  border-left: 4px solid #17a2b8;
-`;
-
-const LoanActions = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-`;
+};
 
 const PersonalLoans = () => {
   const { socket, player, players } = useContext(GameContext);
@@ -145,147 +122,146 @@ const PersonalLoans = () => {
   }, [socket, player]);
 
   const handleRequestLoan = () => {
-    if (!loanAmount || !selectedLender || loanAmount <= 0) return;
+    if (!selectedLender || !loanAmount || loanAmount <= 0) return;
     
-    socket.emit('requestPersonalLoan', {
+    const loanData = {
+      fromPlayerId: player?.socketId,
       toPlayerId: selectedLender,
-      amount: parseInt(loanAmount),
-      interest: parseInt(interestRate)
-    });
+      amount: Number(loanAmount),
+      interestRate: Number(interestRate),
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
     
+    socket.emit('requestPersonalLoan', loanData);
     setLoanAmount(0);
     setSelectedLender('');
   };
-
-  const handleRespondToLoan = (loanId, accept) => {
-    socket.emit('respondToLoan', { loanId, accept });
-    setLoanRequests(prev => prev.filter(req => req.id !== loanId));
+  
+  const handleCancelRequest = (loanId) => {
+    socket.emit('cancelLoanRequest', { loanId });
   };
-
-  const handleReturnLoan = (loanId) => {
-    socket.emit('returnLoan', { loanId });
+  
+  const handleRespondToLoan = (loanId, accepted) => {
+    socket.emit('respondToLoan', { 
+      loanId, 
+      accepted,
+      fromPlayerId: player?.socketId
+    });
   };
-
-  // Get other players for loan requests
-  const otherPlayers = players?.filter(p => p.socketId !== player?.socketId) || [];
+  
+  const handleReturnLoan = (loanId, amount) => {
+    socket.emit('returnLoan', { loanId, amount });
+  };
+  
+  const otherPlayers = players.filter(p => p.socketId !== player?.socketId);
   const myActiveLoans = activeLoans.filter(loan => 
-    loan.fromPlayerId === player?.socketId || loan.toPlayerId === player?.socketId
+    loan.borrowerId === player?.socketId || loan.lenderId === player?.socketId
   );
 
   return (
-    <LoansSection>
-      <h2>Personal Loans</h2>
+    <div style={styles.loansSection}>
+      <h3>Request a Personal Loan</h3>
       
-      {/* Request Loan Section */}
-      <div className="loan-request-section">
-        <h3>Request a Loan</h3>
-        <FormGroup>
-          <Label>Lender:</Label>
-          <Select 
-            value={selectedLender}
-            onChange={(e) => setSelectedLender(e.target.value)}
-          >
-            <option value="">Select a player</option>
-            {otherPlayers.map(p => (
-              <option key={p.socketId} value={p.socketId}>
-                {p.name} (${p.money})
-              </option>
-            ))}
-          </Select>
-        </FormGroup>
-        
-        <FormGroup>
-          <Label>Amount:</Label>
-          <Input
-            type="number"
-            value={loanAmount}
-            onChange={(e) => setLoanAmount(e.target.value)}
-            min="1"
-          />
-        </FormGroup>
-        
-        <FormGroup>
-          <Label>Interest Rate: {interestRate}%</Label>
-          <Input
-            type="range"
-            min="5"
-            max="50"
-            value={interestRate}
-            onChange={(e) => setInterestRate(e.target.value)}
-          />
-        </FormGroup>
-        
-        <Button 
-          onClick={handleRequestLoan}
-          disabled={!selectedLender || !loanAmount || loanAmount <= 0}
-        >
-          Request Loan
-        </Button>
+      <div style={styles.formGroup}>
+        <label style={styles.label}>Amount to Request:</label>
+        <input 
+          type="number" 
+          value={loanAmount}
+          onChange={(e) => setLoanAmount(Number(e.target.value))}
+          min="1"
+          placeholder="Enter amount"
+          style={styles.input}
+        />
       </div>
-      
-      {/* Pending Requests */}
-      {loanRequests.length > 0 && (
-        <div className="loan-requests">
-          <h3>Loan Requests</h3>
-          {loanRequests.map(request => {
-            const fromPlayer = players.find(p => p.socketId === request.fromPlayerId);
-            return (
-              <LoanRequest key={request.id}>
-                <p>
-                  {fromPlayer?.name || 'Unknown player'} 
-                  wants to lend you ${request.amount} 
-                  (Return: ${request.returnAmount})
-                </p>
-                <LoanActions>
-                  <SuccessButton 
-                    onClick={() => handleRespondToLoan(request.id, true)}
-                  >
-                    Accept
-                  </SuccessButton>
-                  <DangerButton 
-                    onClick={() => handleRespondToLoan(request.id, false)}
-                  >
-                    Reject
-                  </DangerButton>
-                </LoanActions>
-              </LoanRequest>
-            );
-          })}
-        </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>Interest Rate (%):</label>
+        <input 
+          type="number" 
+          value={interestRate}
+          onChange={(e) => setInterestRate(Number(e.target.value))}
+          min="1"
+          max="50"
+          placeholder="Interest rate"
+          style={styles.input}
+        />
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>From Player:</label>
+        <select 
+          value={selectedLender}
+          onChange={(e) => setSelectedLender(e.target.value)}
+          style={styles.select}
+        >
+          <option value="">Select a player</option>
+          {otherPlayers.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.name} (${p.money})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button 
+        onClick={handleRequestLoan}
+        disabled={!loanAmount || !selectedLender || loanAmount <= 0}
+        style={styles.button}
+      >
+        Request Loan
+      </button>
+
+      <h4>Your Loan Requests</h4>
+      {loanRequests.length === 0 ? (
+        <p>No pending loan requests</p>
+      ) : (
+        loanRequests.map(loan => (
+          <div key={loan.id} style={{...styles.loanCard, ...(loan.status === 'active' ? styles.activeLoanCard : {})}}>
+            <div>To: {loan.toPlayerName}</div>
+            <div>Amount: ${loan.amount}</div>
+            <div>Interest: {loan.interestRate}%</div>
+            <div>Status: {loan.status}</div>
+            {loan.status === 'pending' && (
+              <button 
+                onClick={() => handleCancelRequest(loan.id)}
+                style={{...styles.button, ...styles.dangerButton}}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        ))
       )}
-      
-      {/* Active Loans */}
-      {myActiveLoans.length > 0 && (
-        <div className="active-loans">
-          <h3>Active Loans</h3>
-          {myActiveLoans.map(loan => {
-            const isLender = loan.fromPlayerId === player?.socketId;
-            const otherPlayerId = isLender ? loan.toPlayerId : loan.fromPlayerId;
-            const otherPlayer = players.find(p => p.socketId === otherPlayerId);
+
+      <h4>Active Loans</h4>
+      {myActiveLoans.length === 0 ? (
+        <p>No active loans</p>
+      ) : (
+        myActiveLoans.map(loan => (
+          <div key={loan.id} style={{...styles.loanCard, ...styles.activeLoanCard}}>
+            <div>
+              {loan.borrowerId === player?.id ? 'Borrowed from' : 'Lent to'}: 
+              {loan.borrowerId === player?.id ? loan.lenderName : loan.borrowerName}
+            </div>
+            <div>Amount: ${loan.amount}</div>
+            <div>To return: ${loan.returnAmount}</div>
+            <div>Status: {loan.status}</div>
             
-            return (
-              <ActiveLoan key={loan.id}>
-                <p>
-                  {isLender ? 'You lent' : 'You borrowed'} 
-                  ${loan.amount} at {((loan.returnAmount / loan.amount - 1) * 100).toFixed(0)}% interest
-                  {otherPlayer && ` ${isLender ? 'to' : 'from'} ${otherPlayer.name}`}
-                </p>
-                <p>To return: ${loan.returnAmount}</p>
-                
-                {!isLender && (
-                  <Button 
-                    onClick={() => handleReturnLoan(loan.id)}
-                    disabled={player?.money < loan.returnAmount}
-                  >
-                    Return ${loan.returnAmount}
-                  </Button>
-                )}
-              </ActiveLoan>
-            );
-          })}
-        </div>
+            {loan.status === 'active' && loan.borrowerId === player?.id && (
+              <div style={styles.loanActions}>
+                <button 
+                  onClick={() => handleReturnLoan(loan.id, loan.returnAmount)}
+                  style={styles.button}
+                >
+                  Return ${loan.returnAmount}
+                </button>
+              </div>
+            )}
+          </div>
+        ))
       )}
-    </LoansSection>
+    </div>
   );
 };
 
