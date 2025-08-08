@@ -7,7 +7,7 @@ const Player        = require('./models/Player');
 const GameSession   = require('./models/GameSession');
 const Loan          = require('./models/Loan');
 const GameEngine    = require('./game/GameEngine');
-const { calculateRentMultiplier, determineRPSWinner } = require('./game/RentCalculator');
+const { calculateRentMultiplier } = require('./game/RentCalculator');
 const sequelize     = require('./config/database');
 require('dotenv').config();
 const { checkRedisHealth } = require('./redisHealth');
