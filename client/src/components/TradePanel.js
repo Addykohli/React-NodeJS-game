@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
@@ -26,44 +26,7 @@ const TradePanel = () => {
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  // Personal loan states
-  const [loanAmount, setLoanAmount] = useState('');
-  const [returnAmount, setReturnAmount] = useState('');
-  const [selectedLender, setSelectedLender] = useState('');
-  const [activeLoans, setActiveLoans] = useState([]);
-  const [incomingLoanRequests, setIncomingLoanRequests] = useState([]);
-
-  // Load active loans on component mount
-  useEffect(() => {
-    if (!socket) return;
-    
-    // Request active loans from server
-    socket.emit('getActiveLoans');
-    
-    // Listen for loan updates
-    socket.on('activeLoans', (loans) => {
-      setActiveLoans(loans);
-    });
-    
-    // Listen for incoming loan requests
-    socket.on('loanRequest', (request) => {
-      setIncomingLoanRequests(prev => [...prev, request]);
-    });
-    
-    // Listen for loan updates
-    socket.on('loanUpdated', (updatedLoans) => {
-      setActiveLoans(updatedLoans);
-    });
-    
-    // Clean up listeners
-    return () => {
-      socket.off('activeLoans');
-      socket.off('loanRequest');
-      socket.off('loanUpdated');
-    };
-  }, [socket]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     if (!socket) return;
 
     socket.emit('getActiveTradeOffers');
@@ -102,11 +65,11 @@ const TradePanel = () => {
     };
   }, [socket, player.socketId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
   }, [offerMoney, selectedOfferProperties]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
@@ -173,67 +136,9 @@ const TradePanel = () => {
     socket.emit('tradeResponse', { offerId, accepted });
   };
 
-  // Filter loans where current player is either borrower or lender
-  const myLoans = activeLoans.filter(loan => 
-    loan.borrowerId === player?.socketId || loan.lenderId === player?.socketId
-  );
-  
-  // Filter loans where current player is the borrower
-  const loansIOwe = myLoans.filter(loan => loan.borrowerId === player?.socketId);
-  
-  // Filter loans where current player is the lender
-  const loansOwedToMe = myLoans.filter(loan => loan.lenderId === player?.socketId);
-
-  // Personal loan handlers
-  const handleRequestLoan = () => {
-    if (!selectedLender || !loanAmount || !returnAmount) {
-      alert('Please fill in all fields');
-      return;
-    }
-    
-    if (parseInt(loanAmount) <= 0 || parseInt(returnAmount) <= 0) {
-      alert('Amounts must be greater than 0');
-      return;
-    }
-    
-    socket.emit('requestLoan', {
-      borrowerId: player.socketId,
-      lenderId: selectedLender,
-      amount: parseInt(loanAmount),
-      returnAmount: parseInt(returnAmount)
-    });
-    
-    // Reset form
-    setLoanAmount('');
-    setReturnAmount('');
-    setSelectedLender('');
-  };
-  
-  const handleAcceptLoan = (requestId) => {
-    socket.emit('acceptLoan', { requestId });
-    setIncomingLoanRequests(prev => prev.filter(req => req.id !== requestId));
-  };
-  
-  const handleRejectLoan = (requestId) => {
-    socket.emit('rejectLoan', { requestId });
-    setIncomingLoanRequests(prev => prev.filter(req => req.id !== requestId));
-  };
-  
-  const handleRepayLoan = (loanId) => {
-    socket.emit('repayLoan', { loanId });
-  };
-  
-  const handleTakeRepayment = (loanId) => {
-    socket.emit('takeRepayment', { loanId });
-  };
-
   return (
     <div className="trade-panel" style={{
       padding: '20px',
-      backgroundColor: '#f5f5f5',
-      borderRadius: '10px',
-      maxHeight: '80vh',
-      overflowY: 'auto',
       display: 'flex',
       flexDirection: 'column',
       gap: '20px'
