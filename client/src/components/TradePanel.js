@@ -1,6 +1,35 @@
 import React, { useState, useContext } from 'react';
+import styled from 'styled-components';
+import PersonalLoans from './PersonalLoans';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
+
+// Styled Components
+const TabButton = styled.button`
+  padding: 10px 20px;
+  background: ${props => props.active ? '#444' : 'transparent'};
+  color: white;
+  border: none;
+  border-bottom: 3px solid ${props => props.active ? '#007bff' : 'transparent'};
+  font-size: 16px;
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #444;
+  }
+`;
+
+const TabContent = styled.div`
+  margin-top: 15px;
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #444;
+`;
 
 const TradePanel = () => {
   const { socket, player, players } = useContext(GameContext);
@@ -25,6 +54,7 @@ const TradePanel = () => {
   const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
+  const [activeTab, setActiveTab] = useState('trade'); // 'trade' or 'loans'
 
   React.useEffect(() => {
     if (!socket) return;
@@ -137,304 +167,132 @@ const TradePanel = () => {
   };
 
   return (
-    <div className="trade-panel" style={{
+    <div style={{
       padding: '20px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '20px'
+      gap: '20px',
+      maxHeight: '80vh',
+      overflowY: 'auto',
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      borderRadius: '8px',
+      color: 'white'
     }}>
-      {/* Offer Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <button 
-          onClick={() => {
-            setOfferBtnPressed(true);
-            setTimeout(() => setOfferBtnPressed(false), 120);
-            setIsOfferExpanded(!isOfferExpanded);
-          }}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: 'rgb(175, 76, 80)',
-            border: offerBtnPressed ? '4px inset rgb(90, 40, 40)' : '4px outset rgb(90, 40, 40)',
-            borderRadius: '5px',
-            color: 'white',
-            marginBottom: '10px',
-            cursor: 'pointer',
-            fontSize: '1.8em'
-          }}
+      <TabContainer>
+        <TabButton 
+          active={activeTab === 'trade'}
+          onClick={() => setActiveTab('trade')}
         >
-          Offer
-        </button>
-        {isOfferExpanded && (
-          <div style={{ 
-            marginBottom: '10px',
-            width: '100%',
+          Trade
+        </TabButton>
+        <TabButton 
+          active={activeTab === 'loans'}
+          onClick={() => setActiveTab('loans')}
+        >
+          Personal Loans
+        </TabButton>
+      </TabContainer>
+
+      {activeTab === 'trade' ? (
+        <div style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          borderRadius: '10px',
+          padding: '15px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* Offer Section */}
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: '10px',
+            padding: '15px',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            gap: '15px'
+            alignItems: 'center'
           }}>
-            {/* Money Input */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px'
-            }}>
-              <button 
-                onClick={() => handleMoneyChange('offer', -500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#f44336',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.6em'
-                }}
-              >-</button>
-
-              <span style={{ margin: '0 15px', fontSize: '2em' }}>
-                ${offerMoney}
-              </span>
-
-              <button 
-                onClick={() => handleMoneyChange('offer', 500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#4CAF50',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.6em'
-                }}
-              >+</button>
-            </div>
-
-            {/* Properties Selection */}
             <button 
               onClick={() => {
-                setOfferPropertiesBtnPressed(true);
-                setTimeout(() => setOfferPropertiesBtnPressed(false), 120);
-                setIsOfferPropertiesExpanded(!isOfferPropertiesExpanded);
+                setOfferBtnPressed(true);
+                setTimeout(() => setOfferBtnPressed(false), 120);
+                setIsOfferExpanded(!isOfferExpanded);
               }}
               style={{
                 width: '100%',
-                padding: '8px',
-                backgroundColor: '#2196F3',
-                border: offerPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
+                padding: '10px',
+                backgroundColor: 'rgb(175, 76, 80)',
+                border: offerBtnPressed ? '4px inset rgb(90, 40, 40)' : '4px outset rgb(90, 40, 40)',
                 borderRadius: '5px',
                 color: 'white',
+                marginBottom: '10px',
                 cursor: 'pointer',
-                fontSize: '1.3em'
+                fontSize: '1.8em'
               }}
             >
-              Properties
+              Offer
             </button>
-            {isOfferPropertiesExpanded && (
+            {isOfferExpanded && (
               <div style={{ 
-                marginTop: '10px',
-                width: '100%'
-              }}>
-                {player.properties.map(propId => {
-                  const property = tiles.find(t => t.id === propId);
-                  const checked = selectedOfferProperties.includes(propId);
-                  return (
-                    <div
-                      key={propId}
-                      onClick={() => handlePropertyToggle('offer', propId)}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '8px',
-                        marginBottom: '5px',
-                        backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-                        borderRadius: '5px',
-                        minHeight: '40px',
-                        cursor: 'pointer',
-                        border: checked ? '2px solid #2196F3' : '2px solid transparent',
-                        transition: 'background 0.15s, border 0.15s'
-                      }}
-                    >
-                      <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
-                      <span
-                        style={{
-                          width: '22px',
-                          height: '22px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '4px',
-                          background: checked ? '#2196F3' : 'transparent',
-                          border: '2px solid #2196F3',
-                          transition: 'background 0.15s'
-                        }}
-                      >
-                        {checked && (
-                          <svg width="16" height="16" viewBox="0 0 16 16">
-                            <polyline
-                              points="3,8 7,12 13,4"
-                              style={{
-                                fill: 'none',
-                                stroke: 'white',
-                                strokeWidth: 2
-                              }}
-                            />
-                          </svg>
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Ask Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <button 
-          onClick={() => {
-            setAskBtnPressed(true);
-            setTimeout(() => setAskBtnPressed(false), 120);
-            setIsAskExpanded(!isAskExpanded);
-          }}
-          style={{
-            width: '100%',
-            padding: '10px',
-            backgroundColor: 'rgb(103, 213, 132)',
-            border: askBtnPressed ? '4px inset rgb(40, 90, 40)' : '4px outset rgb(40, 90, 40)',
-            borderRadius: '5px',
-            color: 'white',
-            marginBottom: '10px',
-            cursor: 'pointer',
-            fontSize: '1.8em'
-          }}
-        >
-          Ask
-        </button>
-        
-        {isAskExpanded && (
-          <div style={{ 
-            marginBottom: '10px',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '15px'
-          }}>
-            {/* Money Input */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px'
-            }}>
-              <button 
-                onClick={() => handleMoneyChange('ask', -500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#f44336',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.6em'
-                }}
-              >-</button>
-              <span style={{ margin: '0 15px', fontSize: '2em' }}>
-                ${askMoney}
-                </span>
-              <button 
-                onClick={() => handleMoneyChange('ask', 500)}
-                style={{
-                  padding: '5px 15px',
-                  backgroundColor: '#4CAF50',
-                  border: 'none',
-                  borderRadius: '5px',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '1.6em'
-                }}
-              >+</button>
-            </div>
-
-            {/* Player Selection */}
-            <div style={{ 
-              width: '100%',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              padding: '10px',
-              borderRadius: '5px',
-              display: 'flex',
-              justifyContent: 'center'
-            }}>
-              <select 
-                value={selectedPlayer || ''} 
-                onChange={(e) => handlePlayerSelect(e.target.value)}
-                style={{ 
-                  width: '100%', 
-                  padding: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  border: 'none',
-                  borderRadius: '5px',
-                  fontSize: '1.1em',
-                  textAlign: 'center'
-                }}
-              >
-                <option value="">Select Player</option>
-                {players
-                  .filter(p => p.socketId !== player.socketId)
-                  .map(p => (
-                    <option key={p.socketId} value={p.socketId}>
-                      {p.name}
-                    </option>
-                  ))
-                }
-              </select>
-            </div>
-
-            {/* Properties Selection */}
-            {selectedPlayer && (
-              <div style={{
+                marginBottom: '10px',
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center'
+                alignItems: 'center',
+                gap: '15px'
               }}>
+                {/* Money Input */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '5px'
+                }}>
+                  <button 
+                    onClick={() => handleMoneyChange('offer', -500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#f44336',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.6em'
+                    }}
+                  >-</button>
+
+                  <span style={{ margin: '0 15px', fontSize: '2em' }}>
+                    ${offerMoney}
+                  </span>
+
+                  <button 
+                    onClick={() => handleMoneyChange('offer', 500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#4CAF50',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.6em'
+                    }}
+                  >+</button>
+                </div>
+
+                {/* Properties Selection */}
                 <button 
                   onClick={() => {
-                    setAskPropertiesBtnPressed(true);
-                    setTimeout(() => setAskPropertiesBtnPressed(false), 120);
-                    setIsAskPropertiesExpanded(!isAskPropertiesExpanded);
+                    setOfferPropertiesBtnPressed(true);
+                    setTimeout(() => setOfferPropertiesBtnPressed(false), 120);
+                    setIsOfferPropertiesExpanded(!isOfferPropertiesExpanded);
                   }}
                   style={{
                     width: '100%',
                     padding: '8px',
                     backgroundColor: '#2196F3',
-                    border: askPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
+                    border: offerPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
                     borderRadius: '5px',
                     color: 'white',
                     cursor: 'pointer',
@@ -443,153 +301,360 @@ const TradePanel = () => {
                 >
                   Properties
                 </button>
-                {isAskPropertiesExpanded && (
+                {isOfferPropertiesExpanded && (
                   <div style={{ 
                     marginTop: '10px',
                     width: '100%'
                   }}>
-                    {players
-                      .find(p => p.socketId === selectedPlayer)
-                      ?.properties.map(propId => {
-                        const property = tiles.find(t => t.id === propId);
-                        const checked = selectedAskProperties.includes(propId);
-                        return (
-                          <div
-                            key={propId}
-                            onClick={() => handlePropertyToggle('ask', propId)}
+                    {player.properties.map(propId => {
+                      const property = tiles.find(t => t.id === propId);
+                      const checked = selectedOfferProperties.includes(propId);
+                      return (
+                        <div
+                          key={propId}
+                          onClick={() => handlePropertyToggle('offer', propId)}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '8px',
+                            marginBottom: '5px',
+                            backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                            borderRadius: '5px',
+                            minHeight: '40px',
+                            cursor: 'pointer',
+                            border: checked ? '2px solid #2196F3' : '2px solid transparent',
+                            transition: 'background 0.15s, border 0.15s'
+                          }}
+                        >
+                          <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
+                          <span
                             style={{
+                              width: '22px',
+                              height: '22px',
                               display: 'flex',
-                              justifyContent: 'space-between',
                               alignItems: 'center',
-                              padding: '8px',
-                              marginBottom: '5px',
-                              backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-                              borderRadius: '5px',
-                              minHeight: '40px',
-                              cursor: 'pointer',
-                              border: checked ? '2px solid #2196F3' : '2px solid transparent',
-                              transition: 'background 0.15s, border 0.15s'
+                              justifyContent: 'center',
+                              borderRadius: '4px',
+                              background: checked ? '#2196F3' : 'transparent',
+                              border: '2px solid #2196F3',
+                              transition: 'background 0.15s'
                             }}
                           >
-                            <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
-                            <span
-                              style={{
-                                width: '22px',
-                                height: '22px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: '4px',
-                                background: checked ? '#2196F3' : 'transparent',
-                                border: '2px solid #2196F3',
-                                transition: 'background 0.15s'
-                              }}
-                            >
-                              {checked && (
-                                <svg width="16" height="16" viewBox="0 0 16 16">
-                                  <polyline
-                                    points="3,8 7,12 13,4"
-                                    style={{
-                                      fill: 'none',
-                                      stroke: 'white',
-                                      strokeWidth: 2
-                                    }}
-                                  />
-                                </svg>
-                              )}
-                            </span>
-                          </div>
-                        );
-                      })}
+                            {checked && (
+                              <svg width="16" height="16" viewBox="0 0 16 16">
+                                <polyline
+                                  points="3,8 7,12 13,4"
+                                  style={{
+                                    fill: 'none',
+                                    stroke: 'white',
+                                    strokeWidth: 2
+                                  }}
+                                />
+                              </svg>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             )}
           </div>
-        )}
-      </div>
 
-      {/* Trade Request Button Section */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        borderRadius: '10px',
-        padding: '15px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%'
-      }}>
-        <button
-          onClick={() => {
-            setRequestTradeBtnPressed(true);
-            setTimeout(() => setRequestTradeBtnPressed(false), 120);
-            handleTradeRequest();
-          }}
-          disabled={!offerReady || !askReady || !selectedPlayer}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: offerReady && askReady && selectedPlayer ? '#4CAF50' : '#666',
-            border: requestTradeBtnPressed ? '4px inset rgb(40, 40, 40)' : '4px outset rgb(40, 40, 40)',
-            borderRadius: '5px',
-            color: 'white',
-            fontSize: '1.2em',
-            cursor: offerReady && askReady && selectedPlayer ? 'pointer' : 'not-allowed'
-          }}
-        >
-          Request Trade
-        </button>
-      </div>
-
-      {/* Incoming Offers Section */}
-      {incomingOffers.length > 0 && (
-        <div style={{ 
-          marginTop: '10px',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          borderRadius: '10px',
-          padding: '15px'
-        }}>
-          <h3 style={{ 
-            color: 'white', 
-            marginTop: 0,
-            marginBottom: '15px'
-          }}>Incoming Offers:</h3>
-          {incomingOffers.map(offer => {
-            const fromPlayer = players.find(p => p.socketId === offer.from);
-            return (
-              <div key={offer.id} style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          {/* Ask Section */}
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: '10px',
+            padding: '15px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            <button 
+              onClick={() => {
+                setAskBtnPressed(true);
+                setTimeout(() => setAskBtnPressed(false), 120);
+                setIsAskExpanded(!isAskExpanded);
+              }}
+              style={{
+                width: '100%',
                 padding: '10px',
+                backgroundColor: 'rgb(103, 213, 132)',
+                border: askBtnPressed ? '4px inset rgb(40, 90, 40)' : '4px outset rgb(40, 90, 40)',
+                borderRadius: '5px',
+                color: 'white',
                 marginBottom: '10px',
-                borderRadius: '5px'
+                cursor: 'pointer',
+                fontSize: '1.8em'
+              }}
+            >
+              Ask
+            </button>
+            
+            {isAskExpanded && (
+              <div style={{ 
+                marginBottom: '10px',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '15px'
               }}>
-                <p>From: {fromPlayer?.name}</p>
-                <p>You get: ${offer.offer.money}</p>
-                <p>Properties you get: {offer.offer.properties.map(propId => 
-                  tiles.find(t => t.id === propId)?.name
-                ).join(', ')}</p>
-                <p>Asks: ${offer.ask.money}</p>
-                <p>Properties you give: {offer.ask.properties.map(propId => 
-                  tiles.find(t => t.id === propId)?.name
-                ).join(', ')}</p>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                {/* Money Input */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '5px'
+                }}>
                   <button 
-                    onClick={() => handleTradeResponse(offer.id, true)}
-                    style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '5px 10px' }}
-                  >
-                    Accept
-                  </button>
+                    onClick={() => handleMoneyChange('ask', -500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#f44336',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.6em'
+                    }}
+                  >-</button>
+                  <span style={{ margin: '0 15px', fontSize: '2em' }}>
+                    ${askMoney}
+                  </span>
                   <button 
-                    onClick={() => handleTradeResponse(offer.id, false)}
-                    style={{ backgroundColor: '#f44336', color: 'white', border: 'none', padding: '5px 10px' }}
-                  >
-                    Reject
-                  </button>
+                    onClick={() => handleMoneyChange('ask', 500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#4CAF50',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.6em'
+                    }}
+                  >+</button>
                 </div>
+
+                {/* Player Selection */}
+                <div style={{ 
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '5px',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}>
+                  <select 
+                    value={selectedPlayer || ''} 
+                    onChange={(e) => handlePlayerSelect(e.target.value)}
+                    style={{ 
+                      width: '100%', 
+                      padding: '8px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      fontSize: '1.1em',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <option value="">Select Player</option>
+                    {players
+                      .filter(p => p.socketId !== player.socketId)
+                      .map(p => (
+                        <option key={p.socketId} value={p.socketId}>
+                          {p.name}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
+
+                {/* Properties Selection */}
+                {selectedPlayer && (
+                  <div style={{
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                    <button 
+                      onClick={() => {
+                        setAskPropertiesBtnPressed(true);
+                        setTimeout(() => setAskPropertiesBtnPressed(false), 120);
+                        setIsAskPropertiesExpanded(!isAskPropertiesExpanded);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#2196F3',
+                        border: askPropertiesBtnPressed ? '4px inset rgb(40, 40, 90)' : '4px outset rgb(40, 40, 90)',
+                        borderRadius: '5px',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '1.3em'
+                      }}
+                    >
+                      Properties
+                    </button>
+                    {isAskPropertiesExpanded && (
+                      <div style={{ 
+                        marginTop: '10px',
+                        width: '100%'
+                      }}>
+                        {players
+                          .find(p => p.socketId === selectedPlayer)
+                          ?.properties.map(propId => {
+                            const property = tiles.find(t => t.id === propId);
+                            const checked = selectedAskProperties.includes(propId);
+                            return (
+                              <div
+                                key={propId}
+                                onClick={() => handlePropertyToggle('ask', propId)}
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  padding: '8px',
+                                  marginBottom: '5px',
+                                  backgroundColor: checked ? 'rgba(33, 150, 243, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                                  borderRadius: '5px',
+                                  minHeight: '40px',
+                                  cursor: 'pointer',
+                                  border: checked ? '2px solid #2196F3' : '2px solid transparent',
+                                  transition: 'background 0.15s, border 0.15s'
+                                }}
+                              >
+                                <span style={{ fontSize: '1.1em', userSelect: 'none' }}>{property.name}</span>
+                                <span
+                                  style={{
+                                    width: '22px',
+                                    height: '22px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '4px',
+                                    background: checked ? '#2196F3' : 'transparent',
+                                    border: '2px solid #2196F3',
+                                    transition: 'background 0.15s'
+                                  }}
+                                >
+                                  {checked && (
+                                    <svg width="16" height="16" viewBox="0 0 16 16">
+                                      <polyline
+                                        points="3,8 7,12 13,4"
+                                        style={{
+                                          fill: 'none',
+                                          stroke: 'white',
+                                          strokeWidth: 2
+                                        }}
+                                      />
+                                    </svg>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Trade Request Button Section */}
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: '10px',
+            padding: '15px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%'
+          }}>
+            <button
+              onClick={() => {
+                setRequestTradeBtnPressed(true);
+                setTimeout(() => setRequestTradeBtnPressed(false), 120);
+                handleTradeRequest();
+              }}
+              disabled={!offerReady || !askReady || !selectedPlayer}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: offerReady && askReady && selectedPlayer ? '#4CAF50' : '#666',
+                border: requestTradeBtnPressed ? '4px inset rgb(40, 40, 40)' : '4px outset rgb(40, 40, 40)',
+                borderRadius: '5px',
+                color: 'white',
+                fontSize: '1.2em',
+                cursor: offerReady && askReady && selectedPlayer ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Request Trade
+            </button>
+          </div>
+
+          {/* Incoming Offers Section */}
+          {incomingOffers.length > 0 && (
+            <div style={{ 
+              marginTop: '10px',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              borderRadius: '10px',
+              padding: '15px'
+            }}>
+              <h3 style={{ 
+                color: 'white', 
+                marginTop: 0,
+                marginBottom: '15px'
+              }}>Incoming Offers:</h3>
+              {incomingOffers.map(offer => {
+                const fromPlayer = players.find(p => p.socketId === offer.from);
+                return (
+                  <div key={offer.id} style={{ 
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    padding: '10px',
+                    marginBottom: '10px',
+                    borderRadius: '5px'
+                  }}>
+                    <p>From: {fromPlayer?.name}</p>
+                    <p>You get: ${offer.offer.money}</p>
+                    <p>Properties you get: {offer.offer.properties.map(propId => 
+                      tiles.find(t => t.id === propId)?.name
+                    ).join(', ')}</p>
+                    <p>Asks: ${offer.ask.money}</p>
+                    <p>Properties you give: {offer.ask.properties.map(propId => 
+                      tiles.find(t => t.id === propId)?.name
+                    ).join(', ')}</p>
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button 
+                        onClick={() => handleTradeResponse(offer.id, true)}
+                        style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '5px 10px' }}
+                      >
+                        Accept
+                      </button>
+                      <button 
+                        onClick={() => handleTradeResponse(offer.id, false)}
+                        style={{ backgroundColor: '#f44336', color: 'white', border: 'none', padding: '5px 10px' }}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+      ) : (
+        <TabContent>
+          <PersonalLoans />
+        </TabContent>
       )}
     </div>
   );

@@ -1700,6 +1700,157 @@ io.on('connection', socket => {
     }
   });
 
+  // Personal loan related socket events
+  socket.on('requestPersonalLoan', async ({ toPlayerId, amount, interest }) => {
+    try {
+      const fromPlayer = engine.getPlayer(socket.id);
+      const toPlayer = engine.getPlayer(toPlayerId);
+      
+      if (!fromPlayer || !toPlayer) {
+        socket.emit('loanError', { error: 'Player not found' });
+        return;
+      }
+      
+      if (fromPlayer.money < amount) {
+        socket.emit('loanError', { error: 'Insufficient funds to lend' });
+        return;
+      }
+      
+      const loan = {
+        id: Date.now().toString(),
+        fromPlayerId: socket.id,
+        toPlayerId,
+        amount,
+        returnAmount: amount + (amount * (interest / 100)),
+        status: 'pending',
+        createdAt: new Date()
+      };
+      
+      // Store the loan request
+      if (!engine.loans) engine.loans = [];
+      engine.loans.push(loan);
+      
+      // Notify the target player
+      io.to(toPlayerId).emit('loanRequested', loan);
+      
+      // Send confirmation to requester
+      socket.emit('loanRequestSent', loan);
+      
+    } catch (error) {
+      console.error('Error processing loan request:', error);
+      socket.emit('loanError', { error: 'Failed to process loan request' });
+    }
+  });
+  
+  socket.on('respondToLoan', async ({ loanId, accept }) => {
+    try {
+      const loan = engine.loans?.find(l => l.id === loanId);
+      if (!loan) {
+        socket.emit('loanError', { error: 'Loan not found' });
+        return;
+      }
+      
+      const fromPlayer = engine.getPlayer(loan.fromPlayerId);
+      const toPlayer = engine.getPlayer(loan.toPlayerId);
+      
+      if (!fromPlayer || !toPlayer) {
+        socket.emit('loanError', { error: 'Player not found' });
+        return;
+      }
+      
+      if (accept) {
+        // Check if lender still has enough money
+        if (fromPlayer.money < loan.amount) {
+          io.to(loan.toPlayerId).emit('loanError', { error: 'Lender no longer has sufficient funds' });
+          return;
+        }
+        
+        // Update loan status
+        loan.status = 'active';
+        loan.acceptedAt = new Date();
+        
+        // Transfer money
+        fromPlayer.money -= loan.amount;
+        toPlayer.money += loan.amount;
+        
+        // Update database
+        await Promise.all([
+          Player.update(
+            { money: fromPlayer.money },
+            { where: { socketId: fromPlayer.socketId } }
+          ),
+          Player.update(
+            { money: toPlayer.money },
+            { where: { socketId: toPlayer.socketId } }
+          )
+        ]);
+        
+        // Notify both parties
+        io.to(loan.fromPlayerId).emit('loanAccepted', loan);
+        io.to(loan.toPlayerId).emit('loanAccepted', loan);
+        
+      } else {
+        // Reject loan
+        loan.status = 'rejected';
+        io.to(loan.fromPlayerId).emit('loanRejected', { loanId, by: socket.id });
+      }
+      
+    } catch (error) {
+      console.error('Error processing loan response:', error);
+      socket.emit('loanError', { error: 'Failed to process loan response' });
+    }
+  });
+  
+  socket.on('returnLoan', async ({ loanId }) => {
+    try {
+      const loan = engine.loans?.find(l => l.id === loanId);
+      if (!loan) {
+        socket.emit('loanError', { error: 'Loan not found' });
+        return;
+      }
+      
+      const fromPlayer = engine.getPlayer(loan.fromPlayerId);
+      const toPlayer = engine.getPlayer(loan.toPlayerId);
+      
+      if (!fromPlayer || !toPlayer) {
+        socket.emit('loanError', { error: 'Player not found' });
+        return;
+      }
+      
+      // Check if borrower has enough money to return
+      if (toPlayer.money < loan.returnAmount) {
+        socket.emit('loanError', { error: 'Insufficient funds to return loan' });
+        return;
+      }
+      
+      // Process loan return
+      toPlayer.money -= loan.returnAmount;
+      fromPlayer.money += loan.returnAmount;
+      loan.status = 'repaid';
+      loan.repaidAt = new Date();
+      
+      // Update database
+      await Promise.all([
+        Player.update(
+          { money: fromPlayer.money },
+          { where: { socketId: fromPlayer.socketId } }
+        ),
+        Player.update(
+          { money: toPlayer.money },
+          { where: { socketId: toPlayer.socketId } }
+        )
+      ]);
+      
+      // Notify both parties
+      io.to(loan.fromPlayerId).emit('loanReturned', loan);
+      io.to(loan.toPlayerId).emit('loanReturned', loan);
+      
+    } catch (error) {
+      console.error('Error processing loan return:', error);
+      socket.emit('loanError', { error: 'Failed to process loan return' });
+    }
+  });
+  
   socket.on('payoffLoan', async ({ amount }) => {
     console.log('[payoffLoan] Request received:', {
       playerId: socket.id,
