@@ -12,6 +12,7 @@ const TradePanel = () => {
   const [offerReady, setOfferReady] = useState(false);
   
   const [askMoney, setAskMoney] = useState(0);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [selectedAskProperties, setSelectedAskProperties] = useState([]);
   const [isAskExpanded, setIsAskExpanded] = useState(false);
   const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
