@@ -504,9 +504,10 @@ io.on('connection', socket => {
           }
 
           const stompAmount = 2000;
-          const transaction = await sequelize.transaction();
+          let transaction;
           
           try {
+            transaction = await sequelize.transaction();
             // Calculate how much the target player can pay
             const amountPaid = Math.min(targetPlayer.money, stompAmount);
             const loanIncrease = Math.max(0, stompAmount - amountPaid);
@@ -518,7 +519,7 @@ io.on('connection', socket => {
             }
             
             // Update final player's money
-            finalPlayer.money += amountPaid;
+            finalPlayer.money += stompAmount;
             
             console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
                        (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
@@ -573,7 +574,7 @@ io.on('connection', socket => {
             
             await transaction.commit();
             
-            // Notify all clients about the money transfer
+            // Notify all clients about the money transfer after successful commit
             io.emit('playerMoneyUpdate', {
               playerId: targetPlayer.socketId,
               newBalance: targetPlayer.money,
@@ -586,16 +587,20 @@ io.on('connection', socket => {
             });
             
             // Log the stomp event
-            const message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
+            let message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
             if (loanIncrease > 0) {
               message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
             }
             broadcastGameEvent(message);
             
           } catch (err) {
-            await transaction.rollback();
+            if (transaction && !transaction.finished) {
+              await transaction.rollback();
+            }
             console.error('Error processing stomp payment:', err);
             broadcastGameEvent(`Error processing stomp payment between ${finalPlayer.name} and ${targetPlayer.name}.`);
+            // Re-throw the error to be handled by the outer try-catch if needed
+            throw err;
           }
         }
       }
@@ -636,7 +641,6 @@ io.on('connection', socket => {
       tileType: finalTile?.type
     });
 
-    //implement stomp check, exeptions, and transactions, db updates
 
     
     if (finalTile?.name === 'RPS') {
@@ -1745,49 +1749,81 @@ io.on('connection', socket => {
       return;
     }
 
-    const paymentAmount = Math.min(amount, player.loan);
-    player.loan -= paymentAmount;
-    player.money -= paymentAmount;
-    await Player.update(
-      { loan: player.loan, money: player.money },
-      { where: { socketId: socket.id } }
-    );
+    const transaction = await sequelize.transaction();
+    try {
+      const paymentAmount = Math.min(amount, player.loan);
+      const newLoanAmount = player.loan - paymentAmount;
+      const newMoneyAmount = player.money - paymentAmount;
+      
+      // Update player in database
+      await Player.update(
+        { 
+          loan: newLoanAmount, 
+          money: newMoneyAmount 
+        },
+        { 
+          where: { socketId: socket.id },
+          transaction
+        }
+      );
 
-    console.log('[payoffLoan] Updated player state:', {
-      name: player.name,
-      newMoney: player.money,
-      newLoan: player.loan,
-      paidAmount: paymentAmount
-    });
+      // Update in-memory player state
+      player.loan = newLoanAmount;
+      player.money = newMoneyAmount;
 
-    io.emit('loanUpdated', {
-      playerId: socket.id,
-      newMoney: player.money,
-      loanAmount: player.loan
-    });
+      console.log('[payoffLoan] Updated player state:', {
+        name: player.name,
+        newMoney: player.money,
+        newLoan: player.loan,
+        paidAmount: paymentAmount
+      });
 
-    socket.emit('borrowResponse', { 
-      success: true 
-    });
-
-    if (currentSessionId) {
-      // Get current game session
-      const session = await GameSession.findByPk(currentSessionId);
-      if (session) {
-        // Update the specific player in the players array
-        const updatedPlayers = session.players.map(p => 
-          p.socketId === socket.id 
-            ? { ...p, money: player.money, loan: player.loan }
-            : p
-        );
-        
-        // Update the session with the modified players array
-        await session.update({
-          players: updatedPlayers
-        });
-        
-        console.log('[payoffLoan] Game session updated successfully');
+      // Update game session if available
+      if (currentSessionId) {
+        const session = await GameSession.findByPk(currentSessionId, { transaction });
+        if (session) {
+          const updatedPlayers = session.players.map(p => 
+            p.socketId === socket.id 
+              ? { ...p, money: newMoneyAmount, loan: newLoanAmount }
+              : p
+          );
+          
+          await session.update({
+            players: updatedPlayers
+          }, { transaction });
+          
+          console.log('[payoffLoan] Game session updated successfully');
+        }
       }
+
+      // Commit the transaction
+      await transaction.commit();
+
+      // Notify clients after successful commit
+      io.emit('loanUpdated', {
+        playerId: socket.id,
+        newMoney: player.money,
+        loanAmount: player.loan
+      });
+
+      socket.emit('borrowResponse', { 
+        success: true 
+      });
+      
+    } catch (error) {
+      // Rollback transaction on error
+      if (transaction && !transaction.finished) {
+        await transaction.rollback();
+      }
+      
+      console.error('[payoffLoan] Error processing loan payoff:', error);
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'An error occurred while processing your payment. Please try again.'
+      });
+      
+      // Re-throw to be handled by any outer error handlers
+      throw error;
     }
   });
 

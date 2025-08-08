@@ -1047,7 +1047,7 @@ export default function GameScreen() {
                         tileMeta.cost > (player?.money || 0) && (
                          <button
                            onClick={async (e) => {
-                           if (isRpsActive) return;
+                           if (rpsGame) return;
                              e.target.style.border = '2px inset rgb(80, 80, 170)';
                              if (socket) {
                                const amountNeeded = tileMeta.cost - (player?.money || 0);
@@ -1145,7 +1145,7 @@ export default function GameScreen() {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);
                         }}
-                        disabled={!player?.loan || player?.money < payoffAmount || isRpsActive}
+                        disabled={!player?.loan || player?.money < payoffAmount || rpsGame}
                         style={{
                           width: '100%',
                           padding: '12px',
