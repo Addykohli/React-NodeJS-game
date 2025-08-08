@@ -1,10 +1,8 @@
 import React, { useState, useContext } from 'react';
-import styled from 'styled-components';
 import PersonalLoans from './PersonalLoans';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
-// Styled Components
 const TabButton = styled.button`
   padding: 10px 20px;
   background: ${props => props.active ? '#444' : 'transparent'};

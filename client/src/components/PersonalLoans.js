@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { GameContext } from '../context/GameContext';
-import styled from 'styled-components';
 
-// Styled Components
 const LoansSection = styled.div`
   margin-top: 15px;
   color: #333;
