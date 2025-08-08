@@ -144,7 +144,7 @@ io.on('connection', socket => {
   
   // Handle loan request
   socket.on('requestLoan', async ({ lenderId, amount, returnAmount }) => {
-    const transaction = await sequelize.transaction();
+    let transaction;
     try {
       // Validate inputs
       if (!lenderId || !amount || !returnAmount) {
@@ -154,6 +154,8 @@ io.on('connection', socket => {
       if (amount <= 0 || returnAmount <= amount) {
         throw new Error('Invalid loan amount or return amount');
       }
+      
+      transaction = await sequelize.transaction();
       
       // Get borrower and lender data
       const [borrower, lender] = await Promise.all([
@@ -191,7 +193,9 @@ io.on('connection', socket => {
       socket.emit('updateLoans', { activeLoans, pendingRequests });
       
     } catch (error) {
-      await transaction.rollback();
+      if (transaction && !transaction.finished) {
+        await transaction.rollback();
+      }
       console.error('Error requesting loan:', error);
       socket.emit('loanError', { message: error.message || 'Failed to request loan' });
     }
