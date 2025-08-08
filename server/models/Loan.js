@@ -25,7 +25,9 @@ const Loan = sequelize.define('Loan', {
     references: {
       model: 'Players',
       key: 'socketId'
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
   lenderId: {
     type: DataTypes.STRING,
@@ -33,7 +35,9 @@ const Loan = sequelize.define('Loan', {
     references: {
       model: 'Players',
       key: 'socketId'
-    }
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
   borrowerName: {
     type: DataTypes.STRING,

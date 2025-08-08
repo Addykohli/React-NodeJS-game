@@ -8,6 +8,7 @@ const GameSession   = require('./models/GameSession');
 const Loan          = require('./models/Loan');
 const GameEngine    = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
+const { Op } = require('sequelize');
 const sequelize     = require('./config/database');
 require('dotenv').config();
 const { checkRedisHealth } = require('./redisHealth');
@@ -97,7 +98,7 @@ const broadcastGameEvent = (message) => {
 async function getActiveLoans(playerId) {
   return await Loan.findAll({
     where: {
-      [sequelize.Op.or]: [
+      [Op.or]: [
         { borrowerId: playerId, status: 'active' },
         { lenderId: playerId, status: 'active' }
       ]
