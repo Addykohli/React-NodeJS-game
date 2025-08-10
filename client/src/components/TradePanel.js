@@ -7,36 +7,38 @@ const TradePanel = () => {
     socket, 
     player, 
     players, 
-    setPlayer, 
-    setPlayers,
-    // Loan context
-    activeLoans = [],
-    loanRequests = [],
+    activeLoans, 
+    loanRequests, 
+    fetchLoans,
     requestLoan,
-    respondToLoanRequest,
-    repayLoan
+    respondToLoan,
+    repayLoan,
+    setPlayer, 
+    setPlayers 
   } = useContext(GameContext);
   
-  // Trade states
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [offerMoney, setOfferMoney] = useState(0);
-  const [askMoney, setAskMoney] = useState(0);
   const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
-  const [selectedAskProperties, setSelectedAskProperties] = useState([]);
-  const [incomingOffers, setIncomingOffers] = useState([]);
   const [isOfferExpanded, setIsOfferExpanded] = useState(false);
-  const [isAskExpanded, setIsAskExpanded] = useState(false);
   const [isOfferPropertiesExpanded, setIsOfferPropertiesExpanded] = useState(false);
-  const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [offerReady, setOfferReady] = useState(false);
+  
+  const [askMoney, setAskMoney] = useState(0);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [selectedAskProperties, setSelectedAskProperties] = useState([]);
+  const [isAskExpanded, setIsAskExpanded] = useState(false);
+  const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [askReady, setAskReady] = useState(false);
+
+  const [incomingOffers, setIncomingOffers] = useState([]);
+
   const [offerBtnPressed, setOfferBtnPressed] = useState(false);
   const [askBtnPressed, setAskBtnPressed] = useState(false);
   const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  // Personal Loan States
+  // Local UI state
   const [loanAmount, setLoanAmount] = useState(0);
   const [returnAmount, setReturnAmount] = useState(0);
   const [selectedLender, setSelectedLender] = useState(null);
@@ -90,16 +92,27 @@ const TradePanel = () => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
-  // Set up trade offer interval
+  // Fetch loans when the panel is opened and when socket changes
   useEffect(() => {
-    if (!socket) return;
+    if (socket) {
+      console.log('Fetching loans...');
+      fetchLoans();
+    }
     
-    const interval = setInterval(() => {
-      socket.emit('getActiveTradeOffers');
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [socket]);
+    // Set up a listener for when the panel becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && socket) {
+        console.log('Panel became visible, refreshing loans...');
+        fetchLoans();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [socket, fetchLoans]);
 
   const handleMoneyChange = (section, amount) => {
     if (section === 'offer') {
@@ -113,13 +126,14 @@ const TradePanel = () => {
 
   // Personal Loan Handlers
   const handleRequestLoan = () => {
+    console.log('handleRequestLoan called with:', { selectedLender, loanAmount, returnAmount });
     if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
       console.log('Validation failed - missing lender or invalid amounts');
       return;
     }
     
-    console.log('Calling requestLoan from context');
-    requestLoan(selectedLender.socketId, parseInt(loanAmount), parseInt(returnAmount));
+    console.log('Requesting loan via context');
+    requestLoan(selectedLender.socketId, loanAmount, returnAmount);
     
     // Reset form
     setLoanAmount(0);
@@ -129,12 +143,12 @@ const TradePanel = () => {
 
   const handleAcceptLoan = (loanId) => {
     console.log('Accepting loan:', loanId);
-    respondToLoanRequest(loanId, true);
+    respondToLoan(loanId, true);
   };
 
   const handleRejectLoan = (loanId) => {
     console.log('Rejecting loan:', loanId);
-    respondToLoanRequest(loanId, false);
+    respondToLoan(loanId, false);
   };
 
   const handleRepayLoan = (loanId) => {
@@ -144,13 +158,14 @@ const TradePanel = () => {
 
   const handleClaimLoan = (loanId) => {
     console.log('Claiming loan:', loanId);
-    // Assuming claimLoan is also moved to context if needed
-    if (socket) socket.emit('claimLoan', { loanId });
+    // This would be for the lender to claim the loan if it's not repaid on time
+    // Implementation would depend on your game's rules
+    socket.emit('claimLoan', { loanId });
   };
 
   const handlePropertyToggle = (section, propertyId) => {
     if (section === 'offer') {
-      setOfferProperties(prev => 
+      setSelectedOfferProperties(prev => 
         prev.includes(propertyId) 
           ? prev.filter(id => id !== propertyId)
           : [...prev, propertyId]
