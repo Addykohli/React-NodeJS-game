@@ -195,14 +195,14 @@ const TradePanel = () => {
     setSelectedLender(null);
   };
 
-  const handleAcceptLoan = (requestId) => {
-    console.log('handleAcceptLoan called with:', requestId);
-    socket.emit('acceptLoan', { requestId });
+  const handleAcceptLoan = (loanId) => {
+    console.log('handleAcceptLoan called with loanId:', loanId);
+    socket.emit('acceptLoan', { loanId });
   };
 
-  const handleRejectLoan = (requestId) => {
-    console.log('handleRejectLoan called with:', requestId);
-    socket.emit('rejectLoan', { requestId });
+  const handleRejectLoan = (loanId) => {
+    console.log('handleRejectLoan called with loanId:', loanId);
+    socket.emit('rejectLoan', { loanId });
   };
 
   const handleRepayLoan = (loanId) => {
