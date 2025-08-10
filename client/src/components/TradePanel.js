@@ -138,7 +138,7 @@ const TradePanel = () => {
     socket.on('loanAccepted', (data) => {
       console.log('✅ Loan accepted:', data);
       // Update UI to show loan was accepted
-      setLoanRequests(prev => prev.filter(req => req.id !== data.loanId));
+      setLoanRequests(prev => prev.filter(req => req.id === data.loanId ? false : true));
       // Refresh loans to show the new active loan
       socket.emit('getActiveLoans');
     });
@@ -147,7 +147,7 @@ const TradePanel = () => {
     socket.on('loanRejected', (data) => {
       console.log('❌ Loan rejected:', data);
       // Update UI to remove the rejected request
-      setLoanRequests(prev => prev.filter(req => req.id !== data.loanId));
+      setLoanRequests(prev => prev.filter(req => req.id === data.loanId ? false : true));
     });
 
     // Initial fetch

@@ -144,15 +144,15 @@ io.on('connection', socket => {
   });
   
   // Handle accepting a loan request
-  socket.on('acceptLoan', async ({ requestId }) => {
-    console.log(`=== ACCEPTING LOAN REQUEST ${requestId} ===`);
+  socket.on('acceptLoan', async ({ loanId }) => {
+    console.log(`=== ACCEPTING LOAN ${loanId} ===`);
     const transaction = await sequelize.transaction();
     
     try {
-      // Find the loan request
-      const loan = await Loan.findByPk(requestId, { transaction });
+      // Find the loan
+      const loan = await Loan.findByPk(loanId, { transaction });
       if (!loan) {
-        console.error(`Loan ${requestId} not found`);
+        console.error(`Loan ${loanId} not found`);
         socket.emit('loanError', { message: 'Loan not found' });
         return;
       }
@@ -226,15 +226,15 @@ io.on('connection', socket => {
     }
   });
   
-  // Handle rejecting a loan request
-  socket.on('rejectLoan', async ({ requestId }) => {
-    console.log(`=== REJECTING LOAN REQUEST ${requestId} ===`);
+  // Handle rejecting a loan
+  socket.on('rejectLoan', async ({ loanId }) => {
+    console.log(`=== REJECTING LOAN ${loanId} ===`);
     
     try {
-      // Find the loan request
-      const loan = await Loan.findByPk(requestId);
+      // Find the loan
+      const loan = await Loan.findByPk(loanId);
       if (!loan) {
-        console.error(`Loan ${requestId} not found`);
+        console.error(`Loan ${loanId} not found`);
         socket.emit('loanError', { message: 'Loan not found' });
         return;
       }
