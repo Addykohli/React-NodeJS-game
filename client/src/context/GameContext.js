@@ -133,6 +133,59 @@ export function GameProvider({ children }) {
         return [...prev, request];
       });
     });
+
+    // Handle loan acceptance
+    socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
+      console.log('Loan accepted:', loan);
+      
+      // Update active loans
+      setActiveLoans(prev => {
+        // Remove from pending requests
+        const updatedLoans = prev.filter(l => l.id !== loan.id);
+        // Add to active loans if not already there
+        if (!updatedLoans.some(l => l.id === loan.id)) {
+          return [...updatedLoans, loan];
+        }
+        return updatedLoans;
+      });
+
+      // Remove from pending requests
+      setLoanRequests(prev => prev.filter(req => req.id !== loan.id));
+
+      // Update player money if current user is involved
+      if (socket.id === borrowerUpdate.playerId) {
+        setPlayer(prev => ({
+          ...prev,
+          money: borrowerUpdate.newMoney
+        }));
+      } else if (socket.id === lenderUpdate.playerId) {
+        setPlayer(prev => ({
+          ...prev,
+          money: lenderUpdate.newMoney
+        }));
+      }
+
+      // Update players list
+      setPlayers(prev => 
+        prev.map(p => {
+          if (p.socketId === borrowerUpdate.playerId) {
+            return { ...p, money: borrowerUpdate.newMoney };
+          }
+          if (p.socketId === lenderUpdate.playerId) {
+            return { ...p, money: lenderUpdate.newMoney };
+          }
+          return p;
+        })
+      );
+    });
+    
+    // Handle loan rejection
+    socket.on('loanRejected', ({ loanId, reason }) => {
+      console.log(`Loan ${loanId} rejected:`, reason);
+      
+      // Remove from pending requests
+      setLoanRequests(prev => prev.filter(req => req.id !== loanId));
+    });
     
     // Initial fetch
     fetchLoans();
