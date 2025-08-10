@@ -98,6 +98,17 @@ const TradePanel = () => {
       setLoanRequests(requests);
     });
 
+    // Handle new loan requests in real-time
+    socket.on('loanRequest', (request) => {
+      setLoanRequests(prev => {
+        // Check if we already have this request to avoid duplicates
+        if (prev.some(req => req.id === request.id)) {
+          return prev;
+        }
+        return [...prev, request];
+      });
+    });
+
     // Initial fetch
     fetchLoans();
 
@@ -108,6 +119,7 @@ const TradePanel = () => {
       clearInterval(interval);
       socket.off('activeLoans');
       socket.off('loanRequests');
+      socket.off('loanRequest');
     };
   }, [socket]);
 
