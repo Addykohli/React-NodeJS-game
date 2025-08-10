@@ -94,7 +94,7 @@ const TradePanel = () => {
     const fetchLoans = () => {
       console.log('Fetching active loans and requests...');
       socket.emit('getActiveLoans');
-      socket.emit('getPendingLoanRequests'); // Changed from getLoanRequests to match server
+      socket.emit('getPendingLoanRequests'); 
     };
 
     // Initial fetch
@@ -114,15 +114,25 @@ const TradePanel = () => {
 
     // Set up event listeners
     socket.on('activeLoans', handleActiveLoans);
-    socket.on('pendingLoanRequests', handleLoanRequests); // Changed to match server event
+    socket.on('pendingLoanRequests', handleLoanRequests);
 
-    // Also fetch on reconnect
+    // Also fetch on reconnect and when panel becomes visible
     const handleConnect = () => {
       console.log('Socket reconnected, refreshing loan data...');
       fetchLoans();
     };
     
     socket.on('connect', handleConnect);
+
+    // Add visibility change listener to refresh data when panel becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Panel became visible, refreshing loan data...');
+        fetchLoans();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Handle new loan requests in real-time
     const handleNewLoanRequest = (request) => {
@@ -143,7 +153,8 @@ const TradePanel = () => {
     // Handle loan request sent confirmation
     socket.on('loanRequestSent', (data) => {
       console.log('✅ Loan request sent successfully:', data);
-      // You might want to show a success message to the user
+      // Refresh loans to ensure we have the latest state
+      fetchLoans();
     });
     
     // Handle loan errors
