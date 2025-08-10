@@ -94,20 +94,38 @@ const TradePanel = () => {
     const fetchLoans = () => {
       console.log('Fetching active loans and requests...');
       socket.emit('getActiveLoans');
-      socket.emit('getLoanRequests');
+      socket.emit('getPendingLoanRequests'); // Changed from getLoanRequests to match server
     };
 
-    socket.on('activeLoans', (loans) => {
-      setActiveLoans(loans);
-    });
+    // Initial fetch
+    fetchLoans();
 
-    socket.on('loanRequests', (requests) => {
+    // Handle active loans update
+    const handleActiveLoans = (loans) => {
+      console.log('Received activeLoans:', loans);
+      setActiveLoans(loans || []);
+    };
+
+    // Handle loan requests update
+    const handleLoanRequests = (requests) => {
       console.log('Received loanRequests:', requests);
-      setLoanRequests(requests);
-    });
+      setLoanRequests(requests || []);
+    };
+
+    // Set up event listeners
+    socket.on('activeLoans', handleActiveLoans);
+    socket.on('pendingLoanRequests', handleLoanRequests); // Changed to match server event
+
+    // Also fetch on reconnect
+    const handleConnect = () => {
+      console.log('Socket reconnected, refreshing loan data...');
+      fetchLoans();
+    };
+    
+    socket.on('connect', handleConnect);
 
     // Handle new loan requests in real-time
-    socket.on('loanRequest', (request) => {
+    const handleNewLoanRequest = (request) => {
       console.log('📬 Received loanRequest event:', request);
       setLoanRequests(prev => {
         // Check if we already have this request to avoid duplicates
@@ -116,11 +134,11 @@ const TradePanel = () => {
           return prev;
         }
         console.log('✅ Adding new loan request to state');
-        console.log('Current requests:', JSON.stringify(prev, null, 2));
-        console.log('New request:', JSON.stringify(request, null, 2));
         return [...prev, request];
       });
-    });
+    };
+
+    socket.on('loanRequest', handleNewLoanRequest);
     
     // Handle loan request sent confirmation
     socket.on('loanRequestSent', (data) => {
@@ -232,9 +250,11 @@ const TradePanel = () => {
 
     return () => {
       clearInterval(interval);
-      socket.off('activeLoans');
-      socket.off('loanRequests');
-      socket.off('loanRequest');
+      // Clean up all event listeners
+      socket.off('activeLoans', handleActiveLoans);
+      socket.off('pendingLoanRequests', handleLoanRequests);
+      socket.off('loanRequest', handleNewLoanRequest);
+      socket.off('connect', handleConnect);
     };
   }, [socket]);
 

@@ -451,6 +451,28 @@ export function GameProvider({ children }) {
       }
     });
 
+    // Handle player money updates
+    socket.on('playerMoneyUpdate', ({ playerId, newMoney, playerName }) => {
+      console.log(`Updating money for player ${playerName || playerId} to ${newMoney}`);
+      
+      // Update the player in the players list
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerId 
+            ? { ...p, money: newMoney }
+            : p
+        )
+      );
+      
+      // Update current player if it's the current user
+      if (playerId === socket.id) {
+        setPlayer(prev => ({
+          ...prev,
+          money: newMoney
+        }));
+      }
+    });
+
     return () => {
       socket.off('lobbyUpdate');
       socket.off('gameStart');
@@ -470,6 +492,7 @@ export function GameProvider({ children }) {
       socket.off('loanUpdated');
       socket.off('tradeAccepted');
       socket.off('playersStateUpdate');
+      socket.off('playerMoneyUpdate');
     };
   }, [player, players]);
 
