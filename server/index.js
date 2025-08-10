@@ -321,12 +321,27 @@ io.on('connection', socket => {
       lender.money -= loan.amount;
       borrower.money += loan.amount;
       
-      // Update engine state
+      // Update engine state for both players
       const lenderEnginePlayer = engine.getPlayer(lender.socketId);
       const borrowerEnginePlayer = engine.getPlayer(borrower.socketId);
       
-      if (lenderEnginePlayer) lenderEnginePlayer.money = lender.money;
-      if (borrowerEnginePlayer) borrowerEnginePlayer.money = borrower.money;
+      if (lenderEnginePlayer) {
+        lenderEnginePlayer.money = lender.money;
+        // Update player in the game engine's players array
+        const lenderIndex = engine.session.players.findIndex(p => p.socketId === lender.socketId);
+        if (lenderIndex !== -1) {
+          engine.session.players[lenderIndex].money = lender.money;
+        }
+      }
+      
+      if (borrowerEnginePlayer) {
+        borrowerEnginePlayer.money = borrower.money;
+        // Update player in the game engine's players array
+        const borrowerIndex = engine.session.players.findIndex(p => p.socketId === borrower.socketId);
+        if (borrowerIndex !== -1) {
+          engine.session.players[borrowerIndex].money = borrower.money;
+        }
+      }
       
       await Promise.all([
         lender.save({ transaction }),
@@ -363,36 +378,86 @@ io.on('connection', socket => {
         }
       };
       
+      // Prepare complete player updates for both parties
+      const borrowerPlayerUpdate = {
+        ...borrowerUpdate,
+        player: {
+          socketId: borrower.socketId,
+          name: borrower.name,
+          money: borrower.money,
+          // Include other relevant player properties
+        }
+      };
+
+      const lenderPlayerUpdate = {
+        ...lenderUpdate,
+        player: {
+          socketId: lender.socketId,
+          name: lender.name,
+          money: lender.money,
+          // Include other relevant player properties
+        }
+      };
+
       // Notify both parties with complete state
       io.to(loan.borrowerId).emit('loanAccepted', {
         loan,
-        playerUpdate: borrowerUpdate,
-        lenderName: lender.name
+        playerUpdate: borrowerPlayerUpdate,
+        lenderName: lender.name,
+        isBorrower: true
       });
       
       socket.emit('loanAccepted', {
         loan,
-        playerUpdate: lenderUpdate,
-        borrowerName: borrower.name
+        playerUpdate: lenderPlayerUpdate,
+        borrowerName: borrower.name,
+        isLender: true
       });
       
-      // Update game state for both players
+      // Update game state for all players
       io.emit('playerMoneyUpdate', {
         playerId: borrower.socketId,
-        newMoney: borrower.money
+        newMoney: borrower.money,
+        playerName: borrower.name
       });
       
       io.emit('playerMoneyUpdate', {
         playerId: lender.socketId,
-        newMoney: lender.money
+        newMoney: lender.money,
+        playerName: lender.name
       });
       
-      // Update loan lists for both parties
-      io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
-      socket.emit('updateLoans', lenderUpdate.loans);
+      // Update loan lists for both parties with full player data
+      io.to(loan.borrowerId).emit('updateLoans', {
+        ...borrowerUpdate.loans,
+        playerMoney: borrower.money
+      });
       
-      // Broadcast game state update to all clients
-      io.emit('gameStateUpdate', engine.getState());
+      socket.emit('updateLoans', {
+        ...lenderUpdate.loans,
+        playerMoney: lender.money
+      });
+      
+      // Broadcast complete game state update to all clients
+      const gameState = engine.getState();
+      io.emit('gameStateUpdate', gameState);
+      
+      // Log the complete state for debugging
+      console.log('[LOAN] Game state after loan acceptance:', JSON.stringify({
+        borrower: {
+          id: borrower.socketId,
+          name: borrower.name,
+          money: borrower.money,
+          loans: borrowerUpdate.loans
+        },
+        lender: {
+          id: lender.socketId,
+          name: lender.name,
+          money: lender.money,
+          loans: lenderUpdate.loans
+        },
+        gameState: gameState
+      }, null, 2));
       
     } catch (error) {
       console.error('[LOAN] Error accepting loan:', error);

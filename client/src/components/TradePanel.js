@@ -33,6 +33,7 @@ const TradePanel = () => {
   const [activeLoans, setActiveLoans] = useState([]);
   const [loanRequests, setLoanRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('request'); // 'request' or 'active'
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   React.useEffect(() => {
     if (!socket) return;
@@ -139,22 +140,45 @@ const TradePanel = () => {
       console.log('✅ Loan accepted:', data);
       
       // Update active loans if included in the response
-      if (data.playerUpdate?.loans?.activeLoans) {
+      if (data.loan) {
+        setActiveLoans(prevLoans => {
+          // Check if the loan is already in the list to avoid duplicates
+          const existingLoanIndex = prevLoans.findIndex(loan => loan.id === data.loan.id);
+          if (existingLoanIndex === -1) {
+            // Add the new loan to the active loans list
+            return [...prevLoans, data.loan];
+          } else {
+            // Update existing loan
+            const updatedLoans = [...prevLoans];
+            updatedLoans[existingLoanIndex] = data.loan;
+            return updatedLoans;
+          }
+        });
+      } else if (data.playerUpdate?.loans?.activeLoans) {
+        // Fallback: Use the provided active loans list
         setActiveLoans(data.playerUpdate.loans.activeLoans);
       } else {
-        // Fallback: Refresh loans from server
+        // Last resort: Refresh loans from server
+        console.log('No loan data in response, refreshing from server...');
         socket.emit('getActiveLoans');
       }
       
-      // Remove the accepted request from pending
-      setLoanRequests(prev => prev.filter(req => req.id === data.loan?.id ? false : true));
+      // Remove the accepted request from pending requests
+      setLoanRequests(prev => prev.filter(req => req.id !== data.loan?.id));
       
       // Update player money if included
-      if (data.playerUpdate?.newMoney !== undefined) {
-        // This assumes you have a way to update the player's money in the UI
-        // The actual implementation depends on how your app state is managed
-        console.log('Updating player money to:', data.playerUpdate.newMoney);
+      if (data.playerUpdate?.player?.money !== undefined) {
+        const { socketId, name, money } = data.playerUpdate.player;
+        console.log(`Updating player ${name} (${socketId}) money to:`, money);
+        
+        // Update the game context if available
+        if (typeof updatePlayerMoney === 'function') {
+          updatePlayerMoney(socketId, money);
+        }
       }
+      
+      // Force a re-render of the loans list
+      setLastUpdate(Date.now());
     });
     
     // Handle loan rejected
