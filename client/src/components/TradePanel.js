@@ -130,7 +130,24 @@ const TradePanel = () => {
     // Handle loan errors
     socket.on('loanError', (error) => {
       console.error('❌ Loan error:', error);
-      // You might want to show an error message to the user
+      // Show error to user
+      alert(`Loan error: ${error.message || 'Something went wrong'}`);
+    });
+    
+    // Handle loan accepted
+    socket.on('loanAccepted', (data) => {
+      console.log('✅ Loan accepted:', data);
+      // Update UI to show loan was accepted
+      setLoanRequests(prev => prev.filter(req => req.id !== data.loanId));
+      // Refresh loans to show the new active loan
+      socket.emit('getActiveLoans');
+    });
+    
+    // Handle loan rejected
+    socket.on('loanRejected', (data) => {
+      console.log('❌ Loan rejected:', data);
+      // Update UI to remove the rejected request
+      setLoanRequests(prev => prev.filter(req => req.id !== data.loanId));
     });
 
     // Initial fetch

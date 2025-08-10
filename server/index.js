@@ -143,6 +143,133 @@ io.on('connection', socket => {
     }
   });
   
+  // Handle accepting a loan request
+  socket.on('acceptLoan', async ({ requestId }) => {
+    console.log(`=== ACCEPTING LOAN REQUEST ${requestId} ===`);
+    const transaction = await sequelize.transaction();
+    
+    try {
+      // Find the loan request
+      const loan = await Loan.findByPk(requestId, { transaction });
+      if (!loan) {
+        console.error(`Loan ${requestId} not found`);
+        socket.emit('loanError', { message: 'Loan not found' });
+        return;
+      }
+      
+      // Verify the current user is the lender
+      if (loan.lenderId !== socket.id) {
+        console.error(`User ${socket.id} is not the lender of loan ${requestId}`);
+        socket.emit('loanError', { message: 'Not authorized' });
+        return;
+      }
+      
+      // Verify loan is still pending
+      if (loan.status !== 'pending') {
+        console.error(`Loan ${requestId} is not pending (status: ${loan.status})`);
+        socket.emit('loanError', { message: 'Loan is not pending' });
+        return;
+      }
+      
+      // Get lender and borrower
+      const [lender, borrower] = await Promise.all([
+        Player.findByPk(loan.lenderId, { transaction }),
+        Player.findByPk(loan.borrowerId, { transaction })
+      ]);
+      
+      if (!lender || !borrower) {
+        console.error('Lender or borrower not found');
+        socket.emit('loanError', { message: 'Player not found' });
+        return;
+      }
+      
+      // Verify lender has enough money
+      if (lender.money < loan.amount) {
+        console.error(`Lender ${lender.id} doesn't have enough money`);
+        socket.emit('loanError', { message: 'Not enough money' });
+        return;
+      }
+      
+      // Update loan status and transfer money
+      loan.status = 'active';
+      await loan.save({ transaction });
+      
+      lender.money -= loan.amount;
+      borrower.money += loan.amount;
+      
+      await Promise.all([
+        lender.save({ transaction }),
+        borrower.save({ transaction })
+      ]);
+      
+      await transaction.commit();
+      
+      console.log(`Loan ${requestId} accepted successfully`);
+      
+      // Notify both parties
+      io.to(borrower.socketId).emit('loanAccepted', { 
+        loanId: loan.id,
+        amount: loan.amount,
+        returnAmount: loan.returnAmount
+      });
+      
+      socket.emit('loanAccepted', { 
+        loanId: loan.id,
+        amount: loan.amount,
+        returnAmount: loan.returnAmount
+      });
+      
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error accepting loan:', error);
+      socket.emit('loanError', { message: 'Failed to accept loan' });
+    }
+  });
+  
+  // Handle rejecting a loan request
+  socket.on('rejectLoan', async ({ requestId }) => {
+    console.log(`=== REJECTING LOAN REQUEST ${requestId} ===`);
+    
+    try {
+      // Find the loan request
+      const loan = await Loan.findByPk(requestId);
+      if (!loan) {
+        console.error(`Loan ${requestId} not found`);
+        socket.emit('loanError', { message: 'Loan not found' });
+        return;
+      }
+      
+      // Verify the current user is the lender
+      if (loan.lenderId !== socket.id) {
+        console.error(`User ${socket.id} is not the lender of loan ${requestId}`);
+        socket.emit('loanError', { message: 'Not authorized' });
+        return;
+      }
+      
+      // Update loan status to rejected
+      loan.status = 'rejected';
+      await loan.save();
+      
+      console.log(`Loan ${requestId} rejected`);
+      
+      // Notify borrower
+      io.to(loan.borrowerId).emit('loanRejected', { 
+        loanId: loan.id,
+        reason: 'Loan request was rejected'
+      });
+      
+      // Notify lender
+      socket.emit('loanRejected', { 
+        loanId: loan.id,
+        success: true
+      });
+      
+    } catch (error) {
+      console.error('Error rejecting loan:', error);
+      socket.emit('loanError', { message: 'Failed to reject loan' });
+    }
+  });
+  
   // Handle loan requests
   socket.on('requestLoan', async ({ lenderId, amount, returnAmount }) => {
     console.log('=== NEW LOAN REQUEST ===');
