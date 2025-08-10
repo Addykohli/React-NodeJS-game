@@ -186,6 +186,32 @@ export function GameProvider({ children }) {
       // Remove from pending requests
       setLoanRequests(prev => prev.filter(req => req.id !== loanId));
     });
+
+    // Handle loan repayment
+    socket.on('loanRepaid', ({ loan, playerUpdate }) => {
+      console.log('Loan repaid:', loan);
+      
+      // Remove from active loans
+      setActiveLoans(prev => prev.filter(l => l.id !== loan.id));
+
+      // Update player money if current user is involved
+      if (socket.id === playerUpdate.playerId) {
+        setPlayer(prev => ({
+          ...prev,
+          money: playerUpdate.newMoney
+        }));
+      }
+
+      // Update players list
+      setPlayers(prev => 
+        prev.map(p => {
+          if (p.socketId === playerUpdate.playerId) {
+            return { ...p, money: playerUpdate.newMoney };
+          }
+          return p;
+        })
+      );
+    });
     
     // Initial fetch
     fetchLoans();
