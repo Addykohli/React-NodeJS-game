@@ -147,26 +147,30 @@ io.on('connection', socket => {
   socket.on('acceptLoan', async ({ loanId }) => {
     console.log(`=== ACCEPTING LOAN ${loanId} ===`);
     const transaction = await sequelize.transaction();
+    let transactionCommitted = false;
     
     try {
       // Find the loan
       const loan = await Loan.findByPk(loanId, { transaction });
       if (!loan) {
         console.error(`Loan ${loanId} not found`);
+        await transaction.rollback();
         socket.emit('loanError', { message: 'Loan not found' });
         return;
       }
       
       // Verify the current user is the lender
       if (loan.lenderId !== socket.id) {
-        console.error(`User ${socket.id} is not the lender of loan ${requestId}`);
+        console.error(`User ${socket.id} is not the lender of loan ${loanId}`);
+        await transaction.rollback();
         socket.emit('loanError', { message: 'Not authorized' });
         return;
       }
       
       // Verify loan is still pending
       if (loan.status !== 'pending') {
-        console.error(`Loan ${requestId} is not pending (status: ${loan.status})`);
+        console.error(`Loan ${loanId} is not pending (status: ${loan.status})`);
+        await transaction.rollback();
         socket.emit('loanError', { message: 'Loan is not pending' });
         return;
       }
@@ -179,6 +183,7 @@ io.on('connection', socket => {
       
       if (!lender || !borrower) {
         console.error('Lender or borrower not found');
+        await transaction.rollback();
         socket.emit('loanError', { message: 'Player not found' });
         return;
       }
@@ -186,6 +191,7 @@ io.on('connection', socket => {
       // Verify lender has enough money
       if (lender.money < loan.amount) {
         console.error(`Lender ${lender.id} doesn't have enough money`);
+        await transaction.rollback();
         socket.emit('loanError', { message: 'Not enough money' });
         return;
       }
@@ -203,8 +209,9 @@ io.on('connection', socket => {
       ]);
       
       await transaction.commit();
+      transactionCommitted = true;
       
-      console.log(`Loan ${requestId} accepted successfully`);
+      console.log(`Loan ${loanId} accepted successfully`);
       
       // Notify both parties
       io.to(borrower.socketId).emit('loanAccepted', { 
@@ -220,9 +227,16 @@ io.on('connection', socket => {
       });
       
     } catch (error) {
-      await transaction.rollback();
+      if (!transactionCommitted) {
+        try {
+          await transaction.rollback();
+          console.log('Transaction rolled back due to error');
+        } catch (rollbackError) {
+          console.error('Error rolling back transaction:', rollbackError);
+        }
+      }
       console.error('Error accepting loan:', error);
-      socket.emit('loanError', { message: 'Failed to accept loan' });
+      socket.emit('loanError', { message: 'Failed to accept loan', error: error.message });
     }
   });
   
@@ -241,8 +255,15 @@ io.on('connection', socket => {
       
       // Verify the current user is the lender
       if (loan.lenderId !== socket.id) {
-        console.error(`User ${socket.id} is not the lender of loan ${requestId}`);
+        console.error(`User ${socket.id} is not the lender of loan ${loanId}`);
         socket.emit('loanError', { message: 'Not authorized' });
+        return;
+      }
+      
+      // Verify loan is still pending
+      if (loan.status !== 'pending') {
+        console.error(`Loan ${loanId} is not pending (status: ${loan.status})`);
+        socket.emit('loanError', { message: 'Loan is not pending' });
         return;
       }
       
@@ -250,7 +271,7 @@ io.on('connection', socket => {
       loan.status = 'rejected';
       await loan.save();
       
-      console.log(`Loan ${requestId} rejected`);
+      console.log(`Loan ${loanId} rejected`);
       
       // Notify borrower
       io.to(loan.borrowerId).emit('loanRejected', { 
@@ -266,7 +287,10 @@ io.on('connection', socket => {
       
     } catch (error) {
       console.error('Error rejecting loan:', error);
-      socket.emit('loanError', { message: 'Failed to reject loan' });
+      socket.emit('loanError', { 
+        message: 'Failed to reject loan', 
+        error: error.message 
+      });
     }
   });
   
