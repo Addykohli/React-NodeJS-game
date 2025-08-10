@@ -3,7 +3,7 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 const TradePanel = () => {
-  const { socket, player, players } = useContext(GameContext);
+  const { socket, player, players, setPlayer, setPlayers } = useContext(GameContext);
   
   const [offerMoney, setOfferMoney] = useState(0);
   const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
@@ -171,10 +171,23 @@ const TradePanel = () => {
         const { socketId, name, money } = data.playerUpdate.player;
         console.log(`Updating player ${name} (${socketId}) money to:`, money);
         
-        // Update the game context if available
-        if (typeof updatePlayerMoney === 'function') {
-          updatePlayerMoney(socketId, money);
+        // Update the player's money in the game context
+        if (socketId === socket?.id) {
+          // Update current player
+          setPlayer(prev => ({
+            ...prev,
+            money: money
+          }));
         }
+        
+        // Update players list
+        setPlayers(prevPlayers => 
+          prevPlayers.map(p => 
+            p.socketId === socketId 
+              ? { ...p, money: money }
+              : p
+          )
+        );
       }
       
       // Force a re-render of the loans list
