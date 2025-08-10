@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
@@ -6,32 +6,21 @@ const TradePanel = () => {
   const { socket, player, players, setPlayer, setPlayers } = useContext(GameContext);
   
   const [offerMoney, setOfferMoney] = useState(0);
-  const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
-  const [isOfferExpanded, setIsOfferExpanded] = useState(false);
-  const [isOfferPropertiesExpanded, setIsOfferPropertiesExpanded] = useState(false);
-  const [offerReady, setOfferReady] = useState(false);
-  
   const [askMoney, setAskMoney] = useState(0);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [selectedAskProperties, setSelectedAskProperties] = useState([]);
-  const [isAskExpanded, setIsAskExpanded] = useState(false);
-  const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
-  const [askReady, setAskReady] = useState(false);
-
+  const [offerProperties, setOfferProperties] = useState([]);
+  const [askProperties, setAskProperties] = useState([]);
   const [incomingOffers, setIncomingOffers] = useState([]);
-
-  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
-  const [askBtnPressed, setAskBtnPressed] = useState(false);
-  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
-  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
+  const [showProperties, setShowProperties] = useState(false);
+  const [propertiesMode, setPropertiesMode] = useState('offer');
+  const [selectedProperties, setSelectedProperties] = useState([]);
+  const [offerReady, setOfferReady] = useState(false);
+  const [askReady, setAskReady] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
   // Personal Loan States
   const [loanAmount, setLoanAmount] = useState(0);
   const [returnAmount, setReturnAmount] = useState(0);
   const [selectedLender, setSelectedLender] = useState(null);
-  const [activeLoans, setActiveLoans] = useState([]);
-  const [loanRequests, setLoanRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('request'); // 'request' or 'active'
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
@@ -75,198 +64,22 @@ const TradePanel = () => {
   }, [socket, player.socketId]);
 
   React.useEffect(() => {
-    setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
-  }, [offerMoney, selectedOfferProperties]);
+    setOfferReady(offerMoney >= 500 || offerProperties.length > 0);
+  }, [offerMoney, offerProperties]);
 
   React.useEffect(() => {
-    setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
-  }, [askMoney, selectedAskProperties]);
+    setAskReady(askMoney >= 500 || askProperties.length > 0);
+  }, [askMoney, askProperties]);
 
-  // Fetch active loans and requests
-  React.useEffect(() => {
-    if (!socket) {
-      console.log('Socket not available');
-      return;
-    }
-
-    console.log('Setting up loan listeners...');
+  // Set up trade offer interval
+  useEffect(() => {
+    if (!socket) return;
     
-    const fetchLoans = () => {
-      console.log('Fetching active loans and requests...');
-      socket.emit('getActiveLoans');
-      socket.emit('getPendingLoanRequests'); 
-    };
+    const interval = setInterval(() => {
+      socket.emit('getActiveTradeOffers');
+    }, 5000);
 
-    // Initial fetch
-    fetchLoans();
-
-    // Handle active loans update
-    const handleActiveLoans = (loans) => {
-      console.log('Received activeLoans:', loans);
-      setActiveLoans(loans || []);
-    };
-
-    // Handle loan requests update
-    const handleLoanRequests = (requests) => {
-      console.log('Received loanRequests:', requests);
-      setLoanRequests(requests || []);
-    };
-
-    // Set up event listeners
-    socket.on('activeLoans', handleActiveLoans);
-    socket.on('pendingLoanRequests', handleLoanRequests);
-
-    // Also fetch on reconnect and when panel becomes visible
-    const handleConnect = () => {
-      console.log('Socket reconnected, refreshing loan data...');
-      fetchLoans();
-    };
-    
-    socket.on('connect', handleConnect);
-
-    // Add visibility change listener to refresh data when panel becomes visible
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('Panel became visible, refreshing loan data...');
-        fetchLoans();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Handle new loan requests in real-time
-    const handleNewLoanRequest = (request) => {
-      console.log('📬 Received loanRequest event:', request);
-      setLoanRequests(prev => {
-        // Check if we already have this request to avoid duplicates
-        if (prev.some(req => req.id === request.id)) {
-          console.log('🔄 Duplicate request received, ignoring');
-          return prev;
-        }
-        console.log('✅ Adding new loan request to state');
-        return [...prev, request];
-      });
-    };
-
-    socket.on('loanRequest', handleNewLoanRequest);
-    
-    // Handle loan request sent confirmation
-    socket.on('loanRequestSent', (data) => {
-      console.log('✅ Loan request sent successfully:', data);
-      // Refresh loans to ensure we have the latest state
-      fetchLoans();
-    });
-    
-    // Handle loan errors
-    socket.on('loanError', (error) => {
-      console.error('❌ Loan error:', error);
-      // Show error to user
-      alert(`Loan error: ${error.message || 'Something went wrong'}`);
-    });
-    
-    // Handle loan accepted
-    socket.on('loanAccepted', (data) => {
-      console.log('✅ Loan accepted:', data);
-      
-      // Update active loans if included in the response
-      if (data.loan) {
-        setActiveLoans(prevLoans => {
-          // Check if the loan is already in the list to avoid duplicates
-          const existingLoanIndex = prevLoans.findIndex(loan => loan.id === data.loan.id);
-          if (existingLoanIndex === -1) {
-            // Add the new loan to the active loans list
-            return [...prevLoans, data.loan];
-          } else {
-            // Update existing loan
-            const updatedLoans = [...prevLoans];
-            updatedLoans[existingLoanIndex] = data.loan;
-            return updatedLoans;
-          }
-        });
-      } else if (data.playerUpdate?.loans?.activeLoans) {
-        // Fallback: Use the provided active loans list
-        setActiveLoans(data.playerUpdate.loans.activeLoans);
-      } else {
-        // Last resort: Refresh loans from server
-        console.log('No loan data in response, refreshing from server...');
-        socket.emit('getActiveLoans');
-      }
-      
-      // Remove the accepted request from pending requests
-      setLoanRequests(prev => prev.filter(req => req.id !== data.loan?.id));
-      
-      // Update player money if included
-      if (data.playerUpdate?.player?.money !== undefined) {
-        const { socketId, name, money } = data.playerUpdate.player;
-        console.log(`Updating player ${name} (${socketId}) money to:`, money);
-        
-        // Update the player's money in the game context
-        if (socketId === socket?.id) {
-          // Update current player
-          setPlayer(prev => ({
-            ...prev,
-            money: money
-          }));
-        }
-        
-        // Update players list
-        setPlayers(prevPlayers => 
-          prevPlayers.map(p => 
-            p.socketId === socketId 
-              ? { ...p, money: money }
-              : p
-          )
-        );
-      }
-      
-      // Force a re-render of the loans list
-      setLastUpdate(Date.now());
-    });
-    
-    // Handle loan rejected
-    socket.on('loanRejected', (data) => {
-      console.log('❌ Loan rejected:', data);
-      // Update UI to remove the rejected request
-      setLoanRequests(prev => prev.filter(req => req.id === data.loan?.id ? false : true));
-      
-      // Show rejection message if available
-      if (data.message) {
-        console.log('Rejection reason:', data.message);
-      }
-    });
-    
-    // Handle loan repaid
-    socket.on('loanRepaid', (data) => {
-      console.log('💰 Loan repaid:', data);
-      
-      // Update active loans if included in the response
-      if (data.playerUpdate?.loans?.activeLoans) {
-        setActiveLoans(data.playerUpdate.loans.activeLoans);
-      } else {
-        // Fallback: Refresh loans from server
-        socket.emit('getActiveLoans');
-      }
-      
-      // Update player money if included
-      if (data.playerUpdate?.newMoney !== undefined) {
-        console.log('Updating player money to:', data.playerUpdate.newMoney);
-      }
-    });
-
-    // Initial fetch
-    fetchLoans();
-
-    // Set up periodic refresh
-    const interval = setInterval(fetchLoans, 5000);
-
-    return () => {
-      clearInterval(interval);
-      // Clean up all event listeners
-      socket.off('activeLoans', handleActiveLoans);
-      socket.off('pendingLoanRequests', handleLoanRequests);
-      socket.off('loanRequest', handleNewLoanRequest);
-      socket.off('connect', handleConnect);
-    };
+    return () => clearInterval(interval);
   }, [socket]);
 
   const handleMoneyChange = (section, amount) => {
@@ -281,18 +94,13 @@ const TradePanel = () => {
 
   // Personal Loan Handlers
   const handleRequestLoan = () => {
-    console.log('handleRequestLoan called with:', { selectedLender, loanAmount, returnAmount });
     if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
       console.log('Validation failed - missing lender or invalid amounts');
       return;
     }
     
-    console.log('Emitting requestLoan event to server');
-    socket.emit('requestLoan', {
-      lenderId: selectedLender.socketId,
-      amount: loanAmount,
-      returnAmount: returnAmount
-    });
+    console.log('Calling requestLoan from context');
+    requestLoan(selectedLender.socketId, parseInt(loanAmount), parseInt(returnAmount));
     
     // Reset form
     setLoanAmount(0);
@@ -301,26 +109,29 @@ const TradePanel = () => {
   };
 
   const handleAcceptLoan = (loanId) => {
-    console.log('handleAcceptLoan called with loanId:', loanId);
-    socket.emit('acceptLoan', { loanId });
+    console.log('Accepting loan:', loanId);
+    respondToLoanRequest(loanId, true);
   };
 
   const handleRejectLoan = (loanId) => {
-    console.log('handleRejectLoan called with loanId:', loanId);
-    socket.emit('rejectLoan', { loanId });
+    console.log('Rejecting loan:', loanId);
+    respondToLoanRequest(loanId, false);
   };
 
   const handleRepayLoan = (loanId) => {
-    socket.emit('repayLoan', { loanId });
+    console.log('Repaying loan:', loanId);
+    repayLoan(loanId);
   };
 
   const handleClaimLoan = (loanId) => {
-    socket.emit('claimLoan', { loanId });
+    console.log('Claiming loan:', loanId);
+    // Assuming claimLoan is also moved to context if needed
+    if (socket) socket.emit('claimLoan', { loanId });
   };
 
   const handlePropertyToggle = (section, propertyId) => {
     if (section === 'offer') {
-      setSelectedOfferProperties(prev => 
+      setOfferProperties(prev => 
         prev.includes(propertyId) 
           ? prev.filter(id => id !== propertyId)
           : [...prev, propertyId]

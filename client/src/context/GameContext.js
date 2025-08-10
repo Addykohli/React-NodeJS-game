@@ -9,6 +9,10 @@ export function GameProvider({ children }) {
   
   const [chatMessages, setChatMessages] = useState([]);
   
+  // Loan state
+  const [activeLoans, setActiveLoans] = useState([]);
+  const [loanRequests, setLoanRequests] = useState([]);
+  
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
     return savedPlayer ? JSON.parse(savedPlayer) : null;
@@ -446,42 +450,6 @@ export function GameProvider({ children }) {
       setPlayers(players);
       
       const updatedPlayer = players.find(p => p.socketId === socket.id);
-      if (updatedPlayer) {
-        setPlayer(updatedPlayer);
-      }
-    });
-
-    // Handle player money updates
-    socket.on('playerMoneyUpdate', ({ playerId, newMoney, playerName }) => {
-      console.log(`Updating money for player ${playerName || playerId} to ${newMoney}`);
-      
-      // Update the player in the players list
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
-          p.socketId === playerId 
-            ? { ...p, money: newMoney }
-            : p
-        )
-      );
-      
-      // Update current player if it's the current user
-      if (playerId === socket.id) {
-        setPlayer(prev => ({
-          ...prev,
-          money: newMoney
-        }));
-      }
-    });
-
-    return () => {
-      socket.off('lobbyUpdate');
-      socket.off('gameStart');
-      socket.off('gameOver');
-      socket.off('playerQuit');
-      socket.off('turnEnded');
-      socket.off('diceResult');
-      socket.off('playerMoved');
-      socket.off('movementDone');
       socket.off('insufficientFunds');
       socket.off('rentPaid');
       socket.off('rentBonus');
@@ -495,6 +463,31 @@ export function GameProvider({ children }) {
       socket.off('playerMoneyUpdate');
     };
   }, [player, players]);
+
+  // Loan-related functions
+  const requestLoan = (lenderId, amount, returnAmount) => {
+    if (socket) {
+      socket.emit('requestLoan', { lenderId, amount, returnAmount });
+      return true;
+    }
+    return false;
+  };
+
+  const respondToLoanRequest = (requestId, accepted) => {
+    if (socket) {
+      socket.emit('respondToLoanRequest', { requestId, accepted });
+      return true;
+    }
+    return false;
+  };
+
+  const repayLoan = (loanId) => {
+    if (socket) {
+      socket.emit('repayLoan', { loanId });
+      return true;
+    }
+    return false;
+  };
 
   return (
     <GameContext.Provider
@@ -521,6 +514,18 @@ export function GameProvider({ children }) {
         chatMessages,
         setChatMessages,
         isRpsActive,
+        // Loan related
+        activeLoans,
+        loanRequests,
+        requestLoan,
+        respondToLoanRequest,
+        repayLoan,
+        // Loan related
+        activeLoans,
+        loanRequests,
+        requestLoan,
+        respondToLoanRequest,
+        repayLoan,
         setIsRpsActive,
         handleQuit
       }}
