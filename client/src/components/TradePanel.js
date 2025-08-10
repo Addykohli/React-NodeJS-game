@@ -83,9 +83,15 @@ const TradePanel = () => {
 
   // Fetch active loans and requests
   React.useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('Socket not available');
+      return;
+    }
 
+    console.log('Setting up loan listeners...');
+    
     const fetchLoans = () => {
+      console.log('Fetching active loans and requests...');
       socket.emit('getActiveLoans');
       socket.emit('getLoanRequests');
     };
@@ -95,18 +101,36 @@ const TradePanel = () => {
     });
 
     socket.on('loanRequests', (requests) => {
+      console.log('Received loanRequests:', requests);
       setLoanRequests(requests);
     });
 
     // Handle new loan requests in real-time
     socket.on('loanRequest', (request) => {
+      console.log('📬 Received loanRequest event:', request);
       setLoanRequests(prev => {
         // Check if we already have this request to avoid duplicates
         if (prev.some(req => req.id === request.id)) {
+          console.log('🔄 Duplicate request received, ignoring');
           return prev;
         }
+        console.log('✅ Adding new loan request to state');
+        console.log('Current requests:', JSON.stringify(prev, null, 2));
+        console.log('New request:', JSON.stringify(request, null, 2));
         return [...prev, request];
       });
+    });
+    
+    // Handle loan request sent confirmation
+    socket.on('loanRequestSent', (data) => {
+      console.log('✅ Loan request sent successfully:', data);
+      // You might want to show a success message to the user
+    });
+    
+    // Handle loan errors
+    socket.on('loanError', (error) => {
+      console.error('❌ Loan error:', error);
+      // You might want to show an error message to the user
     });
 
     // Initial fetch
@@ -135,27 +159,32 @@ const TradePanel = () => {
 
   // Personal Loan Handlers
   const handleRequestLoan = () => {
+    console.log('handleRequestLoan called with:', { selectedLender, loanAmount, returnAmount });
     if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
-      alert('Please select a player and enter valid loan/return amounts');
+      console.log('Validation failed - missing lender or invalid amounts');
       return;
     }
     
+    console.log('Emitting requestLoan event to server');
     socket.emit('requestLoan', {
       lenderId: selectedLender.socketId,
-      amount: parseInt(loanAmount),
-      returnAmount: parseInt(returnAmount)
+      amount: loanAmount,
+      returnAmount: returnAmount
     });
     
     // Reset form
     setLoanAmount(0);
     setReturnAmount(0);
+    setSelectedLender(null);
   };
 
   const handleAcceptLoan = (requestId) => {
+    console.log('handleAcceptLoan called with:', requestId);
     socket.emit('acceptLoan', { requestId });
   };
 
   const handleRejectLoan = (requestId) => {
+    console.log('handleRejectLoan called with:', requestId);
     socket.emit('rejectLoan', { requestId });
   };
 

@@ -143,62 +143,80 @@ io.on('connection', socket => {
     }
   });
   
-  // Handle loan request
+  // Handle loan requests
   socket.on('requestLoan', async ({ lenderId, amount, returnAmount }) => {
-    let transaction;
+    console.log('=== NEW LOAN REQUEST ===');
+    console.log(`Borrower ID: ${socket.id}`);
+    console.log(`Lender ID: ${lenderId}`);
+    console.log(`Amount: $${amount}, Return: $${returnAmount}`);
+    
     try {
-      // Validate inputs
-      if (!lenderId || !amount || !returnAmount) {
-        throw new Error('Missing required fields');
-      }
-      
-      if (amount <= 0 || returnAmount <= amount) {
-        throw new Error('Invalid loan amount or return amount');
-      }
-      
-      transaction = await sequelize.transaction();
-      
-      // Get borrower and lender data
+      console.log('Looking up borrower and lender in database...');
       const [borrower, lender] = await Promise.all([
-        Player.findByPk(socket.id, { transaction }),
-        Player.findByPk(lenderId, { transaction })
+        Player.findByPk(socket.id),
+        Player.findByPk(lenderId)
       ]);
+      
+      console.log('Borrower found:', !!borrower);
+      console.log('Lender found:', !!lender);
       
       if (!borrower || !lender) {
-        throw new Error('Player not found');
+        const errorMsg = !borrower ? 'Borrower not found' : 'Lender not found';
+        console.log(`Error: ${errorMsg}`);
+        socket.emit('loanError', { message: errorMsg });
+        return;
       }
+
+      console.log(`Creating loan: ${borrower.name} -> ${lender.name} for $${amount}`);
       
-      // Create loan request
-      const loan = await Loan.create({
-        amount,
-        returnAmount,
-        borrowerId: socket.id,
-        lenderId,
-        borrowerName: borrower.name,
-        lenderName: lender.name,
-        status: 'pending'
-      }, { transaction });
-      
-      await transaction.commit();
-      
-      // Notify both parties
-      io.to(lenderId).emit('loanRequestReceived', loan);
-      socket.emit('loanRequestSent', { success: true });
-      
-      // Update loan lists for both parties
-      const [activeLoans, pendingRequests] = await Promise.all([
-        getActiveLoans(socket.id),
-        getPendingLoanRequests(socket.id)
-      ]);
-      
-      socket.emit('updateLoans', { activeLoans, pendingRequests });
-      
+      try {
+        const loan = await Loan.create({
+          amount,
+          returnAmount,
+          borrowerId: socket.id,
+          lenderId,
+          borrowerName: borrower.name,
+          lenderName: lender.name,
+          status: 'pending'
+        });
+        console.log(`✅ Loan created with ID: ${loan.id}`);
+        
+        // Prepare loan data for the client
+        const loanData = {
+          id: loan.id,
+          from: {
+            socketId: borrower.socketId,
+            name: borrower.name
+          },
+          amount,
+          returnAmount,
+          status: 'pending',
+          createdAt: loan.createdAt
+        };
+        
+        console.log('📤 Sending loanRequest to lender:', lenderId);
+        console.log('Loan data being sent:', JSON.stringify(loanData, null, 2));
+        
+        // Check if lender is connected
+        const sockets = await io.in(lenderId).fetchSockets();
+        console.log(`Lender ${lenderId} has ${sockets.length} connected sockets`);
+        
+        // Emit to the specific lender
+        io.to(lenderId).emit('loanRequest', loanData);
+        console.log('✅ loanRequest event emitted to lender');
+        
+        // Also emit success to borrower
+        socket.emit('loanRequestSent', { success: true });
+        console.log('✅ loanRequestSent event emitted to borrower');
+        
+      } catch (error) {
+        console.error('❌ Error creating loan:', error);
+        throw error; // This will be caught by the outer try-catch
+      }
+
     } catch (error) {
-      if (transaction && !transaction.finished) {
-        await transaction.rollback();
-      }
-      console.error('Error requesting loan:', error);
-      socket.emit('loanError', { message: error.message || 'Failed to request loan' });
+      console.error('Error in requestLoan:', error);
+      socket.emit('loanError', { message: 'Failed to process loan request' });
     }
   });
   
