@@ -3,18 +3,37 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 const TradePanel = () => {
-  const { socket, player, players, setPlayer, setPlayers } = useContext(GameContext);
+  const { 
+    socket, 
+    player, 
+    players, 
+    setPlayer, 
+    setPlayers,
+    // Loan context
+    activeLoans = [],
+    loanRequests = [],
+    requestLoan,
+    respondToLoanRequest,
+    repayLoan
+  } = useContext(GameContext);
   
+  // Trade states
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [offerMoney, setOfferMoney] = useState(0);
   const [askMoney, setAskMoney] = useState(0);
-  const [offerProperties, setOfferProperties] = useState([]);
-  const [askProperties, setAskProperties] = useState([]);
+  const [selectedOfferProperties, setSelectedOfferProperties] = useState([]);
+  const [selectedAskProperties, setSelectedAskProperties] = useState([]);
   const [incomingOffers, setIncomingOffers] = useState([]);
-  const [showProperties, setShowProperties] = useState(false);
-  const [propertiesMode, setPropertiesMode] = useState('offer');
-  const [selectedProperties, setSelectedProperties] = useState([]);
+  const [isOfferExpanded, setIsOfferExpanded] = useState(false);
+  const [isAskExpanded, setIsAskExpanded] = useState(false);
+  const [isOfferPropertiesExpanded, setIsOfferPropertiesExpanded] = useState(false);
+  const [isAskPropertiesExpanded, setIsAskPropertiesExpanded] = useState(false);
   const [offerReady, setOfferReady] = useState(false);
   const [askReady, setAskReady] = useState(false);
+  const [offerBtnPressed, setOfferBtnPressed] = useState(false);
+  const [askBtnPressed, setAskBtnPressed] = useState(false);
+  const [requestTradeBtnPressed, setRequestTradeBtnPressed] = useState(false);
+  const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
   // Personal Loan States
@@ -64,12 +83,12 @@ const TradePanel = () => {
   }, [socket, player.socketId]);
 
   React.useEffect(() => {
-    setOfferReady(offerMoney >= 500 || offerProperties.length > 0);
-  }, [offerMoney, offerProperties]);
+    setOfferReady(offerMoney >= 500 || selectedOfferProperties.length > 0);
+  }, [offerMoney, selectedOfferProperties]);
 
   React.useEffect(() => {
-    setAskReady(askMoney >= 500 || askProperties.length > 0);
-  }, [askMoney, askProperties]);
+    setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
+  }, [askMoney, selectedAskProperties]);
 
   // Set up trade offer interval
   useEffect(() => {
