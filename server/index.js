@@ -280,24 +280,36 @@ io.on('connection', socket => {
   socket.on('acceptLoan', async ({ loanId }) => {
     const transaction = await sequelize.transaction();
     try {
+      console.log(`[LOAN] Accepting loan ${loanId}`);
       const loan = await Loan.findByPk(loanId, { transaction });
       
       if (!loan) {
+        console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
       
       if (loan.lenderId !== socket.id) {
+        console.error(`[LOAN] Unauthorized: ${socket.id} is not the lender of loan ${loanId}`);
         throw new Error('Not authorized to accept this loan');
       }
       
       if (loan.status !== 'pending') {
+        console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
       
       // Check if lender has enough money
       const lender = await Player.findByPk(socket.id, { transaction });
       if (lender.money < loan.amount) {
+        console.error(`[LOAN] Insufficient funds: ${lender.money} < ${loan.amount}`);
         throw new Error('Insufficient funds to approve this loan');
+      }
+      
+      // Get borrower data
+      const borrower = await Player.findByPk(loan.borrowerId, { transaction });
+      if (!borrower) {
+        console.error(`[LOAN] Borrower ${loan.borrowerId} not found`);
+        throw new Error('Borrower not found');
       }
       
       // Update loan status
@@ -306,9 +318,15 @@ io.on('connection', socket => {
       await loan.save({ transaction });
       
       // Transfer money
-      const borrower = await Player.findByPk(loan.borrowerId, { transaction });
       lender.money -= loan.amount;
       borrower.money += loan.amount;
+      
+      // Update engine state
+      const lenderEnginePlayer = engine.getPlayer(lender.socketId);
+      const borrowerEnginePlayer = engine.getPlayer(borrower.socketId);
+      
+      if (lenderEnginePlayer) lenderEnginePlayer.money = lender.money;
+      if (borrowerEnginePlayer) borrowerEnginePlayer.money = borrower.money;
       
       await Promise.all([
         lender.save({ transaction }),
@@ -316,59 +334,102 @@ io.on('connection', socket => {
       ]);
       
       await transaction.commit();
+      console.log(`[LOAN] Loan ${loanId} accepted successfully`);
       
-      // Notify both parties
-      io.to(loan.borrowerId).emit('loanAccepted', loan);
-      socket.emit('loanAccepted', loan);
+      // Get updated loan lists
+      const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
+        getActiveLoans(loan.borrowerId),
+        getActiveLoans(loan.lenderId),
+        getPendingLoanRequests(loan.borrowerId),
+        getPendingLoanRequests(loan.lenderId)
+      ]);
+      
+      // Prepare update data for both players
+      const borrowerUpdate = {
+        playerId: borrower.socketId,
+        newMoney: borrower.money,
+        loans: {
+          activeLoans: borrowerLoans,
+          pendingRequests: borrowerPending
+        }
+      };
+      
+      const lenderUpdate = {
+        playerId: lender.socketId,
+        newMoney: lender.money,
+        loans: {
+          activeLoans: lenderLoans,
+          pendingRequests: lenderPending
+        }
+      };
+      
+      // Notify both parties with complete state
+      io.to(loan.borrowerId).emit('loanAccepted', {
+        loan,
+        playerUpdate: borrowerUpdate,
+        lenderName: lender.name
+      });
+      
+      socket.emit('loanAccepted', {
+        loan,
+        playerUpdate: lenderUpdate,
+        borrowerName: borrower.name
+      });
       
       // Update game state for both players
       io.emit('playerMoneyUpdate', {
-        playerId: socket.id,
-        newMoney: lender.money
-      });
-      
-      io.emit('playerMoneyUpdate', {
-        playerId: loan.borrowerId,
+        playerId: borrower.socketId,
         newMoney: borrower.money
       });
       
+      io.emit('playerMoneyUpdate', {
+        playerId: lender.socketId,
+        newMoney: lender.money
+      });
+      
       // Update loan lists for both parties
-      const [borrowerLoans, lenderLoans] = await Promise.all([
-        getActiveLoans(loan.borrowerId),
-        getActiveLoans(loan.lenderId)
-      ]);
+      io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
+      socket.emit('updateLoans', lenderUpdate.loans);
       
-      io.to(loan.borrowerId).emit('updateLoans', { 
-        activeLoans: borrowerLoans,
-        pendingRequests: []
-      });
-      
-      socket.emit('updateLoans', { 
-        activeLoans: lenderLoans,
-        pendingRequests: await getPendingLoanRequests(socket.id)
-      });
+      // Broadcast game state update to all clients
+      io.emit('gameStateUpdate', engine.getState());
       
     } catch (error) {
-      await transaction.rollback();
-      console.error('Error accepting loan:', error);
-      socket.emit('loanError', { message: error.message || 'Failed to accept loan' });
+      console.error('[LOAN] Error accepting loan:', error);
+      try {
+        if (transaction.finished !== 'commit') {
+          await transaction.rollback();
+          console.log('[LOAN] Transaction rolled back');
+        }
+      } catch (rollbackError) {
+        console.error('[LOAN] Error rolling back transaction:', rollbackError);
+      }
+      socket.emit('loanError', { 
+        message: error.message || 'Failed to accept loan',
+        code: error.code
+      });
     }
   });
   
   // Handle loan rejection
   socket.on('rejectLoan', async ({ loanId }) => {
+    console.log(`[LOAN] Rejecting loan ${loanId}`);
+    
     try {
       const loan = await Loan.findByPk(loanId);
       
       if (!loan) {
+        console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
       
       if (loan.lenderId !== socket.id) {
+        console.error(`[LOAN] Unauthorized: ${socket.id} is not the lender of loan ${loanId}`);
         throw new Error('Not authorized to reject this loan');
       }
       
       if (loan.status !== 'pending') {
+        console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
       
@@ -377,56 +438,107 @@ io.on('connection', socket => {
       loan.rejectedAt = new Date();
       await loan.save();
       
-      // Notify both parties
-      io.to(loan.borrowerId).emit('loanRejected', loan);
-      socket.emit('loanRejected', loan);
+      console.log(`[LOAN] Loan ${loanId} rejected successfully`);
       
-      // Update loan lists for the lender
-      const pendingRequests = await getPendingLoanRequests(socket.id);
-      socket.emit('updateLoans', { 
-        activeLoans: await getActiveLoans(socket.id),
-        pendingRequests
+      // Get updated loan lists for both parties
+      const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
+        getActiveLoans(loan.borrowerId),
+        getActiveLoans(loan.lenderId),
+        getPendingLoanRequests(loan.borrowerId),
+        getPendingLoanRequests(loan.lenderId)
+      ]);
+      
+      // Prepare update data for both players
+      const borrowerUpdate = {
+        playerId: loan.borrowerId,
+        loans: {
+          activeLoans: borrowerLoans,
+          pendingRequests: borrowerPending
+        }
+      };
+      
+      const lenderUpdate = {
+        playerId: loan.lenderId,
+        loans: {
+          activeLoans: lenderLoans,
+          pendingRequests: lenderPending
+        }
+      };
+      
+      // Notify both parties with complete state
+      io.to(loan.borrowerId).emit('loanRejected', {
+        loan,
+        playerUpdate: borrowerUpdate,
+        lenderName: loan.lenderName
       });
       
+      socket.emit('loanRejected', {
+        loan,
+        playerUpdate: lenderUpdate,
+        borrowerName: loan.borrowerName
+      });
+      
+      // Update loan lists for both parties
+      io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
+      socket.emit('updateLoans', lenderUpdate.loans);
+      
     } catch (error) {
-      console.error('Error rejecting loan:', error);
-      socket.emit('loanError', { message: error.message || 'Failed to reject loan' });
+      console.error('[LOAN] Error rejecting loan:', error);
+      socket.emit('loanError', { 
+        message: error.message || 'Failed to reject loan',
+        code: error.code
+      });
     }
   });
   
   // Handle loan repayment
   socket.on('repayLoan', async ({ loanId }) => {
+    console.log(`[LOAN] Repaying loan ${loanId}`);
     const transaction = await sequelize.transaction();
+    
     try {
       const loan = await Loan.findByPk(loanId, { transaction });
       
       if (!loan) {
+        console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
       
       if (loan.borrowerId !== socket.id) {
+        console.error(`[LOAN] Unauthorized: ${socket.id} is not the borrower of loan ${loanId}`);
         throw new Error('Not authorized to repay this loan');
       }
       
       if (loan.status !== 'active') {
+        console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
       
       // Check if borrower has enough money
       const borrower = await Player.findByPk(socket.id, { transaction });
       if (borrower.money < loan.returnAmount) {
+        console.error(`[LOAN] Insufficient funds: ${borrower.money} < ${loan.returnAmount}`);
         throw new Error('Insufficient funds to repay the loan');
       }
       
       // Get lender data
       const lender = await Player.findByPk(loan.lenderId, { transaction });
       if (!lender) {
+        console.error(`[LOAN] Lender ${loan.lenderId} not found`);
         throw new Error('Lender not found');
       }
+      
+      // Update engine state first
+      const borrowerEnginePlayer = engine.getPlayer(borrower.socketId);
+      const lenderEnginePlayer = engine.getPlayer(lender.socketId);
       
       // Transfer money
       borrower.money -= loan.returnAmount;
       lender.money += loan.returnAmount;
+      
+      // Update engine state
+      if (borrowerEnginePlayer) borrowerEnginePlayer.money = borrower.money;
+      if (lenderEnginePlayer) lenderEnginePlayer.money = lender.money;
       
       // Update loan status
       loan.status = 'completed';
@@ -439,42 +551,80 @@ io.on('connection', socket => {
       ]);
       
       await transaction.commit();
+      console.log(`[LOAN] Loan ${loanId} repaid successfully`);
       
-      // Notify both parties
-      io.to(loan.lenderId).emit('loanRepaid', loan);
-      socket.emit('loanRepaid', loan);
+      // Get updated loan lists for both parties
+      const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
+        getActiveLoans(loan.borrowerId),
+        getActiveLoans(loan.lenderId),
+        getPendingLoanRequests(loan.borrowerId),
+        getPendingLoanRequests(loan.lenderId)
+      ]);
+      
+      // Prepare update data for both players
+      const borrowerUpdate = {
+        playerId: borrower.socketId,
+        newMoney: borrower.money,
+        loans: {
+          activeLoans: borrowerLoans,
+          pendingRequests: borrowerPending
+        }
+      };
+      
+      const lenderUpdate = {
+        playerId: lender.socketId,
+        newMoney: lender.money,
+        loans: {
+          activeLoans: lenderLoans,
+          pendingRequests: lenderPending
+        }
+      };
+      
+      // Notify both parties with complete state
+      io.to(loan.lenderId).emit('loanRepaid', {
+        loan,
+        playerUpdate: lenderUpdate,
+        borrowerName: loan.borrowerName
+      });
+      
+      socket.emit('loanRepaid', {
+        loan,
+        playerUpdate: borrowerUpdate,
+        lenderName: loan.lenderName
+      });
       
       // Update game state for both players
       io.emit('playerMoneyUpdate', {
-        playerId: socket.id,
+        playerId: borrower.socketId,
         newMoney: borrower.money
       });
       
       io.emit('playerMoneyUpdate', {
-        playerId: loan.lenderId,
+        playerId: lender.socketId,
         newMoney: lender.money
       });
       
       // Update loan lists for both parties
-      const [borrowerLoans, lenderLoans] = await Promise.all([
-        getActiveLoans(loan.borrowerId),
-        getActiveLoans(loan.lenderId)
-      ]);
+      io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
+      io.to(loan.lenderId).emit('updateLoans', lenderUpdate.loans);
       
-      io.to(loan.borrowerId).emit('updateLoans', { 
-        activeLoans: borrowerLoans,
-        pendingRequests: []
-      });
-      
-      io.to(loan.lenderId).emit('updateLoans', { 
-        activeLoans: lenderLoans,
-        pendingRequests: await getPendingLoanRequests(loan.lenderId)
-      });
+      // Broadcast game state update to all clients
+      io.emit('gameStateUpdate', engine.getState());
       
     } catch (error) {
-      await transaction.rollback();
-      console.error('Error repaying loan:', error);
-      socket.emit('loanError', { message: error.message || 'Failed to repay loan' });
+      console.error('[LOAN] Error repaying loan:', error);
+      try {
+        if (transaction.finished !== 'commit') {
+          await transaction.rollback();
+          console.log('[LOAN] Transaction rolled back');
+        }
+      } catch (rollbackError) {
+        console.error('[LOAN] Error rolling back transaction:', rollbackError);
+      }
+      socket.emit('loanError', { 
+        message: error.message || 'Failed to repay loan',
+        code: error.code
+      });
     }
   });
 

@@ -137,17 +137,54 @@ const TradePanel = () => {
     // Handle loan accepted
     socket.on('loanAccepted', (data) => {
       console.log('✅ Loan accepted:', data);
-      // Update UI to show loan was accepted
-      setLoanRequests(prev => prev.filter(req => req.id === data.loanId ? false : true));
-      // Refresh loans to show the new active loan
-      socket.emit('getActiveLoans');
+      
+      // Update active loans if included in the response
+      if (data.playerUpdate?.loans?.activeLoans) {
+        setActiveLoans(data.playerUpdate.loans.activeLoans);
+      } else {
+        // Fallback: Refresh loans from server
+        socket.emit('getActiveLoans');
+      }
+      
+      // Remove the accepted request from pending
+      setLoanRequests(prev => prev.filter(req => req.id === data.loan?.id ? false : true));
+      
+      // Update player money if included
+      if (data.playerUpdate?.newMoney !== undefined) {
+        // This assumes you have a way to update the player's money in the UI
+        // The actual implementation depends on how your app state is managed
+        console.log('Updating player money to:', data.playerUpdate.newMoney);
+      }
     });
     
     // Handle loan rejected
     socket.on('loanRejected', (data) => {
       console.log('❌ Loan rejected:', data);
       // Update UI to remove the rejected request
-      setLoanRequests(prev => prev.filter(req => req.id === data.loanId ? false : true));
+      setLoanRequests(prev => prev.filter(req => req.id === data.loan?.id ? false : true));
+      
+      // Show rejection message if available
+      if (data.message) {
+        console.log('Rejection reason:', data.message);
+      }
+    });
+    
+    // Handle loan repaid
+    socket.on('loanRepaid', (data) => {
+      console.log('💰 Loan repaid:', data);
+      
+      // Update active loans if included in the response
+      if (data.playerUpdate?.loans?.activeLoans) {
+        setActiveLoans(data.playerUpdate.loans.activeLoans);
+      } else {
+        // Fallback: Refresh loans from server
+        socket.emit('getActiveLoans');
+      }
+      
+      // Update player money if included
+      if (data.playerUpdate?.newMoney !== undefined) {
+        console.log('Updating player money to:', data.playerUpdate.newMoney);
+      }
     });
 
     // Initial fetch
@@ -330,7 +367,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.6em'
+                  fontSize: '1.1em'
                 }}
               >-</button>
 
@@ -347,7 +384,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.6em'
+                  fontSize: '1.1em'
                 }}
               >+</button>
             </div>
@@ -492,7 +529,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.6em'
+                  fontSize: '1.1em'
                 }}
               >-</button>
               <span style={{ margin: '0 15px', fontSize: '2em' }}>
@@ -507,7 +544,7 @@ const TradePanel = () => {
                   borderRadius: '5px',
                   color: 'white',
                   cursor: 'pointer',
-                  fontSize: '1.6em'
+                  fontSize: '1.1em'
                 }}
               >+</button>
             </div>
@@ -530,7 +567,7 @@ const TradePanel = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   border: 'none',
                   borderRadius: '5px',
-                  fontSize: '1.1em',
+                  fontSize: '1.3em',
                   textAlign: 'center'
                 }}
               >
@@ -726,15 +763,16 @@ const TradePanel = () => {
       <div style={{
         backgroundColor: 'rgba(0, 0, 0, 0.7)',
         borderRadius: '10px',
-        padding: '15px',
-        marginTop: '20px'
+        padding: '20px',
+        marginTop: '20px',
+        fontSize: '1.2em' // Base font size for the loan section
       }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: '15px',
-          borderBottom: '1px solid #444',
-          paddingBottom: '10px'
+          marginBottom: '20px',
+          borderBottom: '2px solid #555',
+          paddingBottom: '12px'
         }}>
           <button 
             onClick={() => setActiveTab('request')}
@@ -746,7 +784,7 @@ const TradePanel = () => {
               borderRadius: '5px 0 0 5px',
               color: 'white',
               cursor: 'pointer',
-              fontSize: '1.2em'
+              fontSize: '1.4em'
             }}
           >
             Request Loan
@@ -761,7 +799,7 @@ const TradePanel = () => {
               borderRadius: '0 5px 5px 0',
               color: 'white',
               cursor: 'pointer',
-              fontSize: '1.2em'
+              fontSize: '1.4em'
             }}
           >
             My Loans ({activeLoans.length})
@@ -786,7 +824,7 @@ const TradePanel = () => {
                     width: '100%',
                     padding: '8px',
                     borderRadius: '5px',
-                    fontSize: '1.1em'
+                    fontSize: '1.3em'
                   }}
                 >
                   <option value="">Select a player</option>
@@ -813,7 +851,7 @@ const TradePanel = () => {
                     padding: '8px',
                     borderRadius: '5px',
                     border: '1px solid #ccc',
-                    fontSize: '1.1em'
+                    fontSize: '1.3em'
                   }}
                 />
               </div>
@@ -831,7 +869,7 @@ const TradePanel = () => {
                     padding: '8px',
                     borderRadius: '5px',
                     border: '1px solid #ccc',
-                    fontSize: '1.1em'
+                    fontSize: '1.3em'
                   }}
                 />
               </div>
@@ -847,7 +885,7 @@ const TradePanel = () => {
                   border: 'none',
                   borderRadius: '5px',
                   cursor: returnAmount > loanAmount ? 'pointer' : 'not-allowed',
-                  fontSize: '1.2em'
+                  fontSize: '1.4em'
                 }}
               >
                 Request ${loanAmount} (Pay back ${returnAmount})
@@ -860,52 +898,75 @@ const TradePanel = () => {
                 <h3 style={{ color: 'white', borderBottom: '1px solid #444', paddingBottom: '5px' }}>
                   Pending Requests
                 </h3>
-                {loanRequests.map(request => (
-                  <div key={request.id} style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    padding: '10px',
-                    borderRadius: '5px',
-                    marginBottom: '10px',
-                    color: 'white'
-                  }}>
-                    <div><strong>From:</strong> {request.from.name}</div>
-                    <div><strong>Amount:</strong> ${request.amount}</div>
-                    <div><strong>Return:</strong> ${request.returnAmount}</div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                      <button
-                        onClick={() => handleAcceptLoan(request.id)}
-                        disabled={player.money < request.amount}
-                        style={{
-                          flex: 1,
-                          padding: '5px',
-                          backgroundColor: player.money >= request.amount ? '#4CAF50' : '#888',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: player.money >= request.amount ? 'pointer' : 'not-allowed',
-                          fontSize: '1em'
-                        }}
-                      >
-                        Lend ${request.amount}
-                      </button>
-                      <button
-                        onClick={() => handleRejectLoan(request.id)}
-                        style={{
-                          flex: 1,
-                          padding: '5px',
-                          backgroundColor: '#f44336',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '3px',
-                          cursor: 'pointer',
-                          fontSize: '1em'
-                        }}
-                      >
-                        Reject
-                      </button>
+                {loanRequests.map(request => {
+                  // Handle both old and new request formats
+                  const requestData = request.loan || request;
+                  const fromName = requestData.from?.name || requestData.borrowerName || 'Unknown';
+                  const amount = requestData.amount || 0;
+                  const returnAmount = requestData.returnAmount || 0;
+                  
+                  return (
+                    <div key={requestData.id} style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      marginBottom: '15px',
+                      color: 'white',
+                      borderLeft: '4px solid #4CAF50'
+                    }}>
+                      <div style={{ marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 'bold', color: '#4CAF50' }}>Loan Request</span>
+                      </div>
+                      <div style={{ marginBottom: '5px' }}>
+                        <span style={{ opacity: 0.8 }}>From:</span>{' '}
+                        <span style={{ fontWeight: 'bold' }}>{fromName}</span>
+                      </div>
+                      <div style={{ marginBottom: '5px' }}>
+                        <span style={{ opacity: 0.8 }}>Amount:</span>{' '}
+                        <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>${amount.toLocaleString()}</span>
+                      </div>
+                      <div style={{ marginBottom: '10px' }}>
+                        <span style={{ opacity: 0.8 }}>To Return:</span>{' '}
+                        <span style={{ color: '#FF9800', fontWeight: 'bold' }}>${returnAmount.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        <button
+                          onClick={() => handleAcceptLoan(requestData.id)}
+                          disabled={player.money < amount}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            backgroundColor: player.money >= amount ? '#4CAF50' : '#888',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: player.money >= amount ? 'pointer' : 'not-allowed',
+                            fontSize: '1.2em',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          Lend ${amount.toLocaleString()}
+                        </button>
+                        <button
+                          onClick={() => handleRejectLoan(requestData.id)}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            backgroundColor: '#f44336',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontSize: '1.2em',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -946,7 +1007,7 @@ const TradePanel = () => {
                             border: 'none',
                             borderRadius: '5px',
                             cursor: player.money >= loan.returnAmount ? 'pointer' : 'not-allowed',
-                            fontSize: '1.1em'
+                            fontSize: '1.3em'
                           }}
                         >
                           Repay ${loan.returnAmount}
@@ -970,7 +1031,7 @@ const TradePanel = () => {
                         border: 'none',
                         borderRadius: '5px',
                         cursor: 'pointer',
-                        fontSize: '1.1em'
+                        fontSize: '1.3em'
                       }}
                     >
                       Claim ${loan.returnAmount} from {loan.borrowerName}
