@@ -282,7 +282,8 @@ export default function GameScreen() {
     movementDone,
     handleQuit,
     isRpsActive,
-    diceRoll
+    diceRoll,
+    activeLoans = []
   } = useContext(GameContext);
 
   const isMyTurn = player?.socketId === currentPlayerId;
@@ -382,6 +383,33 @@ export default function GameScreen() {
   };
 
   const tileMeta = tiles.find(t => t.id === player?.tileId);
+  
+  // Calculate net worth for a player
+  const calculateNetWorth = (player) => {
+    if (!player) return 0;
+    
+    // Base money
+    let netWorth = player.money || 0 - player.loan || 0;
+    
+    // Add property values
+    const propertyValue = (player.properties || []).reduce((total, propertyId) => {
+      const property = tiles.find(t => t.id === propertyId);
+      return total + (property?.cost);
+    }, 0);
+    netWorth += propertyValue;
+    
+    // Add loan amounts lent to others (positive)
+    const loansLent = activeLoans.filter(loan => loan.lenderId === player.socketId);
+    const totalLoansLent = loansLent.reduce((total, loan) => total + (loan.returnAmount || 0), 0);
+    netWorth += totalLoansLent;
+    
+    // Subtract loan amounts borrowed (negative)
+    const loansBorrowed = activeLoans.filter(loan => loan.borrowerId === player.socketId);
+    const totalLoansBorrowed = loansBorrowed.reduce((total, loan) => total + (loan.returnAmount || 0), 0);
+    netWorth -= totalLoansBorrowed;
+    
+    return netWorth;
+  };
 
   useEffect(() => {
     if (!isMyTurn && tileMeta) {
@@ -703,14 +731,7 @@ export default function GameScreen() {
         }
         const loser = result.losers.find(l => l.socketId === player.socketId);
         if (loser) {
-          setPlayer(prev => ({ 
-            ...prev, 
-            money: loser.money < 0 ? 0 : loser.money,
-            loan: loser.money < 0 ? 
-              (loser.loan || 0) + Math.abs(loser.money) : 
-              (loser.loan || 0)
-          }));
-        }
+          }
       }
 
       result.winners.forEach(winner => {
@@ -965,57 +986,86 @@ export default function GameScreen() {
                       marginTop: '70px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h4 style={{ marginBottom: '15px' , fontSize: '1em', }}>Borrow Money</h4>
+                      <h4 style={{ marginBottom: '15px', fontSize: '1em' }}>Borrow Money</h4>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '10px',
                         fontSize: '1em',
-                        marginBottom: '20px',
+                        marginBottom: '10px',
                         justifyContent: 'center'
                       }}>
                         <button
-                          onClick={() => setBorrowAmount(Math.max(500, borrowAmount - 500))}
+                          onClick={() => setBorrowAmount(prev => Math.max(500, prev - 500))}
                           disabled={isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
-                            cursor: 'pointer',
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            cursor: isRpsActive ? 'not-allowed' : 'pointer',
+                            backgroundColor: isRpsActive ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
+                            minWidth: '50px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           -
                         </button>
                         <div style={{
+                          flex: 1,
                           padding: '8px 16px',
                           backgroundColor: 'rgba(255, 255, 255, 0.15)',
                           borderRadius: '4px',
-                          minWidth: '100px',
                           textAlign: 'center',
                           fontSize: '1.7em',
                           border: '2px inset rgb(80, 80, 170)',
+                          minHeight: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}>
-                          ${borrowAmount}
+                          ${borrowAmount.toLocaleString()}
                         </div>
                         <button
-                          onClick={() => setBorrowAmount(Math.min(100000, borrowAmount + 500))}
+                          onClick={() => setBorrowAmount(prev => Math.min(100000, prev + 500))}
                           disabled={isRpsActive}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
-                            cursor: 'pointer',
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            cursor: isRpsActive ? 'not-allowed' : 'pointer',
+                            backgroundColor: isRpsActive ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
+                            minWidth: '50px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           +
                         </button>
                       </div>
+                      <input
+                        type="number"
+                        value={borrowAmount}
+                        onChange={(e) => setBorrowAmount(Math.max(500, Math.min(100000, parseInt(e.target.value) || 500)))}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          borderRadius: '5px',
+                          border: '1px solid #ccc',
+                          fontSize: '1.3em',
+                          marginBottom: '10px'
+                        }}
+                        min="500"
+                        max="100000"
+                        step="100"
+                        disabled={isRpsActive}
+                      />
 
                       <button
                         onClick={async (e) => {
@@ -1086,54 +1136,88 @@ export default function GameScreen() {
                       <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
                       <div style={{
                         display: 'flex',
-                        gap: '10px',
-                        marginBottom: '20px',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1em'
+                        gap: '10px',
+                        fontSize: '1em',
+                        marginBottom: '10px',
+                        justifyContent: 'center'
                       }}>
                         <button
-                          onClick={() => setPayoffAmount(Math.max(500, payoffAmount - 500))}
+                          onClick={() => setPayoffAmount(prev => Math.max(500, prev - 500))}
                           disabled={!player?.loan || rpsGame}
                           style={{
                             padding: '8px 12px',
-                            cursor: player?.loan ? 'pointer' : 'not-allowed',
-                            backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                            fontSize: '1.7em',
+                            cursor: (!player?.loan || rpsGame) ? 'not-allowed' : 'pointer',
+                            backgroundColor: (!player?.loan || rpsGame) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
                             borderRadius: '4px',
-                            fontSize: '1.7em',
                             border: '2px inset rgb(80, 80, 170)',
+                            minWidth: '50px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           -
                         </button>
                         <div style={{
+                          flex: 1,
                           padding: '8px 16px',
                           backgroundColor: 'rgba(255, 255, 255, 0.15)',
                           borderRadius: '4px',
-                          minWidth: '100px',
                           textAlign: 'center',
                           fontSize: '1.7em',
                           border: '2px inset rgb(80, 80, 170)',
+                          minHeight: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: player?.loan ? '#4CAF50' : '#888'
                         }}>
-                          ${Math.min(payoffAmount, player?.loan || 0)}
+                          ${Math.min(payoffAmount, player?.loan || 0).toLocaleString()}
                         </div>
                         <button
-                          onClick={() => setPayoffAmount(Math.min(player?.loan || 0, payoffAmount + 500))}
+                          onClick={() => setPayoffAmount(prev => Math.min(player?.loan || 0, prev + 500))}
                           disabled={!player?.loan || rpsGame}
                           style={{
                             padding: '8px 12px',
                             fontSize: '1.7em',
-                            cursor: player?.loan ? 'pointer' : 'not-allowed',
-                            backgroundColor: player?.loan ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                            cursor: (!player?.loan || rpsGame) ? 'not-allowed' : 'pointer',
+                            backgroundColor: (!player?.loan || rpsGame) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
+                            minWidth: '50px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}
                         >
                           +
                         </button>
                       </div>
+                      <input
+                        type="number"
+                        value={payoffAmount}
+                        onChange={(e) => {
+                          const newValue = Math.max(0, Math.min(player?.loan || 0, parseInt(e.target.value) || 0));
+                          setPayoffAmount(newValue);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          borderRadius: '5px',
+                          border: '1px solid #ccc',
+                          fontSize: '1.3em',
+                          marginBottom: '10px',
+                          backgroundColor: player?.loan ? 'white' : '#f5f5f5'
+                        }}
+                        min="0"
+                        max={player?.loan || 0}
+                        step="100"
+                        disabled={!player?.loan || rpsGame}
+                      />
                         <button
                           onClick={async (e) => {
                             e.target.style.border = '2px inset rgb(80, 80, 170)';

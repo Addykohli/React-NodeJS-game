@@ -1079,11 +1079,10 @@ io.on('connection', socket => {
     const finalPlayer = engine.getPlayer(socket.id);
     const finalTileId = finalPlayer.tileId;
 
-    // Implement stomp mechanic
-    if (finalTileId !== 7) {  // No stomping on tile ID 7 (Hotel)
+    if (finalTileId !== 7) {  
       const playersOnTile = engine.session.players.filter(p => 
         p.tileId === finalTileId && 
-        p.socketId !== socket.id  // Don't count the current player
+        p.socketId !== socket.id  
       );
 
       if (playersOnTile.length > 0) {
@@ -1093,7 +1092,6 @@ io.on('connection', socket => {
         );
 
         for (const targetPlayer of playersOnTile) {
-          // Skip if the target player owns the property
           if (tileOwner && targetPlayer.socketId === tileOwner.socketId) {
             console.log(`Skipping stomp - target player owns the property`);
             continue;
@@ -1104,11 +1102,9 @@ io.on('connection', socket => {
           
           try {
             transaction = await sequelize.transaction();
-            // Calculate how much the target player can pay
             const amountPaid = Math.min(targetPlayer.money, stompAmount);
             const loanIncrease = Math.max(0, stompAmount - amountPaid);
             
-            // Update target player's money and loan
             targetPlayer.money -= amountPaid;
             if (loanIncrease > 0) {
               targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
@@ -1170,7 +1166,6 @@ io.on('connection', socket => {
             
             await transaction.commit();
             
-            // Notify all clients about the money transfer after successful commit
             io.emit('playerMoneyUpdate', {
               playerId: targetPlayer.socketId,
               newBalance: targetPlayer.money,
@@ -1182,7 +1177,6 @@ io.on('connection', socket => {
               newBalance: finalPlayer.money
             });
             
-            // Log the stomp event
             let message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
             if (loanIncrease > 0) {
               message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
@@ -1195,7 +1189,6 @@ io.on('connection', socket => {
             }
             console.error('Error processing stomp payment:', err);
             broadcastGameEvent(`Error processing stomp payment between ${finalPlayer.name} and ${targetPlayer.name}.`);
-            // Re-throw the error to be handled by the outer try-catch if needed
             throw err;
           }
         }

@@ -751,10 +751,68 @@ const TradePanel = () => {
                 </select>
               </div>
 
-              <div style={{ marginBottom: '10px' }}>
+              <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
                   Loan Amount:
                 </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '10px'
+                }}>
+                  <button
+                    onClick={() => setLoanAmount(prev => Math.max(0, prev - 500))}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
+                      minWidth: '50px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    -
+                  </button>
+                  <div style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                    fontSize: '1.7em',
+                    border: '2px inset rgb(80, 80, 170)',
+                    minHeight: '50px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    ${loanAmount.toLocaleString()}
+                  </div>
+                  <button
+                    onClick={() => setLoanAmount(prev => prev + 500)}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
+                      minWidth: '50px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
                 <input
                   type="number"
                   value={loanAmount}
@@ -764,8 +822,11 @@ const TradePanel = () => {
                     padding: '8px',
                     borderRadius: '5px',
                     border: '1px solid #ccc',
-                    fontSize: '1.3em'
+                    fontSize: '1.3em',
+                    marginTop: '10px'
                   }}
+                  min="0"
+                  step="100"
                 />
               </div>
 
@@ -773,6 +834,66 @@ const TradePanel = () => {
                 <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
                   Return Amount (must be more than loan amount):
                 </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '10px'
+                }}>
+                  <button
+                    onClick={() => setReturnAmount(prev => Math.max(0, parseInt(prev) - 500))}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
+                      minWidth: '50px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    -
+                  </button>
+                  <div style={{
+                    flex: 1,
+                    padding: '8px 16px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                    fontSize: '1.7em',
+                    border: '2px inset rgb(80, 80, 170)',
+                    minHeight: '50px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: returnAmount > loanAmount ? '#4CAF50' : '#FF5252',
+                    fontWeight: 'bold'
+                  }}>
+                    ${returnAmount.toLocaleString()}
+                  </div>
+                  <button
+                    onClick={() => setReturnAmount(prev => parseInt(prev || 0) + 500)}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
+                      cursor: 'pointer',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
+                      minWidth: '50px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
                 <input
                   type="number"
                   value={returnAmount}
@@ -782,9 +903,17 @@ const TradePanel = () => {
                     padding: '8px',
                     borderRadius: '5px',
                     border: '1px solid #ccc',
-                    fontSize: '1.3em'
+                    fontSize: '1.3em',
+                    marginTop: '10px'
                   }}
+                  min={loanAmount + 1}
+                  step="100"
                 />
+                {returnAmount <= loanAmount && (
+                  <div style={{ color: '#FF5252', marginTop: '5px', fontSize: '0.9em' }}>
+                    Return amount must be greater than loan amount
+                  </div>
+                )}
               </div>
 
               <button
