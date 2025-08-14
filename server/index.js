@@ -1427,13 +1427,17 @@ io.on('connection', socket => {
   socket.on('endTurn', async () => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
-    endingPlayer.hasRolled = false; 
+    
+    // Reset hasRolled for all players
+    engine.session.players.forEach(player => {
+      player.hasRolled = false;
+    });
+    
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
       endingPlayer.pickedRoadCash = true; 
       console.log("pickedRoadCash:", endingPlayer.pickedRoadCash);
-    }
-    else {
+    } else {
       console.log('Player not found for endTurn:', socket.id);
     }
     const next = engine.endTurn();

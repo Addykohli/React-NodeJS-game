@@ -383,7 +383,7 @@ const tiles = [
     { from: 32, roll: 'any', to: 34 },
     { from: 34, roll: 'any', to: 32 }
         ],
-    cost: 9500,
+    cost: 8500,
     rent: 3000
   },
 
