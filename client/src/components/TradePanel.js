@@ -760,10 +760,7 @@ const TradePanel = () => {
                   alignItems: 'center',
                   gap: '10px',
                   marginBottom: '10px',
-                  width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  padding: '10px',
-                  borderRadius: '5px'
+                  justifyContent: 'center'
                 }}>
                   <button
                     onClick={(e) => {
@@ -771,15 +768,14 @@ const TradePanel = () => {
                       setLoanAmount(prev => Math.max(0, prev - 500));
                     }}
                     style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#f44336',
-                      border: 'none',
-                      borderRadius: '5px',
-                      color: 'white',
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
                       cursor: 'pointer',
-                      fontSize: '1.5em',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
                       minWidth: '50px',
-                      height: '50px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -793,19 +789,24 @@ const TradePanel = () => {
                     value={loanAmount}
                     onChange={(e) => setLoanAmount(Math.max(0, parseInt(e.target.value) || 0))}
                     onFocus={(e) => e.target.select()}
-                    min="0"
-                    step="100"
                     style={{
                       flex: 1,
-                      padding: '8px',
-                      fontSize: '1.5em',
+                      padding: '8px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '4px',
                       textAlign: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      fontSize: '1.7em',
                       border: '2px inset rgb(80, 80, 170)',
-                      borderRadius: '5px',
-                      height: '50px',
-                      boxSizing: 'border-box'
+                      minHeight: '50px',
+                      color: 'white',
+                      outline: 'none',
+                      WebkitAppearance: 'textfield',
+                      MozAppearance: 'textfield',
+                      appearance: 'textfield',
+                      maxWidth: '200px'
                     }}
+                    min="0"
+                    step="100"
                   />
 
                   <button
@@ -814,15 +815,14 @@ const TradePanel = () => {
                       setLoanAmount(prev => prev + 500);
                     }}
                     style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#4CAF50',
-                      border: 'none',
-                      borderRadius: '5px',
-                      color: 'white',
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
                       cursor: 'pointer',
-                      fontSize: '1.5em',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
                       minWidth: '50px',
-                      height: '50px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -842,27 +842,22 @@ const TradePanel = () => {
                   alignItems: 'center',
                   gap: '10px',
                   marginBottom: '10px',
-                  width: '100%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  padding: '10px',
-                  borderRadius: '5px',
-                  position: 'relative'
+                  justifyContent: 'center'
                 }}>
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      setReturnAmount(prev => Math.max(0, parseInt(prev || 0) - 500));
+                      setReturnAmount(prev => Math.max(loanAmount + 1, parseInt(prev || 0) - 500));
                     }}
                     style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#f44336',
-                      border: 'none',
-                      borderRadius: '5px',
-                      color: 'white',
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
                       cursor: 'pointer',
-                      fontSize: '1.5em',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
                       minWidth: '50px',
-                      height: '50px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -874,21 +869,25 @@ const TradePanel = () => {
                   <input
                     type="number"
                     value={returnAmount}
-                    onChange={(e) => setReturnAmount(Math.max(0, parseInt(e.target.value) || 0))}
+                    onChange={(e) => setReturnAmount(Math.max(loanAmount + 1, parseInt(e.target.value) || loanAmount + 1))}
                     onFocus={(e) => e.target.select()}
                     min={loanAmount + 1}
                     step="100"
                     style={{
                       flex: 1,
-                      padding: '8px',
-                      fontSize: '1.5em',
+                      padding: '8px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: '4px',
                       textAlign: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      border: `2px inset ${returnAmount > loanAmount ? '#4CAF50' : '#FF5252'}`,
-                      borderRadius: '5px',
-                      height: '50px',
-                      boxSizing: 'border-box',
-                      color: returnAmount > loanAmount ? '#4CAF50' : '#FF5252',
+                      fontSize: '1.7em',
+                      border: `2px inset ${returnAmount > loanAmount ? 'rgb(80, 80, 170)' : '#FF5252'}`,
+                      minHeight: '50px',
+                      color: returnAmount > loanAmount ? 'white' : '#FF5252',
+                      outline: 'none',
+                      WebkitAppearance: 'textfield',
+                      MozAppearance: 'textfield',
+                      appearance: 'textfield',
+                      maxWidth: '200px',
                       fontWeight: 'bold'
                     }}
                   />
@@ -896,18 +895,17 @@ const TradePanel = () => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      setReturnAmount(prev => parseInt(prev || 0) + 500);
+                      setReturnAmount(prev => parseInt(prev || loanAmount + 1) + 500);
                     }}
                     style={{
-                      padding: '5px 15px',
-                      backgroundColor: '#4CAF50',
-                      border: 'none',
-                      borderRadius: '5px',
-                      color: 'white',
+                      padding: '8px 12px',
+                      fontSize: '1.7em',
                       cursor: 'pointer',
-                      fontSize: '1.5em',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      borderRadius: '4px',
+                      border: '2px inset rgb(80, 80, 170)',
                       minWidth: '50px',
-                      height: '50px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
