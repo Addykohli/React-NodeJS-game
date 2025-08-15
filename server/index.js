@@ -767,7 +767,9 @@ io.on('connection', socket => {
             disconnectedPlayer.piece = playerState.piece;
             disconnectedPlayer.tileId = playerState.tileId;
             disconnectedPlayer.prevTile = playerState.prevTile;
+            disconnectedPlayer.hasRolled = playerState.hasRolled;
           }
+
         } catch (err) {
           console.error('Error restoring player state:', err);
         }
