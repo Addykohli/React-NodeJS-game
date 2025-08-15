@@ -1021,39 +1021,66 @@ io.on('connection', socket => {
           console.log('Player passed through start! Awarding bonus.', {
             hasLoan: player.loan > 0,
             bonusAmount,
-            currentLoan: player.loan
+            currentLoan: player.loan,
+            currentMoney: player.money
           });
+          
+          // Update player money in memory first
           player.money += bonusAmount;
           passedStart = true;
           
+          // Create a new transaction for the start bonus
+          const transaction = await sequelize.transaction();
           try {
-            const transaction = await sequelize.transaction();
-            try {
-              await Player.update(
-                { money: player.money },
-                { where: { socketId: socket.id }, transaction }
+            // Update player in database
+            await Player.update(
+              { money: player.money },
+              { where: { socketId: socket.id }, transaction }
+            );
+            
+            // Update game session if it exists
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { where: { id: currentSessionId }, transaction }
               );
-              
-              if (currentSessionId) {
-                await GameSession.update(
-                  { players: engine.session.players },
-                  { where: { id: currentSessionId }, transaction }
-                );
-              }
-              await transaction.commit();
-              
-              io.emit('startBonus', {
-                playerSocketId: socket.id,
-                newMoney: player.money,
-                amount: bonusAmount,
-                reason: 'passing through'
-              });
-            } catch (err) {
-              await transaction.rollback();
-              console.error('Error processing start bonus:', err);
             }
+            
+            // Commit the transaction
+            await transaction.commit();
+            
+            console.log('Start bonus transaction committed successfully', {
+              playerId: socket.id,
+              newMoney: player.money,
+              bonusAmount
+            });
+            
+            // Notify all clients about the bonus
+            io.emit('startBonus', {
+              playerSocketId: socket.id,
+              newMoney: player.money,
+              amount: bonusAmount,
+              reason: 'passing through'
+            });
+            
+            const playerName = engine.getPlayer(socket.id).name;
+            broadcastGameEvent(`${playerName} received $${bonusAmount} for passing Start!`);
+            
           } catch (err) {
-            console.error('Error starting transaction:', err);
+            // If there's an error, rollback the transaction
+            if (transaction.finished !== 'commit') {
+              console.error('Error processing start bonus, rolling back transaction:', err);
+              try {
+                await transaction.rollback();
+                // Revert the in-memory change if the transaction fails
+                player.money -= bonusAmount;
+                passedStart = false;
+              } catch (rollbackErr) {
+                console.error('Error during transaction rollback:', rollbackErr);
+              }
+            } else {
+              console.error('Error after transaction was committed:', err);
+            }
           }
         }
 
@@ -1428,11 +1455,6 @@ io.on('connection', socket => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
     
-    // Reset hasRolled for all players
-    engine.session.players.forEach(player => {
-      player.hasRolled = false;
-    });
-    
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
       endingPlayer.pickedRoadCash = true; 
@@ -1440,9 +1462,21 @@ io.on('connection', socket => {
     } else {
       console.log('Player not found for endTurn:', socket.id);
     }
-    const next = engine.endTurn();
-    console.log('Next player:', next);
-    io.emit('turnEnded', { nextPlayerId: next });
+    
+    // Store current player index before ending turn
+    const currentPlayerIndex = engine.session.currentPlayerIndex;
+    
+    // End the turn and get the next player
+    const nextPlayerId = engine.endTurn();
+    console.log('Next player:', nextPlayerId);
+    
+    // Get the next player object and ensure they can roll
+    const nextPlayer = engine.getPlayer(nextPlayerId);
+    if (nextPlayer) {
+      nextPlayer.hasRolled = false;  
+    }
+    
+    io.emit('turnEnded', { nextPlayerId });
     if (currentSessionId) {
       await GameSession.findByIdAndUpdate(currentSessionId, { currentPlayerIndex: engine.session.currentPlayerIndex });
     }

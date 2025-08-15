@@ -298,13 +298,20 @@ export default function GameScreen() {
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
   
-
   useEffect(() => {
     if (rpsResult) {
       const timeout = setTimeout(() => setRpsResult(null), 5000);
       return () => clearTimeout(timeout);
     }
   }, [rpsResult]);
+
+  useEffect(() => {
+    if (rpsChoice) {
+      const timeout = setTimeout(() => setRpsChoice(null), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [rpsChoice]);
+
   const [rpsTieAmount, setRpsTieAmount] = useState(null);
   const [activeSidePanel, setActiveSidePanel] = useState(null);
   const [sidePanelVisible, setSidePanelVisible] = useState(true);
@@ -1014,21 +1021,31 @@ export default function GameScreen() {
                         >
                           -
                         </button>
-                        <div style={{
-                          flex: 1,
-                          padding: '8px 16px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          borderRadius: '4px',
-                          textAlign: 'center',
-                          fontSize: '1.7em',
-                          border: '2px inset rgb(80, 80, 170)',
-                          minHeight: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          ${borrowAmount.toLocaleString()}
-                        </div>
+                        <input
+                          type="number"
+                          value={borrowAmount}
+                          onChange={(e) => setBorrowAmount(Math.max(500, Math.min(100000, parseInt(e.target.value) || 500)))}
+                          onFocus={(e) => e.target.select()}
+                          style={{
+                            flex: 1,
+                            padding: '8px 16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '1.7em',
+                            border: '2px inset rgb(80, 80, 170)',
+                            minHeight: '50px',
+                            color: 'white',
+                            outline: 'none',
+                            WebkitAppearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            appearance: 'textfield'
+                          }}
+                          min="500"
+                          max="100000"
+                          step="100"
+                          disabled={isRpsActive}
+                        />
                         <button
                           onClick={() => setBorrowAmount(prev => Math.min(100000, prev + 500))}
                           disabled={isRpsActive}
@@ -1049,23 +1066,6 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      <input
-                        type="number"
-                        value={borrowAmount}
-                        onChange={(e) => setBorrowAmount(Math.max(500, Math.min(100000, parseInt(e.target.value) || 500)))}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: '5px',
-                          border: '1px solid #ccc',
-                          fontSize: '1.3em',
-                          marginBottom: '10px'
-                        }}
-                        min="500"
-                        max="100000"
-                        step="100"
-                        disabled={isRpsActive}
-                      />
 
                       <button
                         onClick={async (e) => {
@@ -1161,22 +1161,31 @@ export default function GameScreen() {
                         >
                           -
                         </button>
-                        <div style={{
-                          flex: 1,
-                          padding: '8px 16px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          borderRadius: '4px',
-                          textAlign: 'center',
-                          fontSize: '1.7em',
-                          border: '2px inset rgb(80, 80, 170)',
-                          minHeight: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: player?.loan ? '#4CAF50' : '#888'
-                        }}>
-                          ${Math.min(payoffAmount, player?.loan || 0).toLocaleString()}
-                        </div>
+                        <input
+                          type="number"
+                          value={payoffAmount}
+                          onChange={(e) => setPayoffAmount(Math.max(500, Math.min(player?.loan || 0, parseInt(e.target.value) || 500)))}
+                          onFocus={(e) => e.target.select()}
+                          style={{
+                            flex: 1,
+                            padding: '8px 16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '1.7em',
+                            border: '2px inset rgb(80, 80, 170)',
+                            minHeight: '50px',
+                            color: player?.loan ? '#4CAF50' : '#888',
+                            outline: 'none',
+                            WebkitAppearance: 'textfield',
+                            MozAppearance: 'textfield',
+                            appearance: 'textfield'
+                          }}
+                          min="500"
+                          max={player?.loan || 0}
+                          step="100"
+                          disabled={!player?.loan || isRpsActive}
+                        />
                         <button
                           onClick={() => setPayoffAmount(prev => Math.min(player?.loan || 0, prev + 500))}
                           disabled={!player?.loan || rpsGame}
@@ -1197,27 +1206,7 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      <input
-                        type="number"
-                        value={payoffAmount}
-                        onChange={(e) => {
-                          const newValue = Math.max(0, Math.min(player?.loan || 0, parseInt(e.target.value) || 0));
-                          setPayoffAmount(newValue);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: '5px',
-                          border: '1px solid #ccc',
-                          fontSize: '1.3em',
-                          marginBottom: '10px',
-                          backgroundColor: player?.loan ? 'white' : '#f5f5f5'
-                        }}
-                        min="0"
-                        max={player?.loan || 0}
-                        step="100"
-                        disabled={!player?.loan || rpsGame}
-                      />
+
                         <button
                           onClick={async (e) => {
                             e.target.style.border = '2px inset rgb(80, 80, 170)';
@@ -1393,7 +1382,7 @@ export default function GameScreen() {
             <PlayerStats />
             {/* Road Cash Ui */}
             
-            {isMyTurn && tileMeta?.id === 22 && hasRolled &&(
+            {isMyTurn && tileMeta?.id === 22 && hasRolled && (
               <div style={{
                 position: 'absolute',
                 top: '50%',
