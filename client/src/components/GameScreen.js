@@ -1175,7 +1175,7 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             border: '2px inset rgb(80, 80, 170)',
                             minHeight: '50px',
-                            color: player?.loan ? '#4CAF50' : '#888',
+                            color: 'rgb(255, 255, 255)',
                             outline: 'none',
                             WebkitAppearance: 'textfield',
                             MozAppearance: 'textfield',

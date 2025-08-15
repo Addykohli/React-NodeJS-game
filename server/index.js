@@ -128,6 +128,28 @@ async function getPendingLoanRequests(playerId) {
 io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
   
+  // Check if this is a reconnection
+  if (disconnectedPlayers.has(socket.id)) {
+    console.log(`Player reconnected: ${socket.id}`);
+    const playerData = disconnectedPlayers.get(socket.id);
+    
+    // If the game has started, update the player's socket ID in the game engine
+    if (hasStarted) {
+      const player = engine.getPlayer(socket.id);
+      if (player) {
+        // Reset hasRolled to false for reconnected players
+        player.hasRolled = false;
+        console.log(`Reset hasRolled for reconnected player: ${player.name} (${socket.id})`);
+        
+        // Broadcast updated game state to all clients
+        io.emit('gameState', engine.getState());
+      }
+    }
+    
+    // Remove from disconnected players
+    disconnectedPlayers.delete(socket.id);
+  }
+  
   // Send game events history to the newly connected client
   socket.emit('gameEventsHistory', gameEvents);
   
@@ -2915,44 +2937,74 @@ io.on('connection', socket => {
       } else {
         const quitPlayerIndex = engine.session.players.findIndex(p => p.socketId === socket.id);
         if (quitPlayerIndex !== -1 && quitPlayerIndex < engine.session.currentPlayerIndex) {
-          engine.session.currentPlayerIndex--;
-          if (currentSessionId) {
-            GameSession.findByIdAndUpdate(currentSessionId, { 
-              currentPlayerIndex: engine.session.currentPlayerIndex 
-            }).catch(err => {
-              console.error('Error updating game session after quit:', err);
-            });
-          }
-        }
       }
+    }
 
-      engine.removePlayer(socket.id);
-      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+    engine.removePlayer(socket.id);
+    lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+    
+    io.emit('playerQuit', {
+      playerName: quittingPlayer.name,
+      temporary: false
+    });
+    
+    if (engine.session.players.length === 1) {
+      const winner = engine.session.players[0];
+      io.emit('gameOver', {
+        winner: winner.name
+      });
+      hasStarted = false;
+      lobbyPlayers = [];
+      engine.session.players = [];
+      currentSessionId = null;
+    }
+  } else if (!hasStarted) {
+    lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
+    engine.removePlayer(socket.id);
+    io.emit('lobbyUpdate', lobbyPlayers);
+  }
+});
+
+socket.on('disconnect', () => {
+  console.log(' Disconnected:', socket.id);
+  
+  // Check if this was a player in the game
+  if (hasStarted) {
+    const player = engine.getPlayer(socket.id);
+    if (player) {
+      console.log(`Player disconnected: ${player.name} (${socket.id})`);
       
-      io.emit('playerQuit', {
-        playerName: quittingPlayer.name,
-        temporary: false
+      // Store the disconnected player's data
+      disconnectedPlayers.set(socket.id, {
+        name: player.name,
+        piece: player.piece,
+        tileId: player.tileId,
+        prevTile: player.prevTile,
+        money: player.money,
+        properties: player.properties,
+        hasRolled: player.hasRolled,
+        disconnectedAt: new Date()
       });
       
-      if (engine.session.players.length === 1) {
-        const winner = engine.session.players[0];
-        io.emit('gameOver', {
-          winner: winner.name
-        });
-        hasStarted = false;
-        lobbyPlayers = [];
-        engine.session.players = [];
-        currentSessionId = null;
-      }
-    } else if (!hasStarted) {
-      lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
-      engine.removePlayer(socket.id);
+      // Notify other players
+      socket.broadcast.emit('playerDisconnected', { 
+        playerName: player.name, 
+        temporary: true 
+      });
+    }
+  } else {
+    // If game hasn't started, just remove from lobby
+    const index = lobbyPlayers.findIndex(p => p.socketId === socket.id);
+    if (index !== -1) {
+      const player = lobbyPlayers[index];
+      lobbyPlayers.splice(index, 1);
       io.emit('lobbyUpdate', lobbyPlayers);
     }
-  });
+  }
+});
 
-  socket.on("log", (VarName, value) => {
-    console.log(`[Log] ${VarName}:`, value);
+socket.on("log", (VarName, value) => {
+  console.log(`[Log] ${VarName}:`, value);
 });
 
 socket.on('clientPing', () => {
