@@ -997,7 +997,7 @@ export default function GameScreen() {
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px',
+                        gap: '0px',
                         fontSize: '1em',
                         marginBottom: '10px',
                         justifyContent: 'center'

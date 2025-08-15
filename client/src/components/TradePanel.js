@@ -847,7 +847,7 @@ const TradePanel = () => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      setReturnAmount(prev => Math.max(loanAmount + 1, parseInt(prev || 0) - 500));
+                      setReturnAmount(prev => Math.max(loanAmount + 500, parseInt(prev || 0) - 500));
                     }}
                     style={{
                       padding: '8px 12px',
@@ -869,7 +869,7 @@ const TradePanel = () => {
                   <input
                     type="number"
                     value={returnAmount}
-                    onChange={(e) => setReturnAmount(Math.max(loanAmount + 1, parseInt(e.target.value) || loanAmount + 1))}
+                    onChange={(e) => setReturnAmount(Math.max(loanAmount + 500, parseInt(e.target.value) || loanAmount + 500))}
                     onFocus={(e) => e.target.select()}
                     min={loanAmount + 500}
                     step="100"
@@ -895,7 +895,7 @@ const TradePanel = () => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      setReturnAmount(prev => parseInt(prev || loanAmount + 1) + 500);
+                      setReturnAmount(prev => parseInt(prev || loanAmount + 500) + 500);
                     }}
                     style={{
                       padding: '8px 12px',
