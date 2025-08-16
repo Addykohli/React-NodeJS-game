@@ -915,8 +915,11 @@ io.on('connection', socket => {
 
   socket.on('rollDice', async ({ testRoll }) => {
     console.log('[rollDice] for', socket.id);
-    const currentPlayer = engine.getPlayer(socket.id);
+    
+    // Get fresh player data
+    let currentPlayer = engine.getPlayer(socket.id);
     if (!currentPlayer) return;
+    
     if (currentPlayer.hasRolled) {
       console.log('Player has already moved this turn');
       return;
@@ -930,43 +933,42 @@ io.on('connection', socket => {
     }
     console.log('Dice rolled:', roll.die1, roll.die2, 'total:', roll.total);
 
-    // Track money changes during this turn
-    const moneyChanges = new Map(); // socketId -> { amount, loanChange, reason }
-    
-    // Helper function to record money changes
-    const recordMoneyChange = (player, amount, loanChange = 0, reason = '') => {
-      if (!moneyChanges.has(player.socketId)) {
-        moneyChanges.set(player.socketId, { amount: 0, loanChange: 0, reasons: [] });
-      }
-      const change = moneyChanges.get(player.socketId);
-      change.amount += amount;
-      change.loanChange += loanChange;
-      if (reason) {
-        change.reasons = change.reasons || [];
-        change.reasons.push(reason);
-      }
-    };
-
-    currentPlayer.hasRolled = true;
+    // Update hasRolled in a transaction
+    const updateRolledTransaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
+      // Update database
       await Player.update(
         { hasRolled: true },
-        { where: { socketId: socket.id }, transaction }
+        { where: { socketId: socket.id }, transaction: updateRolledTransaction }
       );
+      
+      // Update in-memory state
+      currentPlayer.hasRolled = true;
       engine.session.players = engine.session.players.map(p =>
         p.socketId === socket.id ? { ...p, hasRolled: true } : p
       );
+      
+      // Update session if exists
       if (currentSessionId) {
         await GameSession.update(
           { players: engine.session.players },
-          { where: { id: currentSessionId }, transaction }
+          { 
+            where: { id: currentSessionId },
+            transaction: updateRolledTransaction 
+          }
         );
       }
-      await transaction.commit();
+      
+      await updateRolledTransaction.commit();
+      console.log('Successfully updated hasRolled state for player:', socket.id);
+      
     } catch (err) {
       console.error('Error updating hasRolled state:', err);
-      return; // Don't proceed if we can't set hasRolled
+      if (updateRolledTransaction.finished !== 'commit') {
+        await updateRolledTransaction.rollback();
+        console.log('Rolled back hasRolled update transaction');
+      }
+      return; // Don't proceed if we can't update the hasRolled state
     }
 
     io.emit('playersStateUpdate', {
@@ -1013,49 +1015,156 @@ io.on('connection', socket => {
 
         if (newTile === 1 && !passedStart) {
           const bonusAmount = currentPlayer.loan > 0 ? 4000 : 5000;
-          console.log('Player will receive start bonus:', {
+          console.log('Player landed on start! Awarding bonus.', {
             hasLoan: currentPlayer.loan > 0,
             bonusAmount,
             currentLoan: currentPlayer.loan
           });
           
-          // Record the bonus to be applied later
-          recordMoneyChange(currentPlayer, bonusAmount, 0, `landing on Start`);
-          passedStart = true;
-          
-          io.emit('startBonus', {
-            playerSocketId: socket.id,
-            newMoney: currentPlayer.money + bonusAmount, // Preview of new balance
-            amount: bonusAmount,
-            reason: 'landing on'
-          });
-          
-          const playerName = currentPlayer.name;
-          broadcastGameEvent(`${playerName} will receive $${bonusAmount} for landing on Start!`);
+          const bonusTransaction = await sequelize.transaction();
+          try {
+            // Get fresh player data at the start of the transaction
+            const freshPlayer = await Player.findByPk(socket.id, { transaction: bonusTransaction });
+            if (!freshPlayer) throw new Error('Player not found');
+            
+            // Calculate new money amount
+            const newMoney = freshPlayer.money + bonusAmount;
+            
+            // Update database
+            await Player.update(
+              { money: newMoney },
+              { 
+                where: { socketId: socket.id },
+                transaction: bonusTransaction 
+              }
+            );
+            
+            // Update in-memory state
+            currentPlayer.money = newMoney;
+            passedStart = true;
+            
+            // Update session state
+            engine.session.players = engine.session.players.map(p =>
+              p.socketId === socket.id ? { ...p, money: newMoney } : p
+            );
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction: bonusTransaction 
+                }
+              );
+            }
+            
+            await bonusTransaction.commit();
+            
+            // Emit events after successful commit
+            io.emit('playerMoneyUpdate', {
+              playerId: socket.id,
+              newMoney: newMoney,
+              amount: bonusAmount,
+              reason: 'start_bonus'
+            });
+            
+            io.emit('startBonus', {
+              playerSocketId: socket.id,
+              newMoney: newMoney,
+              amount: bonusAmount,
+              reason: 'landing on'
+            });
+            
+            const playerName = currentPlayer.name;
+            broadcastGameEvent(`${playerName} received $${bonusAmount} for landing on Start!`);
+            
+          } catch (err) {
+            console.error('Error processing start bonus:', err);
+            if (bonusTransaction.finished !== 'commit') {
+              await bonusTransaction.rollback();
+              console.log('Rolled back start bonus transaction');
+              // Revert in-memory changes
+              currentPlayer.money -= bonusAmount;
+              passedStart = false;
+            }
+          }
         }
         else if (prevTile === 30 && newTile > 1 && !passedStart) {
           const bonusAmount = currentPlayer.loan > 0 ? 4000 : 5000;
-          console.log('Player will receive start bonus for passing through:', {
+          console.log('Player passed through start! Awarding bonus.', {
             hasLoan: currentPlayer.loan > 0,
             bonusAmount,
             currentLoan: currentPlayer.loan,
             currentMoney: currentPlayer.money
           });
           
-          // Record the bonus to be applied later
-          recordMoneyChange(currentPlayer, bonusAmount, 0, `passing Start`);
-          passedStart = true;
-          
-          // Notify clients about the bonus (preview)
-          io.emit('startBonus', {
-            playerSocketId: socket.id,
-            newMoney: currentPlayer.money + bonusAmount, // Preview of new balance
-            amount: bonusAmount,
-            reason: 'passing through'
-          });
-          
-          const playerName = currentPlayer.name;
-          broadcastGameEvent(`${playerName} will receive $${bonusAmount} for passing Start!`);
+          const passStartTransaction = await sequelize.transaction();
+          try {
+            // Get fresh player data at the start of the transaction
+            const freshPlayer = await Player.findByPk(socket.id, { transaction: passStartTransaction });
+            if (!freshPlayer) throw new Error('Player not found');
+            
+            // Calculate new money amount
+            const newMoney = freshPlayer.money + bonusAmount;
+            
+            // Update database
+            await Player.update(
+              { money: newMoney },
+              { 
+                where: { socketId: socket.id },
+                transaction: passStartTransaction
+              }
+            );
+            
+            // Update in-memory state
+            currentPlayer.money = newMoney;
+            passedStart = true;
+            
+            // Update session state
+            engine.session.players = engine.session.players.map(p =>
+              p.socketId === socket.id ? { ...p, money: newMoney } : p
+            );
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction: passStartTransaction
+                }
+              );
+            }
+            
+            await passStartTransaction.commit();
+            
+            // Emit events after successful commit
+            io.emit('playerMoneyUpdate', {
+              playerId: socket.id,
+              newMoney: newMoney,
+              amount: bonusAmount,
+              reason: 'start_bonus'
+            });
+            
+            io.emit('startBonus', {
+              playerSocketId: socket.id,
+              newMoney: newMoney,
+              amount: bonusAmount,
+              reason: 'passing through'
+            });
+            
+            const playerName = currentPlayer.name;
+            broadcastGameEvent(`${playerName} received $${bonusAmount} for passing Start!`);
+            
+          } catch (err) {
+            console.error('Error processing pass start bonus:', err);
+            if (passStartTransaction.finished !== 'commit') {
+              await passStartTransaction.rollback();
+              console.log('Rolled back pass start bonus transaction');
+              // Revert in-memory changes
+              currentPlayer.money -= bonusAmount;
+              passedStart = false;
+            }
+          }
         }
 
         currentPlayer.pickedRoadCash = false;
@@ -1106,14 +1215,66 @@ io.on('connection', socket => {
             const amountPaid = Math.min(targetPlayer.money, stompAmount);
             const loanIncrease = Math.max(0, stompAmount - amountPaid);
             
-            // Record money changes for both players
-            recordMoneyChange(targetPlayer, -amountPaid, loanIncrease, `stomped by ${finalPlayer.name}`);
-            recordMoneyChange(finalPlayer, stompAmount, 0, `stomp on ${targetPlayer.name}`);
+            targetPlayer.money -= amountPaid;
+            if (loanIncrease > 0) {
+              targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
+            }
+            
+            // Update final player's money
+            finalPlayer.money += stompAmount;
             
             console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
                        (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
             
-            // Transaction will be handled later when applying all money changes
+            // Update database
+            await Player.update(
+              { 
+                money: targetPlayer.money,
+                loan: targetPlayer.loan || 0
+              },
+              { 
+                where: { socketId: targetPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            await Player.update(
+              { money: finalPlayer.money },
+              { 
+                where: { socketId: finalPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            // Update session state
+            engine.session.players = engine.session.players.map(p => {
+              if (p.socketId === targetPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: targetPlayer.money, 
+                  loan: targetPlayer.loan || 0 
+                };
+              }
+              if (p.socketId === finalPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: finalPlayer.money 
+                };
+              }
+              return p;
+            });
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction 
+                }
+              );
+            }
+            
+            await transaction.commit();
             
             io.emit('playerMoneyUpdate', {
               playerId: targetPlayer.socketId,
@@ -1178,87 +1339,6 @@ io.on('connection', socket => {
       tileName: finalTile?.name,
       tileType: finalTile?.type
     });
-    
-    // Apply all accumulated money changes in a single transaction
-    if (moneyChanges.size > 0) {
-      const transaction = await sequelize.transaction();
-      try {
-        // Process each player with money changes
-        for (const [playerId, change] of moneyChanges.entries()) {
-          const player = engine.getPlayer(playerId);
-          if (!player) continue;
-          
-          // Calculate new values
-          const newMoney = player.money + change.amount;
-          const newLoan = (player.loan || 0) + (change.loanChange || 0);
-          
-          // Update database
-          await Player.update(
-            { 
-              money: Math.max(0, newMoney), // Ensure money doesn't go below 0
-              loan: newLoan,
-              hasRolled: true // Set hasRolled here for the current player
-            },
-            { 
-              where: { socketId: playerId },
-              transaction 
-            }
-          );
-          
-          // Update in-memory state
-          player.money = Math.max(0, newMoney);
-          player.loan = newLoan;
-          player.hasRolled = true;
-          
-          // Notify clients about money updates
-          io.emit('playerMoneyUpdate', {
-            playerId: player.socketId,
-            newBalance: player.money,
-            loan: player.loan
-          });
-          
-          // Log the transaction
-          if (change.reasons && change.reasons.length > 0) {
-            console.log(`Money update for ${player.name}:`, {
-              change: change.amount,
-              loanChange: change.loanChange,
-              newMoney: player.money,
-              newLoan: player.loan,
-              reasons: change.reasons.join(', ')
-            });
-            
-            // Broadcast game event for significant changes
-            if (Math.abs(change.amount) >= 1000 || change.loanChange !== 0) {
-              const reasonText = change.reasons.join(', ');
-              broadcastGameEvent(`${player.name}'s balance changed by $${Math.abs(change.amount)}${change.loanChange > 0 ? ` ($${change.loanChange} loan)` : ''}: ${reasonText}`);
-            }
-          }
-        }
-        
-        // Update game session with all player states
-        if (currentSessionId) {
-          await GameSession.update(
-            { players: engine.session.players },
-            { 
-              where: { id: currentSessionId },
-              transaction 
-            }
-          );
-        }
-        
-        await transaction.commit();
-        console.log('Successfully applied all money changes in a single transaction');
-        
-      } catch (err) {
-        await transaction.rollback();
-        console.error('Error applying money changes:', err);
-        // Notify clients of the error
-        io.emit('gameError', { 
-          message: 'Error processing transactions',
-          details: err.message 
-        });
-      }
-    }
 
 
     
@@ -1317,16 +1397,42 @@ io.on('connection', socket => {
         const transaction = await sequelize.transaction();
 
         try {
-          // Calculate how much can be paid directly and how much needs to be loaned
-          const amountPaid = Math.min(currentPlayer.money, finalRent);
-          const loanIncrease = Math.max(0, finalRent - amountPaid);
-          
-          // Record money changes for both players
-          recordMoneyChange(currentPlayer, -amountPaid, loanIncrease, `rent for ${finalTile.name}`);
-          recordMoneyChange(propertyOwner, finalRent, 0, `rent from ${currentPlayer.name}`);
+        currentPlayer.money -= finalRent;
+        propertyOwner.money += finalRent;
 
-          // Transaction will be handled later when applying all money changes
-          // hasRolled will be set at the end of the turn
+          if (currentPlayer.money < 0) {
+            const loanIncrease = Math.abs(currentPlayer.money);
+            currentPlayer.loan = (currentPlayer.loan || 0) + loanIncrease;
+            currentPlayer.money = 0;
+          }
+
+          await Player.update(
+            { money: currentPlayer.money, loan: currentPlayer.loan, hasRolled: true },
+            { where: { socketId: currentPlayer.socketId }, transaction }
+          );
+
+          await Player.update(
+            { money: propertyOwner.money },
+            { where: { socketId: propertyOwner.socketId }, transaction }
+          );
+
+          engine.session.players = engine.session.players.map(p => {
+            if (p.socketId === currentPlayer.socketId) {
+              return { ...p, money: currentPlayer.money, loan: currentPlayer.loan, hasRolled: true };
+            }
+            if (p.socketId === propertyOwner.socketId) {
+              return { ...p, money: propertyOwner.money };
+            }
+            return p;
+          });
+
+          if (currentSessionId) {
+            await GameSession.update(
+              { players: engine.session.players },
+              { where: { id: currentSessionId }, transaction }
+            );
+          }
+          await transaction.commit();
 
           io.emit('rentPaid', {
             payerSocketId: currentPlayer.socketId,
