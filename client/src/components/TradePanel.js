@@ -116,12 +116,23 @@ const TradePanel = () => {
 
   const handleMoneyChange = (section, amount) => {
     if (section === 'offer') {
-      const newAmount = Math.max(0, Math.min(offerMoney + amount, player.money));
+      const newAmount = Math.max(0, Math.min((offerMoney || 0) + amount, player.money));
       setOfferMoney(newAmount);
-    } else {
-      const newAmount = Math.max(0, askMoney + amount);
+    } else if (section === 'ask') {
+      const newAmount = Math.max(0, (askMoney || 0) + amount);
       setAskMoney(newAmount);
+    } else if (section === 'loan') {
+      const newAmount = Math.max(0, (loanAmount || 0) + amount);
+      setLoanAmount(newAmount);
+    } else if (section === 'return') {
+      const newAmount = Math.max(0, (returnAmount || 0) + amount);
+      setReturnAmount(newAmount);
     }
+  };
+
+  const handleMoneyInput = (e, setter) => {
+    const value = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+    setter(value);
   };
 
   // Personal Loan Handlers
@@ -284,9 +295,23 @@ const TradePanel = () => {
                 }}
               >-</button>
 
-              <span style={{ margin: '0 15px', fontSize: '2em' }}>
-                ${offerMoney}
-              </span>
+              <input
+                type="text"
+                value={offerMoney.toLocaleString()}
+                onChange={(e) => handleMoneyInput(e, setOfferMoney)}
+                style={{
+                  width: '120px',
+                  textAlign: 'center',
+                  fontSize: '1.5em',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: 'white',
+                  margin: '0 15px',
+                  padding: '5px',
+                  borderBottom: '2px solid rgba(255, 255, 255, 0.3)'
+                }}
+                onFocus={(e) => e.target.select()}
+              />
 
               <button 
                 onClick={() => handleMoneyChange('offer', 500)}
@@ -445,9 +470,23 @@ const TradePanel = () => {
                   fontSize: '1.1em'
                 }}
               >-</button>
-              <span style={{ margin: '0 15px', fontSize: '2em' }}>
-                ${askMoney}
-                </span>
+              <input
+                type="text"
+                value={askMoney.toLocaleString()}
+                onChange={(e) => handleMoneyInput(e, setAskMoney)}
+                style={{
+                  width: '120px',
+                  textAlign: 'center',
+                  fontSize: '1.5em',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: 'white',
+                  margin: '0 15px',
+                  padding: '5px',
+                  borderBottom: '2px solid rgba(255, 255, 255, 0.3)'
+                }}
+                onFocus={(e) => e.target.select()}
+              />
               <button 
                 onClick={() => handleMoneyChange('ask', 500)}
                 style={{
@@ -755,167 +794,123 @@ const TradePanel = () => {
                 <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
                   Loan Amount:
                 </label>
-                <div style={{
-                  display: 'flex',
+                <div style={{ 
+                  display: 'flex', 
                   alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '10px'
+                  justifyContent: 'center',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '5px'
                 }}>
-                  <button
-                    onClick={() => setLoanAmount(prev => Math.max(0, prev - 500))}
+                  <button 
+                    onClick={() => setLoanAmount(prev => Math.max(0, (prev || 0) - 500))}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      padding: '5px 15px',
+                      backgroundColor: '#f44336',
+                      border: 'none',
+                      borderRadius: '5px',
                       color: 'white',
-                      borderRadius: '4px',
-                      border: '2px inset rgb(80, 80, 170)',
-                      minWidth: '50px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      cursor: 'pointer',
+                      fontSize: '1.1em'
                     }}
-                  >
-                    -
-                  </button>
-                  <div style={{
-                    flex: 1,
-                    padding: '8px 16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '4px',
-                    textAlign: 'center',
-                    fontSize: '1.7em',
-                    border: '2px inset rgb(80, 80, 170)',
-                    minHeight: '50px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    ${loanAmount.toLocaleString()}
-                  </div>
-                  <button
-                    onClick={() => setLoanAmount(prev => prev + 500)}
+                  >-</button>
+                  <input
+                    type="text"
+                    value={loanAmount.toLocaleString()}
+                    onChange={(e) => handleMoneyInput(e, setLoanAmount)}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      width: '100%',
+                      maxWidth: '200px',
+                      textAlign: 'center',
+                      fontSize: '1.5em',
+                      backgroundColor: 'transparent',
+                      border: 'none',
                       color: 'white',
-                      borderRadius: '4px',
-                      border: '2px inset rgb(80, 80, 170)',
-                      minWidth: '50px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      margin: '0 15px',
+                      padding: '5px',
+                      borderBottom: '2px solid rgba(255, 255, 255, 0.3)'
                     }}
-                  >
-                    +
-                  </button>
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <button 
+                    onClick={() => setLoanAmount(prev => (prev || 0) + 500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#4CAF50',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.1em'
+                    }}
+                  >+</button>
                 </div>
-                <input
-                  type="number"
-                  value={loanAmount}
-                  onChange={(e) => setLoanAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '5px',
-                    border: '1px solid #ccc',
-                    fontSize: '1.3em',
-                    marginTop: '10px'
-                  }}
-                  min="0"
-                  step="100"
-                />
               </div>
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
                   Return Amount (must be more than loan amount):
                 </label>
-                <div style={{
-                  display: 'flex',
+                <div style={{ 
+                  display: 'flex', 
                   alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '10px'
+                  justifyContent: 'center',
+                  width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  padding: '10px',
+                  borderRadius: '5px'
                 }}>
-                  <button
-                    onClick={() => setReturnAmount(prev => Math.max(0, parseInt(prev) - 500))}
+                  <button 
+                    onClick={() => setReturnAmount(prev => Math.max(0, (prev || 0) - 500))}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      padding: '5px 15px',
+                      backgroundColor: '#f44336',
+                      border: 'none',
+                      borderRadius: '5px',
                       color: 'white',
-                      borderRadius: '4px',
-                      border: '2px inset rgb(80, 80, 170)',
-                      minWidth: '50px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      cursor: 'pointer',
+                      fontSize: '1.1em'
                     }}
-                  >
-                    -
-                  </button>
-                  <div style={{
-                    flex: 1,
-                    padding: '8px 16px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: '4px',
-                    textAlign: 'center',
-                    fontSize: '1.7em',
-                    border: '2px inset rgb(80, 80, 170)',
-                    minHeight: '50px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: returnAmount > loanAmount ? '#4CAF50' : '#FF5252',
-                    fontWeight: 'bold'
-                  }}>
-                    ${returnAmount.toLocaleString()}
-                  </div>
-                  <button
-                    onClick={() => setReturnAmount(prev => parseInt(prev || 0) + 500)}
+                  >-</button>
+                  <input
+                    type="text"
+                    value={returnAmount.toLocaleString()}
+                    onChange={(e) => handleMoneyInput(e, setReturnAmount)}
                     style={{
-                      padding: '8px 12px',
-                      fontSize: '1.7em',
-                      cursor: 'pointer',
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      borderRadius: '4px',
-                      border: '2px inset rgb(80, 80, 170)',
-                      minWidth: '50px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                      width: '100%',
+                      maxWidth: '200px',
+                      textAlign: 'center',
+                      fontSize: '1.5em',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      color: returnAmount > loanAmount ? '#4CAF50' : '#FF5252',
+                      fontWeight: 'bold',
+                      margin: '0 15px',
+                      padding: '5px',
+                      borderBottom: '2px solid rgba(255, 255, 255, 0.3)'
                     }}
-                  >
-                    +
-                  </button>
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <button 
+                    onClick={() => setReturnAmount(prev => (prev || 0) + 500)}
+                    style={{
+                      padding: '5px 15px',
+                      backgroundColor: '#4CAF50',
+                      border: 'none',
+                      borderRadius: '5px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '1.1em'
+                    }}
+                  >+</button>
                 </div>
-                <input
-                  type="number"
-                  value={returnAmount}
-                  onChange={(e) => setReturnAmount(Math.max(0, parseInt(e.target.value) || 0))}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '5px',
-                    border: '1px solid #ccc',
-                    fontSize: '1.3em',
-                    marginTop: '10px'
-                  }}
-                  min={loanAmount + 1}
-                  step="100"
-                />
-                {returnAmount <= loanAmount && (
-                  <div style={{ color: '#FF5252', marginTop: '5px', fontSize: '0.9em' }}>
-                    Return amount must be greater than loan amount
-                  </div>
-                )}
               </div>
-
+              {returnAmount <= loanAmount && (
+                <div style={{ color: '#FF5252', marginTop: '5px', fontSize: '0.9em' }}>
+                  Return amount must be greater than loan amount
+                </div>
+              )}
               <button
                 onClick={handleRequestLoan}
                 disabled={!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount}

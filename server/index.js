@@ -2031,6 +2031,122 @@ io.on('connection', socket => {
     } catch (err) {
       console.error('Error starting teleport transaction:', err);
     }
+
+    if (currentPlayer.tileId !== 7) {  
+      const playersOnTile = engine.session.players.filter(p => 
+        p.tileId === currentPlayer.tileId && 
+        p.socketId !== socket.id  
+      );
+
+      if (playersOnTile.length > 0) {
+        const tile = tiles.find(t => t.id === currentPlayer.tileId);
+        const tileOwner = engine.session.players.find(p => 
+          p.properties && p.properties.includes(currentPlayer.tileId)
+        );
+
+        for (const targetPlayer of playersOnTile) {
+          if (tileOwner && targetPlayer.socketId === tileOwner.socketId) {
+            console.log(`Skipping stomp - target player owns the property`);
+            continue;
+          }
+
+          const stompAmount = 2000;
+          let transaction;
+          
+          try {
+            transaction = await sequelize.transaction();
+            const amountPaid = Math.min(targetPlayer.money, stompAmount);
+            const loanIncrease = Math.max(0, stompAmount - amountPaid);
+            
+            targetPlayer.money -= amountPaid;
+            if (loanIncrease > 0) {
+              targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
+            }
+            
+            // Update final player's money
+            currentPlayer.money += stompAmount;
+            
+            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
+                       (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
+            
+            // Update database
+            await Player.update(
+              { 
+                money: targetPlayer.money,
+                loan: targetPlayer.loan || 0
+              },
+              { 
+                where: { socketId: targetPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            await Player.update(
+              { money: finalPlayer.money },
+              { 
+                where: { socketId: finalPlayer.socketId },
+                transaction 
+              }
+            );
+            
+            // Update session state
+            engine.session.players = engine.session.players.map(p => {
+              if (p.socketId === targetPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: targetPlayer.money, 
+                  loan: targetPlayer.loan || 0 
+                };
+              }
+              if (p.socketId === currentPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: finalPlayer.money 
+                };
+              }
+              return p;
+            });
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction 
+                }
+              );
+            }
+            
+            await transaction.commit();
+            
+            io.emit('playerMoneyUpdate', {
+              playerId: targetPlayer.socketId,
+              newBalance: targetPlayer.money,
+              loan: targetPlayer.loan || 0
+            });
+            
+            io.emit('playerMoneyUpdate', {
+              playerId: currentPlayer.socketId,
+              newBalance: currentPlayer.money
+            });
+            
+            let message = `${currentPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
+            if (loanIncrease > 0) {
+              message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
+            }
+            broadcastGameEvent(message);
+            
+          } catch (err) {
+            if (transaction && !transaction.finished) {
+              await transaction.rollback();
+            }
+            console.error('Error processing stomp payment:', err);
+            broadcastGameEvent(`Error processing stomp payment between ${finalPlayer.name} and ${targetPlayer.name}.`);
+            throw err;
+          }
+        }
+      }
+    }
   });
 
   socket.on('stonePaperScissorsChoice', async ({ choice, gameId }) => {
