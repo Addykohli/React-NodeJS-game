@@ -891,7 +891,7 @@ io.on('connection', socket => {
 
   socket.on('rollDice', async ({ testRoll }) => {
     console.log('[rollDice] for', socket.id);
-    const currentPlayer = engine.getPlayer(socket.id);
+    let currentPlayer = engine.getPlayer(socket.id);
     if (!currentPlayer) return;
     if (currentPlayer.hasRolled) {
       console.log('Player has already moved this turn');
