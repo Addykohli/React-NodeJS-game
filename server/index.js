@@ -952,7 +952,7 @@ io.on('connection', socket => {
       if (!step) break;
 
       //let player = engine.getPlayer(socket.id);
-
+      currentPlayer = engine.getPlayer(socket.id);
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
         socket.emit('branchChoices', { options: step.branchChoices.map(c => c.to) });
