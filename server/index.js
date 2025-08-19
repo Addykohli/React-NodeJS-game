@@ -1427,29 +1427,18 @@ io.on('connection', socket => {
   socket.on('endTurn', async () => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
-    
+    endingPlayer.hasRolled = false; 
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
       endingPlayer.pickedRoadCash = true; 
       console.log("pickedRoadCash:", endingPlayer.pickedRoadCash);
-    } else {
+    }
+    else {
       console.log('Player not found for endTurn:', socket.id);
     }
-    
-    // Store current player index before ending turn
-    const currentPlayerIndex = engine.session.currentPlayerIndex;
-    
-    // End the turn and get the next player
-    const nextPlayerId = engine.endTurn();
-    console.log('Next player:', nextPlayerId);
-    
-    // Get the next player object and ensure they can roll
-    const nextPlayer = engine.getPlayer(nextPlayerId);
-    if (nextPlayer) {
-      nextPlayer.hasRolled = false;  
-    }
-    
-    io.emit('turnEnded', { nextPlayerId });
+    const next = engine.endTurn();
+    console.log('Next player:', next);
+    io.emit('turnEnded', { nextPlayerId: next });
     if (currentSessionId) {
       await GameSession.findByIdAndUpdate(currentSessionId, { currentPlayerIndex: engine.session.currentPlayerIndex });
     }
