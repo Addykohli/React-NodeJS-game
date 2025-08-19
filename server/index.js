@@ -951,7 +951,7 @@ io.on('connection', socket => {
       const step = engine.moveOneStep(socket.id, roll.total);
       if (!step) break;
 
-      let player = engine.getPlayer(socket.id);
+      //let player = engine.getPlayer(socket.id);
 
       if (step.branchChoices) {
         console.log('Branch choices:', step.branchChoices);
@@ -960,9 +960,9 @@ io.on('connection', socket => {
         console.log('Branch selected index:', idx);
         const to = engine.chooseBranch(socket.id, step.branchChoices, idx);
 
-        player = engine.getPlayer(socket.id);
+        currentPlayer = engine.getPlayer(socket.id);
 
-        io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: player.hasMoved });
+        io.emit('playerMoved', { playerId: socket.id, tileId: currentPlayer.tileId, hasMoved: currentPlayer.hasMoved });
 
       } else {
         const newTile = currentPlayer.tileId;
