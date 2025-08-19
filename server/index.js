@@ -1428,6 +1428,28 @@ io.on('connection', socket => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
     endingPlayer.hasRolled = false; 
+
+    try {
+      const transaction = await sequelize.transaction();
+      await Player.update(
+        { hasRolled: false },
+        { where: { socketId: socket.id }, transaction }
+      );
+      engine.session.players = engine.session.players.map(p =>
+        p.socketId === socket.id ? { ...p, hasRolled: false } : p
+      );
+      if (currentSessionId) {
+        await GameSession.update(
+          { players: engine.session.players },
+          { where: { id: currentSessionId }, transaction }
+        );
+      }
+      await transaction.commit();
+      
+    } catch (err) {
+      console.error('Error updating hasRolled state:', err);
+    }
+
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
       endingPlayer.pickedRoadCash = true; 
