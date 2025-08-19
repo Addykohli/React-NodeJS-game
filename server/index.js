@@ -1093,7 +1093,7 @@ io.on('connection', socket => {
         console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
         
 
-        io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: currentPlayer.hasMoved });
+        io.emit('playerMoved', { playerId: socket.id, tileId: currentPlayer.tileId, hasMoved: currentPlayer.hasMoved });
       }
 
       if (currentSessionId) {
