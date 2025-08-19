@@ -136,30 +136,15 @@ class GameEngine {
   endTurn() {
     const len = this.session.players.length;
     if (len === 0) return null;
-    
-    // Reset hasRolled for the current player before moving to the next
-    const currentPlayer = this.session.players[this.session.currentPlayerIndex];
-    if (currentPlayer) {
-      currentPlayer.hasRolled = false;
-    }
-    
-    // Move to the next player
     this.session.currentPlayerIndex = (this.session.currentPlayerIndex + 1) % len;
-    const nextPlayer = this.session.players[this.session.currentPlayerIndex];
-    const nextPlayerSocketId = nextPlayer.socketId;
-    
-    // Ensure next player's hasRolled is false
-    nextPlayer.hasRolled = false;
-    
-    console.log('[Engine] endTurn → next player:', nextPlayer.name, 'socket:', nextPlayerSocketId);
-    
+    const next = this.session.players[this.session.currentPlayerIndex].socketId;
+    console.log('[Engine] endTurn → next', next);
     this.session.history.push({
-      playerSocketId: nextPlayerSocketId,
+      playerSocketId: next,
       action: 'endTurn',
       details: {}
     });
-    
-    return nextPlayerSocketId;
+    return next;
   }
 
   getState() {
