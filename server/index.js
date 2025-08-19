@@ -965,32 +965,31 @@ io.on('connection', socket => {
         io.emit('playerMoved', { playerId: socket.id, tileId: player.tileId, hasMoved: player.hasMoved });
 
       } else {
-        const player = engine.getPlayer(socket.id);
-        const newTile = player.tileId;
-        const prevTile = player.prevTile;
+        const newTile = currentPlayer.tileId;
+        const prevTile = currentPlayer.prevTile;
         console.log('Moved from tile', prevTile, 'to tile:', newTile);
 
         if (newTile === 1 && !passedStart) {
-          const bonusAmount = player.loan > 0 ? 4000 : 5000;
+          const bonusAmount = currentPlayer.loan > 0 ? 4000 : 5000;
           console.log('Player landed on start! Awarding bonus.', {
-            hasLoan: player.loan > 0,
+            hasLoan: currentPlayer.loan > 0,
             bonusAmount,
-            currentLoan: player.loan
+            currentLoan: currentPlayer.loan
           });
           
           const transaction = await sequelize.transaction();
 
           try {
-            player.money += bonusAmount;
+            currentPlayer.money += bonusAmount;
             passedStart = true; 
             
             await Player.update(
-              { money: player.money },
+              { money: currentPlayer.money },
               { where: { socketId: socket.id }, transaction }
             );
 
             engine.session.players = engine.session.players.map(p =>
-              p.socketId === socket.id ? { ...p, money: player.money } : p
+              p.socketId === socket.id ? { ...p, money: currentPlayer.money } : p
             );
             if (currentSessionId) {
               await GameSession.update(
@@ -999,11 +998,32 @@ io.on('connection', socket => {
               );
             }
 
+            // Update session state
+            engine.session.players = engine.session.players.map(p => {
+              if (p.socketId === currentPlayer.socketId) {
+                return { 
+                  ...p, 
+                  money: currentPlayer.money 
+                };
+              }
+              return p;
+            });
+            
+            if (currentSessionId) {
+              await GameSession.update(
+                { players: engine.session.players },
+                { 
+                  where: { id: currentSessionId },
+                  transaction 
+                }
+              );
+            }
+
             await transaction.commit();
 
             io.emit('startBonus', {
               playerSocketId: socket.id,
-              newMoney: player.money,
+              newMoney: currentPlayer.money,
               amount: bonusAmount,
               reason: 'landing on'
             });
@@ -1017,20 +1037,20 @@ io.on('connection', socket => {
           }
         }
         else if (prevTile === 30 && newTile > 1 && !passedStart) {
-          const bonusAmount = player.loan > 0 ? 4000 : 5000;
+          const bonusAmount = currentPlayer.loan > 0 ? 4000 : 5000;
           console.log('Player passed through start! Awarding bonus.', {
-            hasLoan: player.loan > 0,
+            hasLoan: currentPlayer.loan > 0,
             bonusAmount,
-            currentLoan: player.loan
+            currentLoan: currentPlayer.loan
           });
-          player.money += bonusAmount;
+          currentPlayer.money += bonusAmount;
           passedStart = true;
           
           try {
             const transaction = await sequelize.transaction();
             try {
               await Player.update(
-                { money: player.money },
+                { money: currentPlayer.money },
                 { where: { socketId: socket.id }, transaction }
               );
               
@@ -1040,11 +1060,23 @@ io.on('connection', socket => {
                   { where: { id: currentSessionId }, transaction }
                 );
               }
+
+              // Update session state
+              engine.session.players = engine.session.players.map(p => {
+                if (p.socketId === currentPlayer.socketId) {
+                  return { 
+                    ...p, 
+                    money: currentPlayer.money 
+                  };
+                }
+                return p;
+              });
+
               await transaction.commit();
               
               io.emit('startBonus', {
                 playerSocketId: socket.id,
-                newMoney: player.money,
+                newMoney: currentPlayer.money,
                 amount: bonusAmount,
                 reason: 'passing through'
               });

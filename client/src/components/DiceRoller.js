@@ -21,7 +21,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
   const [rpsGame, setRpsGame] = useState(null);
   const [branchOptions, setBranchOptions] = useState(null);
   const [casinoPlayed, setCasinoPlayed] = useState(hasCasinoPlayed);
-  const [hasRolled, setHasRolled] = useState(false);
   const tileMeta = tiles.find(t => t.id === player?.tileId);
 
   const isOnCasino = tileMeta?.id === 16;
@@ -79,7 +78,7 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     };
   }, [player, socket]);
 
-  //const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
+  const hasRolled = players.find(p => p.socketId === player?.socketId)?.hasRolled ?? player?.hasRolled ?? false;
 
   
   
@@ -102,7 +101,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
     setDone(false);
     localStorage.setItem('gameDoneState', 'false');
     setBranchOptions(null);
-    setHasRolled(false);
   };
 
   return (
