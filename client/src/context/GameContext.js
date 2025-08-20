@@ -395,13 +395,13 @@ export function GameProvider({ children }) {
       setDiceRoll({ playerId, die1, die2, total });
     });
     socket.on('playerMoved', ({ playerId, tileId }) => {
-      setPlayers(prev =>
+      /*setPlayers(prev =>
         prev.map(p => 
           p.socketId === playerId 
             ? { ...p, tileId, piece: p.piece ?? null } 
             : p
         )
-      );
+      );*/
       
       if (player?.socketId === playerId) {
         setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
