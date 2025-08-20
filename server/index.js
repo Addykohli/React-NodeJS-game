@@ -2061,7 +2061,7 @@ io.on('connection', socket => {
             // Update final player's money
             currentPlayer.money += stompAmount;
             
-            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
+            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${currentPlayer.name}` + 
                        (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
             
             // Update database
@@ -2077,9 +2077,9 @@ io.on('connection', socket => {
             );
             
             await Player.update(
-              { money: finalPlayer.money },
+              { money: currentPlayer.money },
               { 
-                where: { socketId: finalPlayer.socketId },
+                where: { socketId: currentPlayer.socketId },
                 transaction 
               }
             );
@@ -2096,7 +2096,7 @@ io.on('connection', socket => {
               if (p.socketId === currentPlayer.socketId) {
                 return { 
                   ...p, 
-                  money: finalPlayer.money 
+                  money: currentPlayer.money 
                 };
               }
               return p;
