@@ -215,14 +215,14 @@ const TopPropertyDisplay = () => {
                         {property.name}
                       </div>
                       <div style={{
-                        fontSize: '1rem',
+                        fontSize: '1em',
                         textAlign: 'left',
                         marginBottom: '8px'
                       }}>
                         Cost: ${property.cost}
                       </div>
                       <div style={{
-                        fontSize: '1rem',
+                        fontSize: '1em',
                         textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',

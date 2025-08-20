@@ -143,14 +143,11 @@ io.on('connection', socket => {
     }
   });
   
-  // Removed duplicate acceptLoan handler - using the one at line 375 instead
-  
   // Handle rejecting a loan
   socket.on('rejectLoan', async ({ loanId }) => {
     console.log(`=== REJECTING LOAN ${loanId} ===`);
     
     try {
-      // Find the loan
       const loan = await Loan.findByPk(loanId);
       if (!loan) {
         console.error(`Loan ${loanId} not found`);
@@ -1209,10 +1206,7 @@ io.on('connection', socket => {
               newBalance: finalPlayer.money
             });
             
-            let message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
-            if (loanIncrease > 0) {
-              message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
-            }
+            let message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $2000!`;
             broadcastGameEvent(message);
             
           } catch (err) {
@@ -2131,10 +2125,7 @@ io.on('connection', socket => {
               newBalance: currentPlayer.money
             });
             
-            let message = `${currentPlayer.name} stomped on ${targetPlayer.name} and collected $${amountPaid}!`;
-            if (loanIncrease > 0) {
-              message += ` ${targetPlayer.name} couldn't pay the full amount and now has a $${loanIncrease} loan.`;
-            }
+            let message = `${currentPlayer.name} stomped on ${targetPlayer.name} and collected $2000!`;
             broadcastGameEvent(message);
             
           } catch (err) {

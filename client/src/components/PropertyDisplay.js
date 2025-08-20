@@ -78,14 +78,14 @@ const PropertyCard = ({ property,socket, playerId, player }) => {
         {property.name}
       </div>
       <div style={{
-        fontSize: '1rem',
+        fontSize: '1em',
         textAlign: 'left',
         marginBottom: '8px'
       }}>
         Cost: ${property.cost}
       </div>
       <div style={{
-        fontSize: '1rem',
+        fontSize: '1em',
         textAlign: 'left',
         display: 'flex',
         alignItems: 'center',
@@ -573,7 +573,7 @@ const PropertyDisplay = () => {
               }}>
                 <div style={{
                   fontSize: '1.96rem',
-                  marginBottom: '1px',
+                  marginBottom: '8px',
                   textAlign: 'left',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -584,14 +584,14 @@ const PropertyDisplay = () => {
                   {property.name}
                 </div>
                 <div style={{
-                  fontSize: '1.4rem',
+                  fontSize: '1.5rem',
                   textAlign: 'left',
                   marginBottom: '12px'
                 }}>
                   Cost: ${property.cost}
                 </div>
                 <div style={{
-                  fontSize: '1.4rem',
+                  fontSize: '1.5rem',
                   textAlign: 'left',
                   display: 'flex',
                   alignItems: 'center',
@@ -602,7 +602,7 @@ const PropertyDisplay = () => {
                   {multiplier > 1 && (
                     <span style={{ 
                       color: '#FFA500', 
-                      fontSize: '1.3em', 
+                      fontSize: '1.4em', 
                       fontWeight: 'bold'
                     }}>
                       X{multiplier}
@@ -622,7 +622,7 @@ const PropertyDisplay = () => {
                       borderRadius: '4px',
                       padding: '4px 8px',
                       cursor: 'pointer',
-                      fontSize: '1.2rem',
+                      fontSize: '1.3rem',
                       fontWeight: 'bold'
                     }}
                   >

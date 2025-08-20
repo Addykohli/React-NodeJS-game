@@ -635,9 +635,9 @@ export default function GameScreen() {
       if (playerId === player?.socketId) {
         setPlayer(prev => ({ ...prev, tileId }));
       }
-      setPlayers(prev => 
+      /*setPlayers(prev => 
         prev.map(p => p.socketId === playerId ? { ...p, tileId } : p)
-      );
+      );*/
       setError(null);
     });
 
@@ -1019,7 +1019,7 @@ export default function GameScreen() {
                           value={borrowAmount.toLocaleString()}
                           onChange={(e) => {
                             const value = parseInt(e.target.value.replace(/\D/g, '')) || 0;
-                            setBorrowAmount(Math.max(500, Math.min(100000, value || 500)));
+                            setBorrowAmount(Math.min(100000, value || 500));
                           }}
                           onFocus={(e) => e.target.select()}
                           style={{
@@ -1069,16 +1069,20 @@ export default function GameScreen() {
                             e.target.style.border = '2px outset rgb(80, 80, 170)';
                           }, 180);
                         }}
+                        disabled={borrowAmount < 500 || rpsGame}
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          backgroundColor: borrowAmount < 500 || rpsGame 
+                            ? 'rgba(255, 255, 255, 0.1)' 
+                            : 'rgba(255, 255, 255, 0.3)',
                           border: '1px outset rgb(80, 80, 170)',
                           color: 'white',
                           borderRadius: '4px',
-                          cursor: 'pointer',
+                          cursor: borrowAmount < 500 || rpsGame ? 'not-allowed' : 'pointer',
                           fontSize: '1.1em',
                           transition: 'background-color 0.2s, border 0.1s',
+                          opacity: borrowAmount < 500 || rpsGame ? 0.7 : 1
                         }}
                       >
                         Borrow
@@ -1170,7 +1174,7 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             border: '2px inset rgb(80, 80, 170)',
                             minHeight: '50px',
-                            color: player?.loan ? '#4CAF50' : '#888',
+                            color: player?.loan ? 'rgb(255, 255, 255)' : '#888',
                             outline: 'none',
                             width: '100%',
                             boxSizing: 'border-box',
