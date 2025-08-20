@@ -2033,6 +2033,7 @@ io.on('connection', socket => {
     }
 
     if (currentPlayer.tileId !== 7) {  
+      const { tiles } = require('./data/tiles.cjs');
       const playersOnTile = engine.session.players.filter(p => 
         p.tileId === currentPlayer.tileId && 
         p.socketId !== socket.id  

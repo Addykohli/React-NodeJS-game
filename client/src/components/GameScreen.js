@@ -1014,21 +1014,30 @@ export default function GameScreen() {
                         >
                           -
                         </button>
-                        <div style={{
-                          flex: 1,
-                          padding: '8px 16px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          borderRadius: '4px',
-                          textAlign: 'center',
-                          fontSize: '1.7em',
-                          border: '2px inset rgb(80, 80, 170)',
-                          minHeight: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          ${borrowAmount.toLocaleString()}
-                        </div>
+                        <input
+                          type="text"
+                          value={borrowAmount.toLocaleString()}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                            setBorrowAmount(Math.max(500, Math.min(100000, value || 500)));
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          style={{
+                            flex: 1,
+                            padding: '8px 16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '1.7em',
+                            border: '2px inset rgb(80, 80, 170)',
+                            minHeight: '50px',
+                            color: 'white',
+                            outline: 'none',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                          }}
+                          disabled={isRpsActive}
+                        />
                         <button
                           onClick={() => setBorrowAmount(prev => Math.min(100000, prev + 500))}
                           disabled={isRpsActive}
@@ -1049,23 +1058,6 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      <input
-                        type="number"
-                        value={borrowAmount}
-                        onChange={(e) => setBorrowAmount(Math.max(500, Math.min(100000, parseInt(e.target.value) || 500)))}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: '5px',
-                          border: '1px solid #ccc',
-                          fontSize: '1.3em',
-                          marginBottom: '10px'
-                        }}
-                        min="500"
-                        max="100000"
-                        step="100"
-                        disabled={isRpsActive}
-                      />
 
                       <button
                         onClick={async (e) => {
@@ -1161,22 +1153,32 @@ export default function GameScreen() {
                         >
                           -
                         </button>
-                        <div style={{
-                          flex: 1,
-                          padding: '8px 16px',
-                          backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                          borderRadius: '4px',
-                          textAlign: 'center',
-                          fontSize: '1.7em',
-                          border: '2px inset rgb(80, 80, 170)',
-                          minHeight: '50px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: player?.loan ? '#4CAF50' : '#888'
-                        }}>
-                          ${Math.min(payoffAmount, player?.loan || 0).toLocaleString()}
-                        </div>
+                        <input
+                          type="text"
+                          value={Math.min(payoffAmount, player?.loan || 0).toLocaleString()}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value.replace(/\D/g, '')) || 0;
+                            setPayoffAmount(Math.max(0, Math.min(player?.loan || 0, value)));
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          style={{
+                            flex: 1,
+                            padding: '8px 16px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                            borderRadius: '4px',
+                            textAlign: 'center',
+                            fontSize: '1.7em',
+                            border: '2px inset rgb(80, 80, 170)',
+                            minHeight: '50px',
+                            color: player?.loan ? '#4CAF50' : '#888',
+                            outline: 'none',
+                            width: '100%',
+                            boxSizing: 'border-box',
+                            cursor: (!player?.loan || rpsGame) ? 'not-allowed' : 'text',
+                            opacity: (!player?.loan || rpsGame) ? 0.7 : 1
+                          }}
+                          disabled={!player?.loan || rpsGame}
+                        />
                         <button
                           onClick={() => setPayoffAmount(prev => Math.min(player?.loan || 0, prev + 500))}
                           disabled={!player?.loan || rpsGame}
@@ -1197,27 +1199,7 @@ export default function GameScreen() {
                           +
                         </button>
                       </div>
-                      <input
-                        type="number"
-                        value={payoffAmount}
-                        onChange={(e) => {
-                          const newValue = Math.max(0, Math.min(player?.loan || 0, parseInt(e.target.value) || 0));
-                          setPayoffAmount(newValue);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: '5px',
-                          border: '1px solid #ccc',
-                          fontSize: '1.3em',
-                          marginBottom: '10px',
-                          backgroundColor: player?.loan ? 'white' : '#f5f5f5'
-                        }}
-                        min="0"
-                        max={player?.loan || 0}
-                        step="100"
-                        disabled={!player?.loan || rpsGame}
-                      />
+
                         <button
                           onClick={async (e) => {
                             e.target.style.border = '2px inset rgb(80, 80, 170)';
