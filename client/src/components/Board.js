@@ -244,9 +244,10 @@ const Board = () => {
               console.log(`[Board] Missing player at index ${i}`);
               return null;
             }
+            const isPiece3 = p.piece === 'piece3.png';
             const isPiece5 = p.piece === 'piece5.png';
             const imgSrc = pieceImages[p.piece];
-            if (!imgSrc && !isPiece5) {
+            if (!imgSrc && !isPiece3 && !isPiece5) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
               return null;
             }
@@ -268,6 +269,44 @@ const Board = () => {
               offsetY = Math.sin(angle) * radius;
             }
             
+            if (isPiece3) {
+              return (
+                <div 
+                  key={p.socketId}
+                  title={p.name}
+                  style={{
+                    position: 'absolute',
+                    top: y + offsetY + 10,
+                    left: x + offsetX,
+                    transform: 'translate(-50%, -50%)',
+                    transition: 'top 0.3s, left 0.3s',
+                    zIndex: 10,
+                    width: '400px',
+                    height: '500px',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                    background: 'transparent'
+                  }}
+                >
+                  <img 
+                    src="https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" 
+                    alt="Player Piece"
+                    style={{
+                      width: '400px',
+                      height: '500px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      transform: 'translateY(-20%)'
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            
             if (isPiece5) {
               return (
                 <div 
@@ -280,26 +319,25 @@ const Board = () => {
                     transform: 'translate(-50%, -50%)',
                     transition: 'top 0.3s, left 0.3s',
                     zIndex: 10,
-                    width: '100px',
-                    height: '100px',
+                    width: '150px',
+                    height: '190px',
                     pointerEvents: 'none',
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                     overflow: 'hidden',
-                    background: 'transparent',
-                    borderRadius: '50%',
-                    border: '2px solid rgba(255,255,255,0.5)'
+                    background: 'transparent'
                   }}
                 >
                   <img 
-                    src="https://media.tenor.com/3bTxuvfS2qYAAAAC/peashooter.gif" 
-                    alt="Peashooter"
+                    src="https://media.tenor.com/RKwYeBPr3pEAAAAi/me.gif" 
+                    alt="Player Piece"
                     style={{
-                      width: '100%',
-                      height: '100%',
+                      width: '150px',
+                      height: '190px',
                       objectFit: 'contain',
-                      pointerEvents: 'none'
+                      pointerEvents: 'none',
+                      transform: 'translateY(-20%)' 
                     }}
                   />
                 </div>
