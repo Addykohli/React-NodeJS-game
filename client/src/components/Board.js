@@ -286,25 +286,22 @@ const Board = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    background: 'transparent',
+                    borderRadius: '50%',
+                    border: '2px solid rgba(255,255,255,0.5)'
                   }}
                 >
-                  <div 
-                    className="tenor-gif-embed" 
-                    data-postid="17102957129566763720" 
-                    data-share-method="host" 
-                    data-aspect-ratio="0.987952" 
-                    data-width="100%"
+                  <img 
+                    src="https://media.tenor.com/3bTxuvfS2qYAAAAC/peashooter.gif" 
+                    alt="Peashooter"
                     style={{
                       width: '100%',
                       height: '100%',
-                      position: 'relative',
-                      paddingBottom: '98.8%',
+                      objectFit: 'contain',
                       pointerEvents: 'none'
                     }}
-                  >
-                    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
-                  </div>
+                  />
                 </div>
               );
             }
