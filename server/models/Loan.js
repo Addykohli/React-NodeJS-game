@@ -47,7 +47,6 @@ const Loan = sequelize.define('Loan', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  // Timestamps for loan lifecycle
   requestedAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

@@ -30,7 +30,6 @@ function setupAssociations() {
   });
 }
 
-// Function to clear all loan data
 async function clearLoanData() {
   try {
     await Loan.destroy({ where: {}, truncate: true });
@@ -41,7 +40,6 @@ async function clearLoanData() {
   }
 }
 
-// Function to initialize a new game session
 async function initNewGame() {
   try {
     await clearLoanData();
@@ -57,13 +55,11 @@ async function initDatabase() {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
 
-    // Set up model associations
     setupAssociations();
 
     await sequelize.sync({ alter: true });
     console.log('All models were synchronized successfully.');
     
-    // Initialize a clean game state
     await initNewGame();
 
   } catch (error) {

@@ -15,7 +15,6 @@ import Chat from './Chat';
 import TradePanel from './TradePanel';
 import PropertiesPanel from './PropertiesPanel';
 
-// Import dice images
 const diceImages = {};
 for (let i = 1; i <= 6; i++) {
   diceImages[i] = require(`../assets/dice/dice${i}.png`);
@@ -327,7 +326,6 @@ export default function GameScreen() {
     return () => socket.off('borrowResponse', handleBorrowResponse);
   }, [socket]);
 
-  // Auto-scroll to top when game events change or panel is opened
   useEffect(() => {
     if (activeSidePanel === 'info' && eventsEndRef.current) {
       eventsEndRef.current.scrollTop = 0;
@@ -384,26 +382,21 @@ export default function GameScreen() {
 
   const tileMeta = tiles.find(t => t.id === player?.tileId);
   
-  // Calculate net worth for a player
   const calculateNetWorth = (player) => {
     if (!player) return 0;
     
-    // Base money
     let netWorth = player.money || 0 - player.loan || 0;
     
-    // Add property values
     const propertyValue = (player.properties || []).reduce((total, propertyId) => {
       const property = tiles.find(t => t.id === propertyId);
       return total + (property?.cost);
     }, 0);
     netWorth += propertyValue;
     
-    // Add loan amounts lent to others (positive)
     const loansLent = activeLoans.filter(loan => loan.lenderId === player.socketId);
     const totalLoansLent = loansLent.reduce((total, loan) => total + (loan.returnAmount || 0), 0);
     netWorth += totalLoansLent;
     
-    // Subtract loan amounts borrowed (negative)
     const loansBorrowed = activeLoans.filter(loan => loan.borrowerId === player.socketId);
     const totalLoansBorrowed = loansBorrowed.reduce((total, loan) => total + (loan.returnAmount || 0), 0);
     netWorth -= totalLoansBorrowed;
@@ -1282,17 +1275,14 @@ export default function GameScreen() {
                       borderRadius: '8px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h4>Player Net Worth</h4>
-                      <div style={{ marginTop: '10px' }}>
+                      <h3>Player Net Worth</h3>
+                      <div style={{ marginTop: '10px', fontSize: '1.7em' }}>
                         {players
                           .map(p => {
-                            // Calculate property value
                             const propertyValue = p.properties?.reduce((total, propId) => {
                               const prop = tiles.find(pr => pr.id === propId);
                               return total + (prop?.cost || 0);
                             }, 0) || 0;
-
-                            // Calculate loan amounts
                             const loanEarnings = activeLoans
                               .filter(loan => loan.lenderId === p.socketId)
                               .reduce((total, loan) => total + loan.returnAmount, 0);
@@ -1301,7 +1291,6 @@ export default function GameScreen() {
                               .filter(loan => loan.borrowerId === p.socketId)
                               .reduce((total, loan) => total + loan.returnAmount, 0);
 
-                            // Calculate total net worth
                             const netWorth = 
                               (p.money || 0) - 
                               (p.loan || 0) + 
@@ -1355,7 +1344,7 @@ export default function GameScreen() {
                               <div style={{
                                 fontWeight: 'bold',
                                 fontSize: '1.1em',
-                                color: player.netWorth >= 0 ? '#4CAF50' : '#f44336'
+                                color: player.netWorth >= 0 ? 'rgb(200, 240, 200)' : 'rgb(196, 46, 46)'
                               }}>
                                 ${player.netWorth.toLocaleString()}
                               </div>

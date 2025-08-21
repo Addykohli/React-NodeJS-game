@@ -38,11 +38,9 @@ export function GameProvider({ children }) {
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
   
-  // Loan state
   const [activeLoans, setActiveLoans] = useState([]);
   const [loanRequests, setLoanRequests] = useState([]);
   
-  // Fetch loan data
   const fetchLoans = () => {
     if (socket) {
       socket.emit('getActiveLoans');
@@ -50,21 +48,18 @@ export function GameProvider({ children }) {
     }
   };
   
-  // Handle loan request
   const requestLoan = (lenderId, amount, returnAmount) => {
     if (socket) {
       socket.emit('requestLoan', { lenderId, amount, returnAmount });
     }
   };
   
-  // Handle loan response
   const respondToLoan = (loanId, accepted) => {
     if (socket) {
       socket.emit(accepted ? 'acceptLoan' : 'rejectLoan', { loanId });
     }
   };
   
-  // Handle loan repayment
   const repayLoan = (loanId) => {
     if (socket) {
       socket.emit('repayLoan', { loanId });
@@ -96,12 +91,8 @@ export function GameProvider({ children }) {
       console.log('GameContext: Received playerDiceRoll event:', data);
       console.log('GameContext: Current socket ID:', socket.id);
       console.log('GameContext: Event player ID:', data.playerId);
-      
-      // Forward the event to all components that might be interested
       console.log('GameContext: Forwarding as forwardedPlayerDiceRoll');
       socket.emit('forwardedPlayerDiceRoll', data);
-      
-      // Also log all socket event listeners for debugging
       console.log('GameContext: Current socket event listeners:', {
         events: socket._callbacks ? Object.keys(socket._callbacks) : 'No callbacks',
         hasForwardedListener: socket._callbacks?.forwardedPlayerDiceRoll ? 'Yes' : 'No'
@@ -118,7 +109,6 @@ export function GameProvider({ children }) {
     socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
     socket.on('playerDiceRoll', handlePlayerDiceRoll);
     
-    // Loan event handlers
     socket.on('activeLoans', (loans) => {
       setActiveLoans(loans || []);
     });
@@ -134,25 +124,19 @@ export function GameProvider({ children }) {
       });
     });
 
-    // Handle loan acceptance
     socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
       console.log('Loan accepted:', loan);
       
-      // Update active loans
       setActiveLoans(prev => {
-        // Remove from pending requests
         const updatedLoans = prev.filter(l => l.id !== loan.id);
-        // Add to active loans if not already there
         if (!updatedLoans.some(l => l.id === loan.id)) {
           return [...updatedLoans, loan];
         }
         return updatedLoans;
       });
 
-      // Remove from pending requests
       setLoanRequests(prev => prev.filter(req => req.id !== loan.id));
 
-      // Update player money if current user is involved
       if (socket.id === borrowerUpdate.playerId) {
         setPlayer(prev => ({
           ...prev,
@@ -165,7 +149,6 @@ export function GameProvider({ children }) {
         }));
       }
 
-      // Update players list
       setPlayers(prev => 
         prev.map(p => {
           if (p.socketId === borrowerUpdate.playerId) {
@@ -179,22 +162,17 @@ export function GameProvider({ children }) {
       );
     });
     
-    // Handle loan rejection
     socket.on('loanRejected', ({ loanId, reason }) => {
       console.log(`Loan ${loanId} rejected:`, reason);
       
-      // Remove from pending requests
       setLoanRequests(prev => prev.filter(req => req.id !== loanId));
     });
 
-    // Handle loan repayment
     socket.on('loanRepaid', ({ loan, playerUpdate }) => {
       console.log('Loan repaid:', loan);
       
-      // Remove from active loans
       setActiveLoans(prev => prev.filter(l => l.id !== loan.id));
 
-      // Update player money if current user is involved
       if (socket.id === playerUpdate.playerId) {
         setPlayer(prev => ({
           ...prev,
@@ -202,7 +180,6 @@ export function GameProvider({ children }) {
         }));
       }
 
-      // Update players list
       setPlayers(prev => 
         prev.map(p => {
           if (p.socketId === playerUpdate.playerId) {
@@ -213,7 +190,6 @@ export function GameProvider({ children }) {
       );
     });
     
-    // Initial fetch
     fetchLoans();
 
     return () => {
@@ -591,11 +567,9 @@ export function GameProvider({ children }) {
       }
     });
 
-    // Handle player money updates
     socket.on('playerMoneyUpdate', ({ playerId, newMoney, playerName }) => {
       console.log(`Updating money for player ${playerName || playerId} to ${newMoney}`);
       
-      // Update the player in the players list
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === playerId 
@@ -604,7 +578,6 @@ export function GameProvider({ children }) {
         )
       );
       
-      // Update current player if it's the current user
       if (playerId === socket.id) {
         setPlayer(prev => ({
           ...prev,
@@ -661,7 +634,6 @@ export function GameProvider({ children }) {
         chatMessages,
         setChatMessages,
         isRpsActive,
-        // Loan context
         activeLoans,
         loanRequests,
         fetchLoans,

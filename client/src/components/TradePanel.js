@@ -38,11 +38,10 @@ const TradePanel = () => {
   const [offerPropertiesBtnPressed, setOfferPropertiesBtnPressed] = useState(false);
   const [askPropertiesBtnPressed, setAskPropertiesBtnPressed] = useState(false);
 
-  // Local UI state
   const [loanAmount, setLoanAmount] = useState(0);
   const [returnAmount, setReturnAmount] = useState(0);
   const [selectedLender, setSelectedLender] = useState(null);
-  const [activeTab, setActiveTab] = useState('request'); // 'request' or 'active'
+  const [activeTab, setActiveTab] = useState('request');
   const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   React.useEffect(() => {
@@ -92,14 +91,12 @@ const TradePanel = () => {
     setAskReady(askMoney >= 500 || selectedAskProperties.length > 0);
   }, [askMoney, selectedAskProperties]);
 
-  // Fetch loans when the panel is opened and when socket changes
   useEffect(() => {
     if (socket) {
       console.log('Fetching loans...');
       fetchLoans();
     }
     
-    // Set up a listener for when the panel becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && socket) {
         console.log('Panel became visible, refreshing loans...');
@@ -135,7 +132,6 @@ const TradePanel = () => {
     setter(value);
   };
 
-  // Personal Loan Handlers
   const handleRequestLoan = () => {
     console.log('handleRequestLoan called with:', { selectedLender, loanAmount, returnAmount });
     if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
@@ -146,7 +142,6 @@ const TradePanel = () => {
     console.log('Requesting loan via context');
     requestLoan(selectedLender.socketId, loanAmount, returnAmount);
     
-    // Reset form
     setLoanAmount(0);
     setReturnAmount(0);
     setSelectedLender(null);
@@ -169,8 +164,6 @@ const TradePanel = () => {
 
   const handleClaimLoan = (loanId) => {
     console.log('Claiming loan:', loanId);
-    // This would be for the lender to claim the loan if it's not repaid on time
-    // Implementation would depend on your game's rules
     socket.emit('claimLoan', { loanId });
   };
 
@@ -927,7 +920,6 @@ const TradePanel = () => {
                   Pending Requests
                 </h3>
                 {loanRequests.map(request => {
-                  // Handle both old and new request formats
                   const requestData = request.loan || request;
                   const fromName = requestData.from?.name || requestData.borrowerName || 'Unknown';
                   const amount = requestData.amount || 0;

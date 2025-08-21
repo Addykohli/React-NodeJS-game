@@ -4,22 +4,17 @@ import { GameContext } from '../context/GameContext';
 const PropertiesPanel = () => {
   const { player, players } = useContext(GameContext);
   const [showOwnership, setShowOwnership] = useState(() => {
-    // Load the saved state from localStorage or default to false
     const saved = localStorage.getItem('showOwnershipView');
     return saved === 'true';
   });
 
-  // Save the state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('showOwnershipView', showOwnership);
   }, [showOwnership]);
-
-  // Toggle the ownership view
   const toggleOwnershipView = () => {
     setShowOwnership(prev => !prev);
   };
 
-  // Emit an event to notify the Board component about the toggle
   useEffect(() => {
     const event = new CustomEvent('ownershipViewToggle', { detail: { show: showOwnership } });
     window.dispatchEvent(event);

@@ -61,7 +61,6 @@ const Chat = () => {
 
   const messagesContainerRef = useRef(null);
 
-  // Scroll to top when chat messages change
   const scrollToTop = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = 0;
@@ -101,7 +100,6 @@ const Chat = () => {
           display: 'flex',
           flexDirection: 'column-reverse',
           gap: '10px',
-          // Enable flex reverse scrolling
           '& > *': {
             flexShrink: 0
           }

@@ -19,12 +19,11 @@ const Board = () => {
   const { player, players, socket } = useContext(GameContext);
   const [branchOptions, setBranchOptions] = useState(null);
   const [showOwnership, setShowOwnership] = useState(() => {
-    // Load the saved state from localStorage or default to false
+
     const saved = localStorage.getItem('showOwnershipView');
     return saved === 'true';
   });
 
-  // Listen for ownership view toggle event
   useEffect(() => {
     const handleOwnershipToggle = (event) => {
       setShowOwnership(event.detail.show);
@@ -36,15 +35,12 @@ const Board = () => {
     };
   }, []);
 
-  // Get all property tiles
   const propertyTiles = tiles.filter(tile => tile.type === 'property');
 
-  // Function to determine if a tile is owned by the current player
   const isOwnedByCurrentPlayer = (tile) => {
     return player?.properties?.includes(tile.id);
   };
 
-  // Function to determine if a tile is owned by any player
   const getTileOwner = (tile) => {
     return players.find(p => p.properties?.includes(tile.id));
   };
@@ -128,12 +124,12 @@ const Board = () => {
         {/* Ownership indicators */}
         {showOwnership && propertyTiles.map((tile) => {
           const owner = getTileOwner(tile);
-          let fillColor = 'rgba(255, 255, 255, 0.6)'; // Default: unowned (white with 0.7 opacity)
+          let fillColor = 'rgba(255, 255, 255, 0.6)'; 
           
           if (owner) {
             fillColor = owner.socketId === player?.socketId 
-              ? 'rgba(0, 255, 0, 0.6)' // Owned by current player (green with 0.7 opacity)
-              : 'rgba(255, 0, 0, 0.6)'; // Owned by other player (red with 0.7 opacity)
+              ? 'rgba(0, 255, 0, 0.6)' 
+              : 'rgba(255, 0, 0, 0.6)'; 
           }
           
           return (
@@ -141,7 +137,7 @@ const Board = () => {
               key={`ownership-${tile.id}`}
               style={{
                 position: 'absolute',
-                left: `${tile.position.x - 60}px`, // Center the 90px square on the tile
+                left: `${tile.position.x - 60}px`, 
                 top: `${tile.position.y - 60}px`,
                 width: '120px',
                 height: '120px',
@@ -150,7 +146,7 @@ const Board = () => {
                 borderRadius: '8px',
                 zIndex: 15, 
                 pointerEvents: 'none',
-                boxShadow: '0 0 15px rgba(0,0,0,0.3)' // Add subtle shadow for better visibility
+                boxShadow: '0 0 15px rgba(0,0,0,0.3)' 
               }}
             />
           );
@@ -248,8 +244,9 @@ const Board = () => {
               console.log(`[Board] Missing player at index ${i}`);
               return null;
             }
+            const isPiece5 = p.piece === 'piece5.png';
             const imgSrc = pieceImages[p.piece];
-            if (!imgSrc) {
+            if (!imgSrc && !isPiece5) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
               return null;
             }
@@ -270,6 +267,35 @@ const Board = () => {
               offsetX = Math.cos(angle) * radius;
               offsetY = Math.sin(angle) * radius;
             }
+            
+            if (isPiece5) {
+              return (
+                <div 
+                  key={p.socketId}
+                  title={p.name}
+                  style={{
+                    position: 'absolute',
+                    top: y + offsetY,
+                    left: x + offsetX,
+                    transform: 'translate(-50%, -50%)',
+                    transition: 'top 0.3s, left 0.3s',
+                    zIndex: 10,
+                    width: '100px',
+                    height: '100px',
+                    pointerEvents: 'none'
+                  }}
+                >
+                  <div class="tenor-gif-embed" 
+                    data-postid="17102957129566763720" 
+                    data-share-method="host" 
+                    data-aspect-ratio="0.987952" 
+                    data-width="100%">
+                  </div>
+                  <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+                </div>
+              );
+            }
+            
             return (
               <img
                 key={p.socketId}

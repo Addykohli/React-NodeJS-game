@@ -185,7 +185,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
       )}
 
       {(() => {
-        // Debug logging for button visibility
         const showButton = done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled;
         console.log('=== Done Button Debug ===');
         console.log('done:', done);
