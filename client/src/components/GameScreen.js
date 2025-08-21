@@ -1274,32 +1274,95 @@ export default function GameScreen() {
                       </button>
                     </div>
 
-                    {/* Status Section */}
+                    {/* net worth Section */}
                     <div style={{
                       marginTop: '20px',
-                      padding: '20px',
+                      padding: '15px',
                       backgroundColor: 'rgba(0, 0, 0, 0.33)',
                       borderRadius: '8px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h4>Current Status</h4>
-                      <div style={{ 
-                        marginTop: '10px',
-                        fontSize: '1.2em'
-                      }}>
-                        <div style={{ marginBottom: '5px' }}>Money: ${player?.money || 0}</div>
-                        <div> Loan: ${player?.loan || 0}</div>
+                      <h4>Player Net Worth</h4>
+                      <div style={{ marginTop: '10px' }}>
+                        {players
+                          .map(p => {
+                            // Calculate property value
+                            const propertyValue = p.properties?.reduce((total, propId) => {
+                              const prop = properties.find(pr => pr.id === propId);
+                              return total + (prop?.cost || 0);
+                            }, 0) || 0;
+
+                            // Calculate loan amounts
+                            const loanEarnings = activeLoans
+                              .filter(loan => loan.lenderId === p.socketId)
+                              .reduce((total, loan) => total + loan.returnAmount, 0);
+                            
+                            const loanDebts = activeLoans
+                              .filter(loan => loan.borrowerId === p.socketId)
+                              .reduce((total, loan) => total + loan.returnAmount, 0);
+
+                            // Calculate total net worth
+                            const netWorth = 
+                              (p.money || 0) - 
+                              (p.loan || 0) + 
+                              propertyValue + 
+                              loanEarnings - 
+                              loanDebts;
+
+                            return {
+                              ...p,
+                              netWorth,
+                              propertyValue,
+                              loanEarnings,
+                              loanDebts
+                            };
+                          })
+                          .sort((a, b) => b.netWorth - a.netWorth)
+                          .map((player, index) => (
+                            <div key={player.socketId} style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '8px 12px',
+                              backgroundColor: player.socketId === socket?.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                              borderRadius: '4px',
+                              marginBottom: '5px',
+                              borderLeft: player.socketId === socket?.id ? '3px solid #4CAF50' : '3px solid transparent'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  backgroundColor: player.color || '#666',
+                                  color: 'white',
+                                  marginRight: '10px',
+                                  fontSize: '0.8em',
+                                  fontWeight: 'bold'
+                                }}>
+                                  {index + 1}
+                                </span>
+                                <span style={{
+                                  fontWeight: player.socketId === socket?.id ? 'bold' : 'normal',
+                                  color: player.socketId === socket?.id ? '#4CAF50' : 'white'
+                                }}>
+                                  {player.name}
+                                </span>
+                              </div>
+                              <div style={{
+                                fontWeight: 'bold',
+                                fontSize: '1.1em',
+                                color: player.netWorth >= 0 ? '#4CAF50' : '#f44336'
+                              }}>
+                                ${player.netWorth.toLocaleString()}
+                              </div>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                    {error && (
-                      <div style={{
-                        color: '#ff6b6b',
-                        marginTop: '10px',
-                        textAlign: 'center'
-                      }}>
-                        {error}
-                      </div>
-                    )}
                   </div>
                 )}
                 {panelId === 'chat' && (
