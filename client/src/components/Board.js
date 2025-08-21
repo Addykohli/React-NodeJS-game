@@ -282,16 +282,29 @@ const Board = () => {
                     zIndex: 10,
                     width: '100px',
                     height: '100px',
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden'
                   }}
                 >
-                  <div class="tenor-gif-embed" 
+                  <div 
+                    className="tenor-gif-embed" 
                     data-postid="17102957129566763720" 
                     data-share-method="host" 
                     data-aspect-ratio="0.987952" 
-                    data-width="100%">
+                    data-width="100%"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                      paddingBottom: '98.8%',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
                   </div>
-                  <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
                 </div>
               );
             }
