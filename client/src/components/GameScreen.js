@@ -1288,7 +1288,7 @@ export default function GameScreen() {
                           .map(p => {
                             // Calculate property value
                             const propertyValue = p.properties?.reduce((total, propId) => {
-                              const prop = properties.find(pr => pr.id === propId);
+                              const prop = tiles.find(pr => pr.id === propId);
                               return total + (prop?.cost || 0);
                             }, 0) || 0;
 
