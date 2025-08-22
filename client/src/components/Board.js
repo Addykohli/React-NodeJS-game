@@ -270,16 +270,33 @@ const Board = () => {
             }
             
             if (isPiece3) {
+              // Get current and previous tile positions
+              const currentTile = tiles.find(t => t.id === p.tileId);
+              const prevTile = tiles.find(t => t.id === p.prevTile);
+              
+              // Calculate rotation based on movement direction
+              let rotation = 0;
+              if (currentTile && prevTile) {
+                const dx = currentTile.position.x - prevTile.position.x;
+                const dy = currentTile.position.y - prevTile.position.y;
+                
+                // Only rotate if there's significant movement (not just a small adjustment)
+                if (Math.abs(dy) > 10) {  // Threshold to prevent jitter
+                  rotation = dy > 0 ? 180 : 0;  // 180 degrees when moving down, 0 when moving up
+                }
+              }
+              
               return (
                 <div 
                   key={p.socketId}
                   title={p.name}
                   style={{
                     position: 'absolute',
-                    top: y + offsetY + 10,
+                    top: y + offsetY + 100,
                     left: x + offsetX,
-                    transform: 'translate(-50%, -50%)',
-                    transition: 'top 0.3s, left 0.3s',
+                    transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                    transition: 'top 0.3s, left 0.3s, transform 0.3s',
+                    transformOrigin: 'center',
                     zIndex: 10,
                     width: '400px',
                     height: '500px',
@@ -299,7 +316,9 @@ const Board = () => {
                       height: '500px',
                       objectFit: 'contain',
                       pointerEvents: 'none',
-                      transform: 'translateY(-20%)'
+                      transform: 'translateY(-20%)',
+                      transition: 'transform 0.3s',
+                      transformOrigin: 'center bottom'  // Rotate around the bottom center
                     }}
                   />
                 </div>
@@ -320,7 +339,7 @@ const Board = () => {
                     transition: 'top 0.3s, left 0.3s',
                     zIndex: 10,
                     width: '150px',
-                    height: '190px',
+                    height: '220px',
                     pointerEvents: 'none',
                     display: 'flex',
                     justifyContent: 'center',
