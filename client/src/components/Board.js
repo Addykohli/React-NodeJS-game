@@ -314,7 +314,7 @@ const Board = () => {
                       height: '100%',
                       objectFit: 'contain',
                       pointerEvents: 'none',
-                      transform: `rotate(${rotation}deg)`,
+                      transform: `rotate(${-rotation}deg)`,
                       transition: 'transform 0.3s',
                       transformOrigin: 'center center'
                     }}
