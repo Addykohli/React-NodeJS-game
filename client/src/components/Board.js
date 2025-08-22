@@ -292,12 +292,12 @@ const Board = () => {
                   title={p.name}
                   style={{
                     position: 'absolute',
-                    top: y + offsetY + 100,
+                    top: y + offsetY,
                     left: x + offsetX,
                     transform: 'translate(-50%, -50%)',
                     zIndex: 10,
                     width: '400px',
-                    height: '500px',
+                    height: '400px',
                     pointerEvents: 'none',
                     display: 'flex',
                     justifyContent: 'center',
@@ -310,17 +310,13 @@ const Board = () => {
                     src="https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" 
                     alt="Player Piece"
                     style={{
-                      width: '400px',
-                      height: '500px',
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'contain',
                       pointerEvents: 'none',
-                      transform: `translateY(-20%) rotate(${-rotation}deg)`,
+                      transform: `rotate(${rotation}deg)`,
                       transition: 'transform 0.3s',
-                      transformOrigin: '50% 75%',
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%) rotate(' + (-rotation) + 'deg)'
+                      transformOrigin: 'center center'
                     }}
                   />
                 </div>
