@@ -279,7 +279,9 @@ const Board = () => {
                 const dy = currentTile.position.y - prevTile.position.y;
                 
                 if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
-                  rotation = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
+                  // Calculate angle in degrees (0 points right, 90 points down)
+                  // We add 90 to make 0 point up, then negate to fix mirroring
+                  rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90);
                   rotation = (rotation + 360) % 360;
                 }
               }
@@ -292,9 +294,7 @@ const Board = () => {
                     position: 'absolute',
                     top: y + offsetY + 100,
                     left: x + offsetX,
-                    transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-                    transition: 'top 0.3s, left 0.3s, transform 0.3s',
-                    transformOrigin: '50% 75%',
+                    transform: 'translate(-50%, -50%)',
                     zIndex: 10,
                     width: '400px',
                     height: '500px',
@@ -314,9 +314,13 @@ const Board = () => {
                       height: '500px',
                       objectFit: 'contain',
                       pointerEvents: 'none',
-                      transform: 'translateY(-20%)',
+                      transform: `translateY(-20%) rotate(${-rotation}deg)`,
                       transition: 'transform 0.3s',
-                      transformOrigin: '50% 75%'
+                      transformOrigin: '50% 75%',
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%) rotate(' + (-rotation) + 'deg)'
                     }}
                   />
                 </div>
