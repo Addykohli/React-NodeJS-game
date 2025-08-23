@@ -246,6 +246,7 @@ const Board = () => {
             }
             const isPiece3 = p.piece === 'piece3.png';
             const isPiece5 = p.piece === 'piece5.png';
+            const isPiece6 = p.piece === 'piece6.png';
             const imgSrc = pieceImages[p.piece];
             if (!imgSrc && !isPiece3 && !isPiece5) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
@@ -269,23 +270,20 @@ const Board = () => {
               offsetY = Math.sin(angle) * radius;
             }
             
-            if (isPiece3) {
-              const currentTile = tiles.find(t => t.id === p.tileId);
-              const prevTile = tiles.find(t => t.id === p.prevTile);
+            let rotation = 0;
+            const currentTile = tiles.find(t => t.id === p.tileId);
+            const prevTile = tiles.find(t => t.id === p.prevTile);
+            
+            if (currentTile && prevTile) {
+              const dx = currentTile.position.x - prevTile.position.x;
+              const dy = currentTile.position.y - prevTile.position.y;
               
-              let rotation = 0;
-              if (currentTile && prevTile) {
-                const dx = currentTile.position.x - prevTile.position.x;
-                const dy = currentTile.position.y - prevTile.position.y;
-                
-                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
-                  // Calculate angle in degrees (0 points right, 90 points down)
-                  // We add 90 to make 0 point up, then negate to fix mirroring
-                  rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90);
-                  rotation = (rotation + 360) % 360;
-                }
+              if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
+                rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90);
+                rotation = (rotation + 360) % 360;
               }
-              
+            }
+            if (isPiece3 || isPiece6) {
               return (
                 <div 
                   key={p.socketId}
@@ -307,7 +305,7 @@ const Board = () => {
                   }}
                 >
                   <img 
-                    src="https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" 
+                    src={isPiece3 ? "https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" : pieceImages[p.piece]} 
                     alt="Player Piece"
                     style={{
                       width: '100%',
@@ -315,16 +313,13 @@ const Board = () => {
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: `rotate(${-rotation}deg)`,
-                      transition: 'transform 0.3s',
+                      transition: 'transform 0.05s',
                       transformOrigin: 'center center'
                     }}
                   />
                 </div>
               );
-            }
-
-            
-            if (isPiece5) {
+            } else if (isPiece5) {
               return (
                 <div 
                   key={p.socketId}

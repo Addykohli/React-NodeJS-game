@@ -15,14 +15,14 @@ function setupAssociations() {
     as: 'lenderLoans'
   });
 
-  // A Loan belongs to a borrower (Player)
+  // A Loan belongs to a borrower 
   Loan.belongsTo(Player, {
     foreignKey: 'borrowerId',
     as: 'borrower',
     onDelete: 'CASCADE'
   });
 
-  // A Loan belongs to a lender (Player)
+  // A Loan belongs to a lender 
   Loan.belongsTo(Player, {
     foreignKey: 'lenderId',
     as: 'lender',
