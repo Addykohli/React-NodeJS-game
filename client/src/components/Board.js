@@ -370,7 +370,7 @@ const Board = () => {
                 const dy = currentTile.position.y - prevTile.position.y;
                 
                 if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
-                  rotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+                  rotation = -Math.atan2(dy, dx) * (180 / Math.PI) + 90;
                   rotation = (rotation + 360) % 360;
                 }
               }
@@ -403,7 +403,7 @@ const Board = () => {
                       height: '100%',
                       objectFit: 'contain',
                       pointerEvents: 'none',
-                      transform: `rotate(${rotation}deg)`,
+                      transform: `scaleX(-1) rotate(${rotation}deg)`,
                       transition: 'transform 0.01s',
                       transformOrigin: 'center center'
                     }}
