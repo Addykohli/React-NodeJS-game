@@ -370,7 +370,7 @@ const Board = () => {
                 const dy = currentTile.position.y - prevTile.position.y;
                 
                 if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
-                  rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90) + 180;
+                  rotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
                   rotation = (rotation + 360) % 360;
                 }
               }
