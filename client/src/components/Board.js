@@ -248,7 +248,7 @@ const Board = () => {
             const isPiece5 = p.piece === 'piece5.png';
             const isPiece6 = p.piece === 'piece6.png';
             const imgSrc = pieceImages[p.piece];
-            if (!imgSrc && !isPiece3 && !isPiece5) {
+            if (!imgSrc && !isPiece3 && !isPiece5 && !isPiece6) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
               return null;
             }
@@ -270,20 +270,21 @@ const Board = () => {
               offsetY = Math.sin(angle) * radius;
             }
             
-            let rotation = 0;
-            const currentTile = tiles.find(t => t.id === p.tileId);
-            const prevTile = tiles.find(t => t.id === p.prevTile);
-            
-            if (currentTile && prevTile) {
-              const dx = currentTile.position.x - prevTile.position.x;
-              const dy = currentTile.position.y - prevTile.position.y;
+            if (isPiece3) {
+              const currentTile = tiles.find(t => t.id === p.tileId);
+              const prevTile = tiles.find(t => t.id === p.prevTile);
               
-              if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
-                rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90);
-                rotation = (rotation + 360) % 360;
+              let rotation = 0;
+              if (currentTile && prevTile) {
+                const dx = currentTile.position.x - prevTile.position.x;
+                const dy = currentTile.position.y - prevTile.position.y;
+                
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
+                  rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90);
+                  rotation = (rotation + 360) % 360;
+                }
               }
-            }
-            if (isPiece3 || isPiece6) {
+              
               return (
                 <div 
                   key={p.socketId}
@@ -305,7 +306,7 @@ const Board = () => {
                   }}
                 >
                   <img 
-                    src={isPiece3 ? "https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" : pieceImages[p.piece]} 
+                    src="https://media.tenor.com/HxNZ_ZyJsRkAAAAm/mini-pekka-camiando.webp" 
                     alt="Player Piece"
                     style={{
                       width: '100%',
@@ -313,13 +314,16 @@ const Board = () => {
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: `rotate(${-rotation}deg)`,
-                      transition: 'transform 0.05s',
+                      transition: 'transform 0.01s',
                       transformOrigin: 'center center'
                     }}
                   />
                 </div>
               );
-            } else if (isPiece5) {
+            }
+
+            
+            if (isPiece5) {
               return (
                 <div 
                   key={p.socketId}
@@ -350,6 +354,58 @@ const Board = () => {
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: 'translateY(-20%)' 
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            if (isPiece6) {
+              const currentTile = tiles.find(t => t.id === p.tileId);
+              const prevTile = tiles.find(t => t.id === p.prevTile);
+              
+              let rotation = 180;
+              if (currentTile && prevTile) {
+                const dx = currentTile.position.x - prevTile.position.x;
+                const dy = currentTile.position.y - prevTile.position.y;
+                
+                if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {  
+                  rotation = -(Math.atan2(dy, dx) * (180 / Math.PI) + 90) + 180;
+                  rotation = (rotation + 360) % 360;
+                }
+              }
+              
+              return (
+                <div 
+                  key={p.socketId}
+                  title={p.name}
+                  style={{
+                    position: 'absolute',
+                    top: y + offsetY,
+                    left: x + offsetX,
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                    background: 'transparent'
+                  }}
+                >
+                  <img 
+                    src={imgSrc} 
+                    alt={p.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      transform: `rotate(${rotation}deg)`,
+                      transition: 'transform 0.01s',
+                      transformOrigin: 'center center'
                     }}
                   />
                 </div>
