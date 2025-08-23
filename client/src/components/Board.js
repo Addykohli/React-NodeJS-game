@@ -314,6 +314,7 @@ const Board = () => {
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: `rotate(${-rotation}deg)`,
+                      transition: 'transform 0.002s',
                       transformOrigin: 'center center'
                     }}
                   />
@@ -403,6 +404,7 @@ const Board = () => {
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: `scaleX(-1) rotate(${rotation}deg)`,
+                      transition: 'transform 0.002s',
                       transformOrigin: 'center center'
                     }}
                   />
