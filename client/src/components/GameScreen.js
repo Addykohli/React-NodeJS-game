@@ -354,6 +354,11 @@ export default function GameScreen() {
   }, [socket]);
 
   const panelConfigs = {
+    master: {
+      color: '#9C27B0',
+      title: 'Master Terminal',
+      icon: '⚙️'
+    },
     info: {
       color: '#4CAF50',
       title: 'Game Events',
@@ -903,8 +908,18 @@ export default function GameScreen() {
           </div>
 
           {/* Active Panel Content */}
-          {activeSidePanel && Object.entries(panelConfigs)
-            .filter(([panelId]) => panelId === activeSidePanel)
+          {activeSidePanel === 'master' ? (
+            <div style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: '20px',
+              overflowY: 'auto',
+              color: 'white'
+            }}>
+              <MasterTerminal onClose={() => setActiveSidePanel(null)} />
+            </div>
+          ) : activeSidePanel && Object.entries(panelConfigs)
+            .filter(([panelId]) => panelId === activeSidePanel && panelId !== 'master')
             .map(([panelId, config]) => (
               <div
                 key={panelId}
