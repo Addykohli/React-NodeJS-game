@@ -269,6 +269,8 @@ const MasterTerminal = ({ onClose }) => {
   );
 };
 
+export default MasterTerminal;
+
 const styles = {
   overlay: {
     position: 'fixed',
@@ -449,5 +451,3 @@ const styles = {
     '100%': { opacity: 0.6 }
   }
 };
-
-export default MasterTerminal;
