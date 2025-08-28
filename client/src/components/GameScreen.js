@@ -354,11 +354,6 @@ export default function GameScreen() {
   }, [socket]);
 
   const panelConfigs = {
-    master: {
-      color: '#9C27B0',
-      title: 'Master Terminal',
-      icon: '⚙️'
-    },
     info: {
       color: '#4CAF50',
       title: 'Game Events',
@@ -822,6 +817,11 @@ export default function GameScreen() {
   };
 
   const [showMasterTerminal, setShowMasterTerminal] = useState(false);
+  
+  // Toggle Master Terminal
+  const toggleMasterTerminal = () => {
+    setShowMasterTerminal(prev => !prev);
+  };
 
   return (
     <div style={{
@@ -837,6 +837,56 @@ export default function GameScreen() {
       marginTop: 0,
       paddingTop: 0
     }}>
+      {/* Settings Button */}
+      <button
+        onClick={toggleMasterTerminal}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 2000,
+          background: 'rgba(0, 0, 0, 0.7)',
+          border: '2px solid #fff',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          outline: 'none',
+          transition: 'all 0.3s ease',
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+          e.currentTarget.style.transform = 'rotate(90deg)';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.7)';
+          e.currentTarget.style.transform = 'rotate(0deg)';
+        }}
+      >
+        <svg 
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="#fff" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.4.72.4 1.59 0 2.4v.2c.22.7.22 1.46 0 2.2v.2z"></path>
+        </svg>
+      </button>
+
+      {/* Master Terminal Modal */}
+      {showMasterTerminal && (
+        <MasterTerminal 
+          onClose={toggleMasterTerminal}
+        />
+      )}
       {/* Side Panel Buttons and Panels */}
       {sidePanelVisible && (
         <div style={{
@@ -908,18 +958,8 @@ export default function GameScreen() {
           </div>
 
           {/* Active Panel Content */}
-          {activeSidePanel === 'master' ? (
-            <div style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              padding: '20px',
-              overflowY: 'auto',
-              color: 'white'
-            }}>
-              <MasterTerminal onClose={() => setActiveSidePanel(null)} />
-            </div>
-          ) : activeSidePanel && Object.entries(panelConfigs)
-            .filter(([panelId]) => panelId === activeSidePanel && panelId !== 'master')
+          {activeSidePanel && Object.entries(panelConfigs)
+            .filter(([panelId]) => panelId === activeSidePanel)
             .map(([panelId, config]) => (
               <div
                 key={panelId}
