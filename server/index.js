@@ -123,7 +123,96 @@ async function getPendingLoanRequests(playerId) {
   });
 }
 
-io.on('connection', socket => {
+io.on('connection', (socket) => {
+  // Master Terminal: Handle player updates
+  socket.on('updatePlayer', async ({ playerId, updates }, callback) => {
+    try {
+      const transaction = await sequelize.transaction();
+      
+      // Get the current player state from the game engine
+      const currentPlayer = engine.session.players.find(p => p.socketId === playerId);
+      if (!currentPlayer) {
+        throw new Error('Player not found in current session');
+      }
+
+      // Prepare updates for database
+      const dbUpdates = {};
+      
+      // Handle money update
+      if (updates.money !== undefined) {
+        dbUpdates.money = updates.money;
+        currentPlayer.money = updates.money;
+      }
+      
+      // Handle loan update
+      if (updates.loan !== undefined) {
+        dbUpdates.loan = updates.loan;
+        currentPlayer.loan = updates.loan;
+      }
+      
+      // Handle properties update
+      if (updates.properties !== undefined) {
+        let propertiesArray = [];
+        if (typeof updates.properties === 'string') {
+          // Convert comma-separated string to array of numbers
+          propertiesArray = updates.properties
+            .split(',')
+            .map(id => parseInt(id.trim()))
+            .filter(id => !isNaN(id));
+        } else if (Array.isArray(updates.properties)) {
+          propertiesArray = updates.properties;
+        }
+        
+        dbUpdates.properties = propertiesArray;
+        currentPlayer.properties = propertiesArray;
+      }
+
+      // Update the player in the database
+      await Player.update(dbUpdates, { 
+        where: { socketId: playerId },
+        transaction 
+      });
+
+      // Update the game session
+      if (currentSessionId) {
+        await GameSession.update(
+          { players: engine.session.players },
+          { 
+            where: { id: currentSessionId },
+            transaction 
+          }
+        );
+      }
+
+      await transaction.commit();
+
+      // Broadcast the update to all clients
+      io.emit('playerUpdated', {
+        playerId,
+        updates: dbUpdates
+      });
+
+      // Log the admin action
+      const admin = engine.session.players.find(p => p.socketId === socket.id);
+      const targetPlayer = engine.session.players.find(p => p.socketId === playerId);
+      
+      if (admin && targetPlayer) {
+        const updateMessages = [];
+        if (updates.money !== undefined) updateMessages.push(`money set to $${updates.money}`);
+        if (updates.loan !== undefined) updateMessages.push(`loan set to $${updates.loan}`);
+        if (updates.properties !== undefined) updateMessages.push(`properties updated`);
+        
+        broadcastGameEvent(`[ADMIN] ${admin.name} updated ${targetPlayer.name}'s ${updateMessages.join(', ')}`);
+      }
+
+      if (callback) callback({ success: true });
+    } catch (error) {
+      console.error('Error updating player:', error);
+      if (transaction) await transaction.rollback();
+      if (callback) callback({ success: false, error: error.message });
+    }
+  });
+
   console.log('🔌 Connected:', socket.id);
   
   socket.emit('gameEventsHistory', gameEvents);
@@ -792,7 +881,7 @@ io.on('connection', socket => {
       const i   = Math.floor(Math.random() * arr.length);
       if (i > 0) arr.unshift(arr.splice(i, 1)[0]);
       lobbyPlayers = arr;
-      engine.session.players            = arr;
+      engine.session.players = arr;
       engine.session.currentPlayerIndex = 0;
 
       try {

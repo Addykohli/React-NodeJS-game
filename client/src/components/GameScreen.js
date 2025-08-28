@@ -1,8 +1,9 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import bgImage from '../assets/bg.png';
 import startIcon from '../assets/start.png';
 import hotelIcon from '../assets/hotel.png';
 import casinoIcon from '../assets/casino.png';
+import MasterTerminal from './MasterTerminal';
 import roadIcon from '../assets/road.png';
 import Board from './Board';
 import DiceRoller from './DiceRoller';
@@ -815,6 +816,8 @@ export default function GameScreen() {
     socket.emit('buyProperty');
   };
 
+  const [showMasterTerminal, setShowMasterTerminal] = useState(false);
+
   return (
     <div style={{
       display: 'flex',
@@ -1506,32 +1509,53 @@ export default function GameScreen() {
             display: 'block',
           }}
         >
-          <button
-            onClick={() => {
-              if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
-                socket.emit('quitGame');
-                handleQuit();
-              }
-            }}
-            disabled={isMyTurn || isRpsActive}
-            style={{
-              padding: '10px 20px',
-              fontSize: '1.2em',
-              backgroundColor: isMyTurn ? '#666666' : '#ff4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: isMyTurn ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.3s',
-              opacity: isMyTurn ? 0.7 : 1,
-              width: '100%',
-              maxWidth: '180px',
-            }}
-            onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
-            onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
-          >
-            Quit Game
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+            <button
+              onClick={() => setShowMasterTerminal(true)}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1.2em',
+                backgroundColor: '#4a76a8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s',
+                width: '100%',
+                maxWidth: '180px',
+              }}
+              onMouseOver={e => e.target.style.backgroundColor = '#5a86b8'}
+              onMouseOut={e => e.target.style.backgroundColor = '#4a76a8'}
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm('Are you sure you want to quit the game? This action cannot be undone.')) {
+                  socket.emit('quitGame');
+                  handleQuit();
+                }
+              }}
+              disabled={isMyTurn || isRpsActive}
+              style={{
+                padding: '10px 20px',
+                fontSize: '1.2em',
+                backgroundColor: isMyTurn ? '#666666' : '#ff4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isMyTurn ? 'not-allowed' : 'pointer',
+                transition: 'background-color 0.3s',
+                opacity: isMyTurn ? 0.7 : 1,
+                width: '100%',
+                maxWidth: '180px',
+              }}
+              onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
+              onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
+            >
+              Quit Game
+            </button>
+          </div>
         </div>
 
         {/* Center Sections Container */}
