@@ -4,7 +4,6 @@ import startIcon from '../assets/start.png';
 import hotelIcon from '../assets/hotel.png';
 import casinoIcon from '../assets/casino.png';
 import roadIcon from '../assets/road.png';
-import SettingsIcon from '@mui/icons-material/Settings';
 import Board from './Board';
 import DiceRoller from './DiceRoller';
 import PlayerStats from './PlayerStats';
@@ -2098,8 +2097,7 @@ export default function GameScreen() {
             onMouseOver={e => e.target.style.backgroundColor = '#1976D2'}
             onMouseOut={e => e.target.style.backgroundColor = '#2196F3'}
           >
-            <SettingsIcon style={{ fontSize: '1.2em' }} />
-            Admin
+            ⚙️ Admin
           </button>
         </div>
 
