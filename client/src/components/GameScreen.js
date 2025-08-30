@@ -854,6 +854,15 @@ export default function GameScreen() {
       marginTop: 0,
       paddingTop: 0
     }}>
+      {/* Master Terminal */}
+      {showMasterTerminal && (
+        <MasterTerminal
+          players={players}
+          onClose={() => setShowMasterTerminal(false)}
+          socket={socket}
+        />
+      )}
+
       {/* Side Panel Buttons and Panels */}
       {sidePanelVisible && (
         <div style={{
