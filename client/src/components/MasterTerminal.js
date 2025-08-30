@@ -21,15 +21,23 @@ const MasterTerminal = ({ players, onClose, onUpdatePlayer, socket }) => {
       [playerId]: {
         ...prev[playerId],
         [field]: field === 'properties' 
-          ? value.split(',').map(p => p.trim()).filter(Boolean)
+          ? value  // Store the raw string value, we'll split it only on save
           : parseInt(value, 10) || 0
       }
     }));
   };
 
   const handleSaveChanges = (playerId) => {
-    const changes = edits[playerId];
+    const changes = { ...edits[playerId] };
     if (changes) {
+      // Process properties field if it exists
+      if (changes.properties !== undefined) {
+        changes.properties = changes.properties
+          .split(',')
+          .map(p => p.trim())
+          .filter(Boolean);
+      }
+      
       socket.emit('updatePlayerStats', {
         playerId,
         updates: changes
@@ -107,7 +115,7 @@ const MasterTerminal = ({ players, onClose, onUpdatePlayer, socket }) => {
                 <label>Properties (comma-separated):</label>
                 <input
                   type="text"
-                  value={edits[player.socketId]?.properties?.join(', ') ?? (player.properties?.join(', ') || '')}
+                  value={edits[player.socketId]?.properties ?? (player.properties?.join(', ') || '')}
                   onChange={(e) => handleInputChange(player.socketId, 'properties', e.target.value)}
                   style={styles.input}
                 />

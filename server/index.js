@@ -1325,11 +1325,13 @@ io.on('connection', socket => {
     }
 
     if (finalTile?.type === 'property') {
-      const isOwnedByCurrentPlayer = currentPlayer.properties.includes(finalTile.id);
+      // Ensure consistent types by converting both to string for comparison
+      const currentPlayerProperties = (currentPlayer.properties || []).map(String);
+      const isOwnedByCurrentPlayer = currentPlayerProperties.includes(String(finalTile.id));
       
       const propertyOwner = engine.session.players.find(p => 
         p.socketId !== socket.id && 
-        p.properties.includes(finalTile.id)
+        (p.properties || []).map(String).includes(String(finalTile.id))
       );
 
       console.log('[DEBUG] Property ownership check:', {
