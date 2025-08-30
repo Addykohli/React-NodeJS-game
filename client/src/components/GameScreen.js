@@ -493,10 +493,6 @@ export default function GameScreen() {
     };
 
     socket.on('purchaseSuccess', handlePurchaseSuccess);
-    
-    return () => {
-      socket.off('purchaseSuccess', handlePurchaseSuccess);
-    };
 
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
