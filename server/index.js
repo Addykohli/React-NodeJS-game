@@ -120,12 +120,34 @@ io.on('connection', (socket) => {
         loan: parseInt(updates.loan) || player.loan
       };
 
+      // Convert properties to array if it's not already
+      const propertiesUpdate = Array.isArray(updates.properties) 
+        ? updates.properties 
+        : [];
+      
+      console.log('=== Before Update ===');
+      console.log('Game Engine Player:', {
+        id: player.socketId,
+        name: player.name,
+        properties: player.properties || []
+      });
+      
+      console.log('DB Player:', {
+        id: player.socketId,
+        name: player.name,
+        properties: player.properties || []
+      });
+      
+      console.log('Updating with properties:', {
+        newProperties: propertiesUpdate
+      });
+      
       // Update in database
       const [updatedCount] = await Player.update(
         {
           money: updatedPlayer.money,
           loan: updatedPlayer.loan,
-          properties: Array.isArray(updates.properties) ? updates.properties : (player.properties || [])
+          properties: propertiesUpdate
         },
         { 
           where: { socketId: playerId },
@@ -136,6 +158,21 @@ io.on('connection', (socket) => {
       if (updatedCount === 0) {
         throw new Error('Failed to update player in database');
       }
+      
+      // Fetch the updated player from DB to verify
+      const updatedDbPlayer = await Player.findOne({ where: { socketId: playerId } });
+      console.log('=== After Update ===');
+      console.log('Game Engine Player:', {
+        id: player.socketId,
+        name: player.name,
+        properties: player.properties || []
+      });
+      
+      console.log('DB Player:', {
+        id: updatedDbPlayer.socketId,
+        name: updatedDbPlayer.name,
+        properties: updatedDbPlayer.properties || []
+      });
 
       // Update in game engine
       engine.session.players = engine.session.players.map(p => {
@@ -143,12 +180,9 @@ io.on('connection', (socket) => {
           const playerUpdate = {
             ...p,
             money: updatedPlayer.money,
-            loan: updatedPlayer.loan
+            loan: updatedPlayer.loan,
+            properties: [...propertiesUpdate] // Ensure properties is always an array
           };
-          
-          if (Array.isArray(updates.properties)) {
-            playerUpdate.properties = [...updates.properties];
-          }
           
           return playerUpdate;
         }

@@ -36,13 +36,36 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
   // Listen for player updates from the server
   useEffect(() => {
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-      setPlayers(prevPlayers => 
-        prevPlayers.map(player => 
+      console.log('=== Client: Received Player Update ===');
+      console.log('Player ID:', playerId);
+      console.log('Updates:', {
+        ...updates,
+        propertiesType: Array.isArray(updates.properties) ? 'array' : typeof updates.properties,
+        propertiesLength: Array.isArray(updates.properties) ? updates.properties.length : 'N/A'
+      });
+      
+      setPlayers(prevPlayers => {
+        const updatedPlayers = prevPlayers.map(player => 
           player.socketId === playerId 
             ? { ...player, ...updates }
             : player
-        )
-      );
+        );
+        
+        // Log the updated player from context
+        const updatedPlayer = updatedPlayers.find(p => p.socketId === playerId);
+        if (updatedPlayer) {
+          console.log('=== Client: Updated Player in Context ===');
+          console.log('Player:', {
+            id: updatedPlayer.socketId,
+            name: updatedPlayer.name,
+            properties: updatedPlayer.properties,
+            propertiesType: Array.isArray(updatedPlayer.properties) ? 'array' : typeof updatedPlayer.properties,
+            propertiesLength: Array.isArray(updatedPlayer.properties) ? updatedPlayer.properties.length : 'N/A'
+          });
+        }
+        
+        return updatedPlayers;
+      });
     };
 
     socket.on('playerStatsUpdated', handlePlayerStatsUpdated);
@@ -56,10 +79,16 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     if (changes) {
       // Process properties field if it exists
       if (changes.properties !== undefined) {
-        changes.properties = changes.properties
-          .split(',')
-          .map(p => p.trim())
-          .filter(Boolean);
+        // If properties is a string, split it into an array
+        // If it's empty or falsy, set to empty array
+        changes.properties = typeof changes.properties === 'string' 
+          ? changes.properties
+              .split(',')
+              .map(p => p.trim())
+              .filter(Boolean)
+          : Array.isArray(changes.properties) 
+            ? changes.properties 
+            : [];
       }
       
       socket.emit('updatePlayerStats', {
