@@ -13,7 +13,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    if (password === 'master terminal') {
+    if (password === 'master termianl') {
       setAuthenticated(true);
     } else {
       alert('Incorrect password!');
@@ -35,31 +35,19 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
 
   // Listen for player updates from the server
   useEffect(() => {
-    if (!socket) return;
-
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-      // Ensure properties is always an array
-      const normalizedUpdates = {
-        ...updates,
-        properties: Array.isArray(updates.properties) ? updates.properties : []
-      };
-
       console.log('=== Client: Received Player Update ===');
       console.log('Player ID:', playerId);
       console.log('Updates:', {
-        ...normalizedUpdates,
-        propertiesType: 'array',
-        propertiesLength: normalizedUpdates.properties.length
+        ...updates,
+        propertiesType: Array.isArray(updates.properties) ? 'array' : typeof updates.properties,
+        propertiesLength: Array.isArray(updates.properties) ? updates.properties.length : 'N/A'
       });
       
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(player => 
           player.socketId === playerId 
-            ? { 
-                ...player, 
-                ...normalizedUpdates,
-                properties: normalizedUpdates.properties || []
-              }
+            ? { ...player, ...updates }
             : player
         );
         
@@ -71,8 +59,8 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
             id: updatedPlayer.socketId,
             name: updatedPlayer.name,
             properties: updatedPlayer.properties,
-            propertiesType: 'array',
-            propertiesLength: updatedPlayer.properties.length
+            propertiesType: Array.isArray(updatedPlayer.properties) ? 'array' : typeof updatedPlayer.properties,
+            propertiesLength: Array.isArray(updatedPlayer.properties) ? updatedPlayer.properties.length : 'N/A'
           });
         }
         

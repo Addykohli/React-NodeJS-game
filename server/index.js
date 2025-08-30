@@ -216,7 +216,8 @@ io.on('connection', (socket) => {
         playerId,
         updates: {
           money: updatedPlayer.money,
-          loan: updatedPlayer.loan
+          loan: updatedPlayer.loan,
+          properties: updatedPlayer.properties
         }
       });
 

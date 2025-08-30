@@ -319,20 +319,10 @@ export default function GameScreen() {
 
     // Handle player stats updates from master terminal
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-      // Ensure properties is always an array
-      const normalizedUpdates = {
-        ...updates,
-        properties: Array.isArray(updates.properties) ? updates.properties : []
-      };
-
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === playerId 
-            ? { 
-                ...p, 
-                ...normalizedUpdates,
-                properties: normalizedUpdates.properties || []
-              }
+            ? { ...p, ...updates }
             : p
         )
       );
@@ -340,8 +330,7 @@ export default function GameScreen() {
       if (player?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
-          ...normalizedUpdates,
-          properties: normalizedUpdates.properties || []
+          ...updates
         }));
       }
     };
