@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
-const MasterTerminal = ({ players, onClose, onUpdatePlayer, socket }) => {
+const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
+  const [players, setPlayers] = useState(initialPlayers);
+  
+  // Sync with parent's players prop
+  useEffect(() => {
+    setPlayers(initialPlayers);
+  }, [initialPlayers]);
   const [password, setPassword] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [edits, setEdits] = useState({});
@@ -26,6 +32,24 @@ const MasterTerminal = ({ players, onClose, onUpdatePlayer, socket }) => {
       }
     }));
   };
+
+  // Listen for player updates from the server
+  useEffect(() => {
+    const handlePlayerStatsUpdated = ({ playerId, updates }) => {
+      setPlayers(prevPlayers => 
+        prevPlayers.map(player => 
+          player.socketId === playerId 
+            ? { ...player, ...updates }
+            : player
+        )
+      );
+    };
+
+    socket.on('playerStatsUpdated', handlePlayerStatsUpdated);
+    return () => {
+      socket.off('playerStatsUpdated', handlePlayerStatsUpdated);
+    };
+  }, [socket]);
 
   const handleSaveChanges = (playerId) => {
     const changes = { ...edits[playerId] };
