@@ -117,7 +117,8 @@ io.on('connection', (socket) => {
         ...updates,
         // Ensure money and loan are numbers
         money: parseInt(updates.money) || player.money,
-        loan: parseInt(updates.loan) || player.loan
+        loan: parseInt(updates.loan) || player.loan,
+
       };
 
       // Convert properties to array if it's not already
@@ -217,10 +218,16 @@ io.on('connection', (socket) => {
         updates: {
           money: updatedPlayer.money,
           loan: updatedPlayer.loan,
-          properties: updatedPlayer.properties
         }
       });
 
+      // purchase success emit
+      io.emit('purchaseSuccess', {
+        socketId: socket.id,
+        money: updatedPlayer.money,
+        properties: propertiesUpdate
+      });
+      
       // Log the game event
       const eventMessage = `[System] Updated stats for ${playerName}`;
       gameEvents.push({
