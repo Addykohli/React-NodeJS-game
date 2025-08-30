@@ -86,12 +86,14 @@ let activeTradeOffers = [];
 // Handle player stats update from master terminal
 io.on('connection', (socket) => {
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
-      
       // Get the current game session
       const currentSession = await GameSession.findOne({
-        where: { status: 'in_progress' },
+        where: {
+          hasStarted: true,
+          isFinished: false
+        },
         transaction
       });
 
@@ -148,23 +150,33 @@ io.on('connection', (socket) => {
 
       await transaction.commit();
 
+      // Log the action
+      const playerName = engine.session.players.find(p => p.socketId === playerId)?.name || 'Unknown';
+      
       // Broadcast the update to all clients
-      io.emit('playerStatsUpdated', {
+      io.emit('playerStatsUpdated', { 
         playerId,
         updates: {
           money: updatedPlayer.money,
-          loan: updatedPlayer.loan,
-          properties: updates.properties
+          loan: updatedPlayer.loan
         }
       });
 
-      // Log the action
-      const playerName = engine.session.players.find(p => p.socketId === playerId)?.name || 'Unknown';
-      broadcastGameEvent(`[System] Updated stats for ${playerName}`);
-      
+      // Log the game event
+      const eventMessage = `[System] Updated stats for ${playerName}`;
+      gameEvents.push({
+        message: eventMessage,
+        timestamp: new Date().toISOString()
+      });
+      io.emit('gameEvent', {
+        message: eventMessage,
+        timestamp: new Date().toISOString()
+      });
+
     } catch (error) {
       console.error('Error updating player stats:', error);
-      if (transaction) await transaction.rollback();
+      await transaction.rollback();
+      socket.emit('error', { message: 'Failed to update player stats: ' + error.message });
     }
   });
 });

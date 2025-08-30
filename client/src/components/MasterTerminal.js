@@ -7,7 +7,7 @@ const MasterTerminal = ({ players, onClose, onUpdatePlayer, socket }) => {
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    if (password === 'master termianl') { // Note: Typo in password as per requirement
+    if (password === 'master termianl') {
       setAuthenticated(true);
     } else {
       alert('Incorrect password!');
