@@ -78,35 +78,6 @@ export function GameProvider({ children }) {
   }, []); 
 
   
-  // Handle player updates from master terminal
-  useEffect(() => {
-    if (!socket) return;
-
-    const handlePlayerUpdated = ({ playerId, updates }) => {
-      console.log('Player updated:', playerId, updates);
-      
-      // Update players list if needed
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
-          p.socketId === playerId ? { ...p, ...updates } : p
-        )
-      );
-      
-      // Update current player if it's the local player
-      if (player && player.socketId === playerId) {
-        setPlayer(prev => ({
-          ...prev,
-          ...updates
-        }));
-      }
-    };
-
-    socket.on('playerUpdated', handlePlayerUpdated);
-    return () => {
-      socket.off('playerUpdated', handlePlayerUpdated);
-    };
-  }, [player]);
-
   useEffect(() => {
     if (!socket) {
       console.log('GameContext: Socket not available');

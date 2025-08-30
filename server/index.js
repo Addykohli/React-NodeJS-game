@@ -123,96 +123,7 @@ async function getPendingLoanRequests(playerId) {
   });
 }
 
-io.on('connection', (socket) => {
-  // Master Terminal: Handle player updates
-  socket.on('updatePlayer', async ({ playerId, updates }, callback) => {
-    try {
-      const transaction = await sequelize.transaction();
-      
-      // Get the current player state from the game engine
-      const currentPlayer = engine.session.players.find(p => p.socketId === playerId);
-      if (!currentPlayer) {
-        throw new Error('Player not found in current session');
-      }
-
-      // Prepare updates for database
-      const dbUpdates = {};
-      
-      // Handle money update
-      if (updates.money !== undefined) {
-        dbUpdates.money = updates.money;
-        currentPlayer.money = updates.money;
-      }
-      
-      // Handle loan update
-      if (updates.loan !== undefined) {
-        dbUpdates.loan = updates.loan;
-        currentPlayer.loan = updates.loan;
-      }
-      
-      // Handle properties update
-      if (updates.properties !== undefined) {
-        let propertiesArray = [];
-        if (typeof updates.properties === 'string') {
-          // Convert comma-separated string to array of numbers
-          propertiesArray = updates.properties
-            .split(',')
-            .map(id => parseInt(id.trim()))
-            .filter(id => !isNaN(id));
-        } else if (Array.isArray(updates.properties)) {
-          propertiesArray = updates.properties;
-        }
-        
-        dbUpdates.properties = propertiesArray;
-        currentPlayer.properties = propertiesArray;
-      }
-
-      // Update the player in the database
-      await Player.update(dbUpdates, { 
-        where: { socketId: playerId },
-        transaction 
-      });
-
-      // Update the game session
-      if (currentSessionId) {
-        await GameSession.update(
-          { players: engine.session.players },
-          { 
-            where: { id: currentSessionId },
-            transaction 
-          }
-        );
-      }
-
-      await transaction.commit();
-
-      // Broadcast the update to all clients
-      io.emit('playerUpdated', {
-        playerId,
-        updates: dbUpdates
-      });
-
-      // Log the admin action
-      const admin = engine.session.players.find(p => p.socketId === socket.id);
-      const targetPlayer = engine.session.players.find(p => p.socketId === playerId);
-      
-      if (admin && targetPlayer) {
-        const updateMessages = [];
-        if (updates.money !== undefined) updateMessages.push(`money set to $${updates.money}`);
-        if (updates.loan !== undefined) updateMessages.push(`loan set to $${updates.loan}`);
-        if (updates.properties !== undefined) updateMessages.push(`properties updated`);
-        
-        broadcastGameEvent(`[ADMIN] ${admin.name} updated ${targetPlayer.name}'s ${updateMessages.join(', ')}`);
-      }
-
-      if (callback) callback({ success: true });
-    } catch (error) {
-      console.error('Error updating player:', error);
-      if (transaction) await transaction.rollback();
-      if (callback) callback({ success: false, error: error.message });
-    }
-  });
-
+io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
   
   socket.emit('gameEventsHistory', gameEvents);
@@ -2856,114 +2767,114 @@ io.on('connection', (socket) => {
         return;
       }
 
+
+      const transaction = await sequelize.transaction();
+
       try {
-        const transaction = await sequelize.transaction();
+        fromPlayer.money -= offer.offer.money;
+        fromPlayer.money += offer.ask.money;
+        toPlayer.money += offer.offer.money;
+        toPlayer.money -= offer.ask.money;
 
-        try {
-          fromPlayer.money -= offer.offer.money;
-          fromPlayer.money += offer.ask.money;
-          toPlayer.money += offer.offer.money;
-          toPlayer.money -= offer.ask.money;
+        fromPlayer.properties = fromPlayer.properties.filter(p => !offer.offer.properties.includes(p));
+        fromPlayer.properties.push(...offer.ask.properties);
+        toPlayer.properties = toPlayer.properties.filter(p => !offer.ask.properties.includes(p));
+        toPlayer.properties.push(...offer.offer.properties);
 
-          fromPlayer.properties = fromPlayer.properties.filter(p => !offer.offer.properties.includes(p));
-          fromPlayer.properties.push(...offer.ask.properties);
-          toPlayer.properties = toPlayer.properties.filter(p => !offer.ask.properties.includes(p));
-          toPlayer.properties.push(...offer.offer.properties);
+        const [fromPlayerUpdated] = await Player.update(
+          { 
+            money: fromPlayer.money, 
+            properties: fromPlayer.properties 
+          },
+          { 
+            where: { socketId: fromPlayer.socketId },
+            transaction
+          }
+        );
 
-          const [fromPlayerUpdated] = await Player.update(
-            { 
-              money: fromPlayer.money, 
-              properties: fromPlayer.properties 
-            },
-            { 
-              where: { socketId: fromPlayer.socketId },
-              transaction
-            }
-          );
+        const [toPlayerUpdated] = await Player.update(
+          { 
+            money: toPlayer.money, 
+            properties: toPlayer.properties 
+          },
+          { 
+            where: { socketId: toPlayer.socketId },
+            transaction
+          }
+        );
 
-          const [toPlayerUpdated] = await Player.update(
-            { 
-              money: toPlayer.money, 
-              properties: toPlayer.properties 
-            },
-            { 
-              where: { socketId: toPlayer.socketId },
-              transaction
-            }
-          );
-
-          if (!fromPlayerUpdated || !toPlayerUpdated) {
-            throw new Error('Failed to update one or both players');
+        if (!fromPlayerUpdated || !toPlayerUpdated) {
+          throw new Error('Failed to update one or both players');
           }
 
-          if (currentSessionId) {
-            await GameSession.update(
-              { players: engine.session.players },
-              { 
-                where: { id: currentSessionId },
-                transaction
-              }
+        if (currentSessionId) {
+          await GameSession.update(
+            { players: engine.session.players },
+            { 
+              where: { id: currentSessionId },
+              transaction
+            }
             );
           }
 
-          await transaction.commit();
+        await transaction.commit();
 
-          const invalidOffers = activeTradeOffers.filter(o => {
-            const offeringPlayer = engine.getPlayer(o.from);
-            return o.offer.properties.some(propId => !offeringPlayer.properties.includes(propId));
+        const invalidOffers = activeTradeOffers.filter(o => {
+          const offeringPlayer = engine.getPlayer(o.from);
+          return o.offer.properties.some(propId => !offeringPlayer.properties.includes(propId));
           });
 
-          if (invalidOffers.length > 0) {
-            invalidOffers.forEach(invalidOffer => {
-              io.to(invalidOffer.to).emit('tradeRejected', {
-                offerId: invalidOffer.id,
-                reason: 'invalidProperties',
-                keepOffer: false
-              });
-              io.to(invalidOffer.from).emit('tradeRejected', {
-                offerId: invalidOffer.id,
-                reason: 'invalidProperties',
-                keepOffer: false
-              });
-              activeTradeOffers = activeTradeOffers.filter(o => o.id !== invalidOffer.id);
+        if (invalidOffers.length > 0) {
+          invalidOffers.forEach(invalidOffer => {
+            io.to(invalidOffer.to).emit('tradeRejected', {
+              offerId: invalidOffer.id,
+              reason: 'invalidProperties',
+              keepOffer: false
             });
-          }
-
-          if (invalidOffers.length > 0) {
-            invalidOffers.forEach(invalidOffer => {
-              io.to(invalidOffer.to).emit('tradeRejected', {
-                offerId: invalidOffer.id,
-                reason: 'invalidProperties',
-                keepOffer: false
-              });
-              io.to(invalidOffer.from).emit('tradeRejected', {
-                offerId: invalidOffer.id,
-                reason: 'invalidProperties',
-                keepOffer: false
-              });
+            io.to(invalidOffer.from).emit('tradeRejected', {
+              offerId: invalidOffer.id,
+              reason: 'invalidProperties',
+              keepOffer: false
             });
+            activeTradeOffers = activeTradeOffers.filter(o => o.id !== invalidOffer.id);
+          });
+        }
 
-            activeTradeOffers = activeTradeOffers.filter(o => 
-              !invalidOffers.some(invalid => invalid.id === o.id)
+        if (invalidOffers.length > 0) {
+          invalidOffers.forEach(invalidOffer => {
+            io.to(invalidOffer.to).emit('tradeRejected', {
+              offerId: invalidOffer.id,
+              reason: 'invalidProperties',
+              keepOffer: false
+            });
+            io.to(invalidOffer.from).emit('tradeRejected', {
+              offerId: invalidOffer.id,
+              reason: 'invalidProperties',
+              keepOffer: false
+            });
+          });
+
+          activeTradeOffers = activeTradeOffers.filter(o => 
+            !invalidOffers.some(invalid => invalid.id === o.id)
             );
           }
 
-          io.emit('tradeAccepted', {
-            offerId,
-            fromPlayer: {
-              socketId: fromPlayer.socketId,
-              money: fromPlayer.money,
-              properties: fromPlayer.properties
+        io.emit('tradeAccepted', {
+          offerId,
+          fromPlayer: {
+            socketId: fromPlayer.socketId,
+            money: fromPlayer.money,
+            properties: fromPlayer.properties
             },
             toPlayer: {
-              socketId: toPlayer.socketId,
-              money: toPlayer.money,
-              properties: toPlayer.properties
+            socketId: toPlayer.socketId,
+            money: toPlayer.money,
+            properties: toPlayer.properties
             }
           });
 
-          io.emit('playersStateUpdate', {
-            players: engine.session.players
+        io.emit('playersStateUpdate', {
+          players: engine.session.players
           });
           const offeredProps = offer.offer.properties.map(propId => {
             const { tiles } = require('./data/tiles.cjs');
@@ -2999,10 +2910,7 @@ io.on('connection', (socket) => {
           console.error('Error processing trade:', err);
           broadcastGameEvent(`Trade between ${fromPlayer.name} and ${toPlayer.name} failed due to an error.`);
         }
-      } catch (err) {
-        console.error('Error starting transaction:', err);
-        broadcastGameEvent(`Trade between ${fromPlayer.name} and ${toPlayer.name} failed due to an error.`);
-      }
+
     } else {
       socket.broadcast.emit('tradeRejected', { 
         offerId,
@@ -3095,6 +3003,109 @@ io.on('connection', (socket) => {
 });
 
 socket.on('clientPing', () => {
+  });
+
+  // Handle admin updates from master terminal
+  socket.on('adminUpdatePlayer', async ({ playerId, updates }) => {
+    console.log(`Admin update requested for player ${playerId}`, updates);
+    
+    try {
+      const transaction = await sequelize.transaction();
+      
+      try {
+        // Get the current game session
+        const session = await GameSession.findOne({
+          where: { status: 'in_progress' },
+          transaction
+        });
+        
+        if (!session) {
+          throw new Error('No active game session found');
+        }
+        
+        // Get the player from the database
+        const player = await Player.findByPk(playerId, { transaction });
+        if (!player) {
+          throw new Error('Player not found');
+        }
+        
+        // Update player data
+        const updatedFields = {};
+        const playerUpdates = {};
+        
+        if (updates.money !== undefined) {
+          updatedFields.money = updates.money;
+          playerUpdates.money = updates.money;
+        }
+        
+        if (updates.loan !== undefined) {
+          updatedFields.loan = updates.loan;
+          playerUpdates.loan = updates.loan;
+        }
+        
+        if (updates.properties !== undefined) {
+          updatedFields.properties = updates.properties;
+          playerUpdates.properties = updates.properties;
+        }
+        
+        // Update player in the database
+        await Player.update(updatedFields, {
+          where: { socketId: playerId },
+          transaction
+        });
+        
+        // Update player in the game session
+        const updatedPlayers = session.players.map(p => 
+          p.socketId === playerId ? { ...p, ...playerUpdates } : p
+        );
+        
+        await GameSession.update(
+          { players: updatedPlayers },
+          { where: { id: session.id }, transaction }
+        );
+        
+        await transaction.commit();
+        
+        // Broadcast updates to all clients
+        io.emit('playerMoneyUpdate', {
+          playerId,
+          newBalance: playerUpdates.money !== undefined ? playerUpdates.money : player.money,
+          loan: playerUpdates.loan !== undefined ? playerUpdates.loan : player.loan
+        });
+        
+        if (updates.properties !== undefined) {
+          io.emit('propertyUpdated', {
+            playerId,
+            properties: updates.properties,
+            action: 'set',
+            newMoney: playerUpdates.money !== undefined ? playerUpdates.money : player.money
+          });
+        }
+        
+        // Log the admin action
+        const admin = await Player.findByPk(socket.id);
+        const targetPlayer = await Player.findByPk(playerId);
+        
+        if (admin && targetPlayer) {
+          const updateMessages = [];
+          if (updates.money !== undefined) updateMessages.push(`money to $${updates.money}`);
+          if (updates.loan !== undefined) updateMessages.push(`loan to $${updates.loan}`);
+          if (updates.properties !== undefined) updateMessages.push('properties');
+          
+          const message = `[SYSTEM] ${admin.name} updated ${targetPlayer.name}'s ${updateMessages.join(', ')}`;
+          broadcastGameEvent(message);
+        }
+        
+      } catch (error) {
+        await transaction.rollback();
+        console.error('Error in admin update:', error);
+        socket.emit('adminUpdateError', { message: error.message });
+      }
+      
+    } catch (error) {
+      console.error('Transaction error in admin update:', error);
+      socket.emit('adminUpdateError', { message: 'Transaction error' });
+    }
   });
 });
 
