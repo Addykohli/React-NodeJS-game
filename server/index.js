@@ -121,26 +121,50 @@ io.on('connection', (socket) => {
       };
 
       // Update in database
-      await Player.update(
+      const [updatedCount] = await Player.update(
         {
           money: updatedPlayer.money,
           loan: updatedPlayer.loan,
-          properties: updates.properties || player.properties
+          properties: Array.isArray(updates.properties) ? updates.properties : (player.properties || [])
         },
-        { where: { socketId: playerId }, transaction }
+        { 
+          where: { socketId: playerId },
+          transaction
+        }
       );
 
+      if (updatedCount === 0) {
+        throw new Error('Failed to update player in database');
+      }
+
       // Update in game engine
-      engine.session.players = engine.session.players.map(p =>
-        p.socketId === playerId 
-          ? { 
-              ...p, 
-              money: updatedPlayer.money,
-              loan: updatedPlayer.loan,
-              properties: updates.properties || p.properties
-            } 
-          : p
-      );
+      engine.session.players = engine.session.players.map(p => {
+        if (p.socketId === playerId) {
+          const updatedPlayer = {
+            ...p,
+            money: updatedPlayer.money,
+            loan: updatedPlayer.loan
+          };
+          
+          if (Array.isArray(updates.properties)) {
+            updatedPlayer.properties = [...updates.properties];
+          }
+          
+          return updatedPlayer;
+        }
+        return p;
+      });
+
+      // Update in game session
+      if (currentSession) {
+        await GameSession.update(
+          { players: engine.session.players },
+          { 
+            where: { id: currentSession.id },
+            transaction
+          }
+        );
+      }
 
       // Update in game session
       await GameSession.update(
