@@ -14,6 +14,7 @@ import { tiles } from '../data/tiles';
 import Chat from './Chat';
 import TradePanel from './TradePanel';
 import PropertiesPanel from './PropertiesPanel';
+import MasterTerminal from './MasterTerminal';
 
 const diceImages = {};
 for (let i = 1; i <= 6; i++) {
@@ -266,438 +267,6 @@ if (!isActive) {
           Your Money: ${currentMoney.toLocaleString()}
         </div>
       </div>
-      
-      {/* Master Terminal Modal */}
-      {showSettings && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          backdropFilter: 'blur(5px)'
-        }}>
-          {!showMasterTerminal ? (
-            // Password prompt
-            <div style={{
-              backgroundColor: '#1a1a2e',
-              padding: '30px',
-              borderRadius: '10px',
-              width: '400px',
-              maxWidth: '90%',
-              boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
-            }}>
-              <h2 style={{
-                color: '#fff',
-                marginTop: 0,
-                textAlign: 'center',
-                marginBottom: '20px',
-                fontSize: '1.8em'
-              }}>Master Terminal Access</h2>
-              
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  color: '#fff',
-                  marginBottom: '8px',
-                  fontSize: '1.1em'
-                }}>
-                  Enter Admin Password:
-                </label>
-                <input
-                  type="password"
-                  value={masterPassword}
-                  onChange={(e) => setMasterPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    fontSize: '1.1em',
-                    borderRadius: '5px',
-                    border: '1px solid #444',
-                    backgroundColor: '#16213e',
-                    color: '#fff',
-                    outline: 'none'
-                  }}
-                  autoFocus
-                />
-                {passwordError && (
-                  <p style={{ color: '#ff6b6b', margin: '8px 0 0 0' }}>{passwordError}</p>
-                )}
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '10px',
-                marginTop: '20px'
-              }}>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#555',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '1em',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={e => e.target.style.backgroundColor = '#666'}
-                  onMouseOut={e => e.target.style.backgroundColor = '#555'}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handlePasswordSubmit}
-                  disabled={!masterPassword.trim()}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: masterPassword.trim() ? '#4CAF50' : '#555',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: masterPassword.trim() ? 'pointer' : 'not-allowed',
-                    fontSize: '1em',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={e => masterPassword.trim() && (e.target.style.backgroundColor = '#45a049')}
-                  onMouseOut={e => e.target.style.backgroundColor = masterPassword.trim() ? '#4CAF50' : '#555'}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Master Terminal UI
-            <div style={{
-              backgroundColor: '#1a1a2e',
-              padding: '20px',
-              borderRadius: '10px',
-              width: '90%',
-              maxWidth: '1200px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 0 20px rgba(0, 0, 0, 0.5)'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px',
-                borderBottom: '1px solid #444',
-                paddingBottom: '10px'
-              }}>
-                <h2 style={{
-                  color: '#fff',
-                  margin: 0,
-                  fontSize: '1.8em',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}>
-                  <span style={{ color: '#4CAF50' }}>⚙️</span> Master Terminal
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowSettings(false);
-                    setShowMasterTerminal(false);
-                    setMasterPassword('');
-                    setPasswordError('');
-                    setEdits({});
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '1.5em',
-                    cursor: 'pointer',
-                    padding: '5px 10px',
-                    borderRadius: '5px',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={e => e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
-                  onMouseOut={e => e.target.style.backgroundColor = 'transparent'}
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-                gap: '20px',
-                marginTop: '20px'
-              }}>
-                {playersData.map(player => {
-                  const playerEdits = edits[player.socketId] || {};
-                  const playerProperties = getPlayerField(player, 'properties') || [];
-                  const availableProps = getAvailablePropertiesForPlayer(player.socketId);
-                  
-                  return (
-                    <div key={player.socketId} style={{
-                      backgroundColor: '#16213e',
-                      borderRadius: '8px',
-                      padding: '15px',
-                      border: `2px solid ${player.color}`,
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-                    }}>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '15px',
-                        paddingBottom: '10px',
-                        borderBottom: '1px solid #444'
-                      }}>
-                        <h3 style={{
-                          color: '#fff',
-                          margin: 0,
-                          fontSize: '1.3em',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}>
-                          <span style={{
-                            display: 'inline-block',
-                            width: '15px',
-                            height: '15px',
-                            backgroundColor: player.color,
-                            borderRadius: '50%',
-                            flexShrink: 0
-                          }}></span>
-                          {player.name}
-                        </h3>
-                        <span style={{
-                          backgroundColor: player.isCurrentPlayer ? '#4CAF50' : '#666',
-                          color: 'white',
-                          padding: '3px 8px',
-                          borderRadius: '10px',
-                          fontSize: '0.8em',
-                          fontWeight: 'bold'
-                        }}>
-                          {player.isCurrentPlayer ? 'Current Turn' : 'Waiting'}
-                        </span>
-                      </div>
-                      
-                      <div style={{ marginBottom: '15px' }}>
-                        <label style={{
-                          display: 'block',
-                          color: '#aaa',
-                          marginBottom: '5px',
-                          fontSize: '0.9em'
-                        }}>
-                          Money:
-                        </label>
-                        <input
-                          type="number"
-                          value={getPlayerField(player, 'money') || 0}
-                          onChange={(e) => handlePlayerEdit(player.socketId, 'money', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            backgroundColor: '#0f3460',
-                            border: '1px solid #444',
-                            borderRadius: '4px',
-                            color: '#fff',
-                            fontSize: '1em'
-                          }}
-                        />
-                      </div>
-                      
-                      <div style={{ marginBottom: '15px' }}>
-                        <label style={{
-                          display: 'block',
-                          color: '#aaa',
-                          marginBottom: '5px',
-                          fontSize: '0.9em'
-                        }}>
-                          Loan:
-                        </label>
-                        <input
-                          type="number"
-                          value={getPlayerField(player, 'loan') || 0}
-                          onChange={(e) => handlePlayerEdit(player.socketId, 'loan', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '8px',
-                            backgroundColor: '#0f3460',
-                            border: '1px solid #444',
-                            borderRadius: '4px',
-                            color: '#fff',
-                            fontSize: '1em'
-                          }}
-                        />
-                      </div>
-                      
-                      <div style={{ marginBottom: '15px' }}>
-                        <div style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          marginBottom: '5px'
-                        }}>
-                          <label style={{
-                            color: '#aaa',
-                            fontSize: '0.9em'
-                          }}>
-                            Properties:
-                          </label>
-                          {availableProps.length > 0 && (
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                              <select
-                                value=""
-                                onChange={(e) => {
-                                  if (e.target.value) {
-                                    addProperty(player.socketId, parseInt(e.target.value));
-                                    e.target.value = '';
-                                  }
-                                }}
-                                style={{
-                                  padding: '5px',
-                                  backgroundColor: '#0f3460',
-                                  border: '1px solid #444',
-                                  borderRadius: '4px',
-                                  color: '#fff',
-                                  fontSize: '0.9em',
-                                  maxWidth: '150px'
-                                }}
-                              >
-                                <option value="">Add Property</option>
-                                {availableProps.map(propId => {
-                                  const tile = tiles.find(t => t.id === propId);
-                                  return tile ? (
-                                    <option key={propId} value={propId}>
-                                      {tile.name} (${tile.rent})
-                                    </option>
-                                  ) : null;
-                                })}
-                              </select>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div style={{
-                          backgroundColor: '#0f1a2e',
-                          borderRadius: '4px',
-                          padding: '10px',
-                          minHeight: '60px',
-                          maxHeight: '120px',
-                          overflowY: 'auto',
-                          border: '1px solid #444'
-                        }}>
-                          {playerProperties.length === 0 ? (
-                            <div style={{ color: '#666', fontStyle: 'italic' }}>No properties owned</div>
-                          ) : (
-                            <div style={{
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: '5px'
-                            }}>
-                              {playerProperties.map(propId => {
-                                const tile = tiles.find(t => t.id === propId);
-                                return tile ? (
-                                  <div key={propId} style={{
-                                    backgroundColor: '#1a365d',
-                                    color: '#fff',
-                                    padding: '3px 8px',
-                                    borderRadius: '4px',
-                                    fontSize: '0.85em',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px'
-                                  }}>
-                                    {tile.name}
-                                    <button
-                                      onClick={() => removeProperty(player.socketId, propId)}
-                                      style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        color: '#ff6b6b',
-                                        cursor: 'pointer',
-                                        padding: '2px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        fontSize: '1.1em'
-                                      }}
-                                      title="Remove property"
-                                    >
-                                      ×
-                                    </button>
-                                  </div>
-                                ) : null;
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <button
-                        onClick={() => handleSavePlayer(player.socketId)}
-                        disabled={!hasUnsavedChanges(player.socketId)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          backgroundColor: hasUnsavedChanges(player.socketId) ? '#4CAF50' : '#555',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: hasUnsavedChanges(player.socketId) ? 'pointer' : 'not-allowed',
-                          fontSize: '1em',
-                          transition: 'background-color 0.2s',
-                          marginTop: '10px'
-                        }}
-                        onMouseOver={e => hasUnsavedChanges(player.socketId) && (e.target.style.backgroundColor = '#45a049')}
-                        onMouseOut={e => e.target.style.backgroundColor = hasUnsavedChanges(player.socketId) ? '#4CAF50' : '#555'}
-                      >
-                        {hasUnsavedChanges(player.socketId) ? 'Save Changes' : 'No Changes'}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                marginTop: '20px',
-                paddingTop: '15px',
-                borderTop: '1px solid #444'
-              }}>
-                <button
-                  onClick={() => {
-                    setShowSettings(false);
-                    setShowMasterTerminal(false);
-                    setMasterPassword('');
-                    setPasswordError('');
-                    setEdits({});
-                  }}
-                  style={{
-                    padding: '8px 20px',
-                    backgroundColor: '#555',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '1em',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={e => e.target.style.backgroundColor = '#666'}
-                  onMouseOut={e => e.target.style.backgroundColor = '#555'}
-                >
-                  Close Terminal
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };
@@ -729,115 +298,44 @@ export default function GameScreen() {
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
   
-  // Settings modal and master terminal states
-  const [showSettings, setShowSettings] = useState(false);
-  const [masterPassword, setMasterPassword] = useState('');
+
+  useEffect(() => {
+    if (rpsResult) {
+      const timeout = setTimeout(() => setRpsResult(null), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [rpsResult]);
+  const [rpsTieAmount, setRpsTieAmount] = useState(null);
+  const [activeSidePanel, setActiveSidePanel] = useState(null);
+  const [sidePanelVisible, setSidePanelVisible] = useState(true);
+  const [borrowAmount, setBorrowAmount] = useState(500);
+  const [payoffAmount, setPayoffAmount] = useState(500);
+  const [gameEvents, setGameEvents] = useState([]);
+  const eventsEndRef = useRef(null);
   const [showMasterTerminal, setShowMasterTerminal] = useState(false);
-  const [playersData, setPlayersData] = useState([]);
-  const [edits, setEdits] = useState({});
-  const [passwordError, setPasswordError] = useState('');
-  const [availableProperties, setAvailableProperties] = useState([]);
-
-  // Handle password submission for master terminal
-  const handlePasswordSubmit = () => {
-    if (masterPassword === 'admin123') { // Simple password for demo, in production this should be more secure
-      setShowMasterTerminal(true);
-      setPasswordError('');
-      // Initialize players data for editing
-      setPlayersData([...players]);
-      // Initialize available properties
-      const allProperties = tiles.filter(tile => tile.type === 'property').map(tile => tile.id);
-      setAvailableProperties(allProperties);
-    } else {
-      setPasswordError('Incorrect password');
-    }
-  };
-
-  // Handle player edits in the master terminal
-  const handlePlayerEdit = (playerId, field, value) => {
-    setEdits(prev => ({
-      ...prev,
-      [playerId]: {
-        ...(prev[playerId] || {}),
-        [field]: value
-      }
-    }));
-  };
-
-  // Add property to a player in the master terminal
-  const addProperty = (playerId, propertyId) => {
-    const player = playersData.find(p => p.socketId === playerId);
-    if (!player) return;
-    
-    const currentProperties = getPlayerField(player, 'properties') || [];
-    if (!currentProperties.includes(propertyId)) {
-      handlePlayerEdit(playerId, 'properties', [...currentProperties, propertyId]);
-    }
-  };
-
-  // Remove property from a player in the master terminal
-  const removeProperty = (playerId, propertyId) => {
-    const player = playersData.find(p => p.socketId === playerId);
-    if (!player) return;
-    
-    const currentProperties = getPlayerField(player, 'properties') || [];
-    handlePlayerEdit(playerId, 'properties', currentProperties.filter(id => id !== propertyId));
-  };
-
-  // Save player changes to the server
-  const handleSavePlayer = (playerId) => {
-    const player = playersData.find(p => p.socketId === playerId);
-    if (!player || !edits[playerId]) return;
-
-    const updates = {};
-    if (edits[playerId].money !== undefined) updates.money = parseInt(edits[playerId].money) || 0;
-    if (edits[playerId].loan !== undefined) updates.loan = parseInt(edits[playerId].loan) || 0;
-    if (edits[playerId].properties !== undefined) updates.properties = [...edits[playerId].properties];
-
-    if (Object.keys(updates).length > 0) {
-      socket.emit('adminUpdatePlayer', { 
-        playerId,
-        updates
-      });
-
-      // Update the local players data
-      setPlayersData(prev => 
-        prev.map(p => 
-          p.socketId === playerId ? { ...p, ...updates } : p
-        )
-      );
-
-      // Clear the edits for this player
-      const newEdits = { ...edits };
-      delete newEdits[playerId];
-      setEdits(newEdits);
-    }
-  };
-
-  // Get the current value for a player's field (either edited or original)
-  const getPlayerField = (player, field) => {
-    if (edits[player.socketId]?.[field] !== undefined) {
-      return edits[player.socketId][field];
-    }
-    return player[field];
-  };
-
-  // Check if a player has unsaved changes
-  const hasUnsavedChanges = (playerId) => {
-    return edits[playerId] && Object.keys(edits[playerId]).length > 0;
-  };
-
-  // Get available properties that the player doesn't already own
-  const getAvailablePropertiesForPlayer = (playerId) => {
-    const player = playersData.find(p => p.socketId === playerId);
-    if (!player) return [];
-    
-    const playerProperties = new Set(getPlayerField(player, 'properties') || []);
-    return availableProperties.filter(id => !playerProperties.has(id));
-  };
 
   useEffect(() => {
     if (!socket) return;
+
+    // Handle player stats updates from master terminal
+    const handlePlayerStatsUpdated = ({ playerId, updates }) => {
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerId 
+            ? { ...p, ...updates }
+            : p
+        )
+      );
+
+      if (player?.socketId === playerId) {
+        setPlayer(prev => ({
+          ...prev,
+          ...updates
+        }));
+      }
+    };
+
+    socket.on('playerStatsUpdated', handlePlayerStatsUpdated);
 
     const handleBorrowResponse = ({ success, error }) => {
       if (!success && error) {
@@ -847,7 +345,10 @@ export default function GameScreen() {
     };
 
     socket.on('borrowResponse', handleBorrowResponse);
-    return () => socket.off('borrowResponse', handleBorrowResponse);
+    return () => {
+      socket.off('borrowResponse', handleBorrowResponse);
+      socket.off('playerStatsUpdated', handlePlayerStatsUpdated);
+    };
   }, [socket]);
 
   useEffect(() => {
@@ -1338,25 +839,6 @@ export default function GameScreen() {
     setError(null);
     socket.emit('buyProperty');
   };
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleAdminUpdateResponse = ({ success, error }) => {
-      if (error) {
-        setError(error);
-        setTimeout(() => setError(null), 5000);
-      } else if (success) {
-        // Refresh players data after successful update
-        setPlayersData(players);
-      }
-    };
-
-    socket.on('adminUpdateResponse', handleAdminUpdateResponse);
-    return () => {
-      socket.off('adminUpdateResponse', handleAdminUpdateResponse);
-    };
-  }, [socket, players]);
 
   return (
     <div style={{
@@ -2065,11 +1547,10 @@ export default function GameScreen() {
               border: 'none',
               borderRadius: '8px',
               cursor: isMyTurn ? 'not-allowed' : 'pointer',
-              transition: 'all 0.3s',
+              transition: 'background-color 0.3s',
               opacity: isMyTurn ? 0.7 : 1,
               width: '100%',
               maxWidth: '180px',
-              marginBottom: '10px',
             }}
             onMouseOver={e => !isMyTurn && (e.target.style.backgroundColor = '#ff6666')}
             onMouseOut={e => !isMyTurn && (e.target.style.backgroundColor = '#ff4444')}
@@ -2077,27 +1558,24 @@ export default function GameScreen() {
             Quit Game
           </button>
           <button
-            onClick={() => setShowSettings(true)}
+            onClick={() => setShowMasterTerminal(true)}
             style={{
               padding: '10px 20px',
               fontSize: '1.2em',
-              backgroundColor: '#2196F3',
+              backgroundColor: '#4a6baf',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
-              transition: 'all 0.3s',
+              transition: 'background-color 0.3s',
               width: '100%',
               maxWidth: '180px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
+              marginBottom: '10px',
             }}
-            onMouseOver={e => e.target.style.backgroundColor = '#1976D2'}
-            onMouseOut={e => e.target.style.backgroundColor = '#2196F3'}
+            onMouseOver={e => e.target.style.backgroundColor = '#5d7bc1'}
+            onMouseOut={e => e.target.style.backgroundColor = '#4a6baf'}
           >
-            ⚙️ Admin
+            ⚙️ Settings
           </button>
         </div>
 
@@ -2807,366 +2285,18 @@ export default function GameScreen() {
               display: block !important;
               width: 100% !important;
               padding: 10px 0 200px 0 !important;
-              text-align: center !important;
+                           text-align: center !important;
             }
           }
           @media (min-width: 901px) {
-            .quit-game-mobile {
+                       .quit-game-mobile {
               display: none !important;
             }
           }
         `}</style>
       </div>
       
-      {/* Master Terminal Modal */}
-      {showSettings && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 2000,
-          backdropFilter: 'blur(5px)'
-        }}>
-          {!showMasterTerminal ? (
-            <div style={{
-              backgroundColor: '#1a1a1a',
-              padding: '2rem',
-              borderRadius: '8px',
-              width: '400px',
-              maxWidth: '90%',
-              textAlign: 'center'
-            }}>
-              <h2 style={{ color: '#fff', marginBottom: '1.5rem' }}>Master Terminal</h2>
-              <input
-                type="password"
-                value={masterPassword}
-                onChange={(e) => setMasterPassword(e.target.value)}
-                placeholder="Enter admin password"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  marginBottom: '1rem',
-                  borderRadius: '4px',
-                  border: '1px solid #444',
-                  backgroundColor: '#2a2a2a',
-                  color: '#fff',
-                  fontSize: '1rem'
-                }}
-                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-              />
-              {passwordError && (
-                <p style={{ color: '#ff6b6b', marginBottom: '1rem' }}>{passwordError}</p>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#444',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handlePasswordSubmit}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#4CAF50',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{
-              backgroundColor: '#1a1a1a',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              width: '90%',
-              maxWidth: '1000px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              position: 'relative'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1.5rem',
-                paddingBottom: '1rem',
-                borderBottom: '1px solid #333'
-              }}>
-                <h2 style={{ color: '#fff', margin: 0 }}>Master Terminal</h2>
-                <button
-                  onClick={() => {
-                    setShowMasterTerminal(false);
-                    setShowSettings(false);
-                    setMasterPassword('');
-                    setEdits({});
-                  }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#fff',
-                    fontSize: '1.5rem',
-                    cursor: 'pointer',
-                    padding: '0.5rem'
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                {playersData.map((p) => (
-                  <div key={p.socketId} style={{
-                    backgroundColor: '#2a2a2a',
-                    borderRadius: '6px',
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    borderLeft: `4px solid ${p.color || '#666'}`
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
-                      <h3 style={{ 
-                        color: '#fff',
-                        margin: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        {p.name}
-                        {p.socketId === currentPlayer?.socketId && (
-                          <span style={{
-                            backgroundColor: '#4CAF50',
-                            color: '#fff',
-                            fontSize: '0.7rem',
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '10px'
-                          }}>
-                            Current Turn
-                          </span>
-                        )}
-                      </h3>
-                      <button
-                        onClick={() => handleSavePlayer(p.socketId)}
-                        disabled={!hasUnsavedChanges(p.socketId)}
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          backgroundColor: hasUnsavedChanges(p.socketId) ? '#4CAF50' : '#666',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: hasUnsavedChanges(p.socketId) ? 'pointer' : 'not-allowed',
-                          fontSize: '0.9rem',
-                          opacity: hasUnsavedChanges(p.socketId) ? 1 : 0.7
-                        }}
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '1rem',
-                      marginBottom: '1rem'
-                    }}>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          color: '#aaa',
-                          marginBottom: '0.5rem',
-                          fontSize: '0.9rem'
-                        }}>
-                          Money
-                        </label>
-                        <input
-                          type="number"
-                          value={getPlayerField(p, 'money')}
-                          onChange={(e) => handlePlayerEdit(p.socketId, 'money', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid #444',
-                            backgroundColor: '#333',
-                            color: '#fff'
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <label style={{
-                          display: 'block',
-                          color: '#aaa',
-                          marginBottom: '0.5rem',
-                          fontSize: '0.9rem'
-                        }}>
-                          Loan
-                        </label>
-                        <input
-                          type="number"
-                          value={getPlayerField(p, 'loan')}
-                          onChange={(e) => handlePlayerEdit(p.socketId, 'loan', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.5rem',
-                            borderRadius: '4px',
-                            border: '1px solid #444',
-                            backgroundColor: '#333',
-                            color: '#fff'
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '0.5rem'
-                      }}>
-                        <label style={{
-                          color: '#aaa',
-                          fontSize: '0.9rem'
-                        }}>
-                          Properties
-                        </label>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <select
-                            value=""
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                addProperty(p.socketId, e.target.value);
-                                e.target.value = '';
-                              }
-                            }}
-                            style={{
-                              padding: '0.3rem',
-                              borderRadius: '4px',
-                              border: '1px solid #444',
-                              backgroundColor: '#333',
-                              color: '#fff',
-                              fontSize: '0.9rem'
-                            }}
-                          >
-                            <option value="">Add Property</option>
-                            {getAvailablePropertiesForPlayer(p.socketId).map(propId => {
-                              const tile = tiles.find(t => t.id === propId);
-                              return tile ? (
-                                <option key={propId} value={propId}>
-                                  {tile.name} (${tile.price})
-                                </option>
-                              ) : null;
-                            })}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '0.5rem',
-                        minHeight: '40px',
-                        backgroundColor: '#222',
-                        borderRadius: '4px',
-                        padding: '0.5rem',
-                        border: '1px solid #333'
-                      }}>
-                        {getPlayerField(p, 'properties')?.map(propId => {
-                          const tile = tiles.find(t => t.id === propId);
-                          return tile ? (
-                            <div key={propId} style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              backgroundColor: tile.color || '#444',
-                              color: '#fff',
-                              padding: '0.25rem 0.5rem',
-                              borderRadius: '4px',
-                              fontSize: '0.8rem',
-                              gap: '0.5rem'
-                            }}>
-                              {tile.name}
-                              <button
-                                onClick={() => removeProperty(p.socketId, propId)}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: '#fff',
-                                  cursor: 'pointer',
-                                  padding: '0 0.25rem',
-                                  fontSize: '1rem',
-                                  lineHeight: 1
-                                }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ) : null;
-                        })}
-                        {(!getPlayerField(p, 'properties') || getPlayerField(p, 'properties').length === 0) && (
-                          <span style={{ color: '#666', fontSize: '0.9rem' }}>
-                            No properties
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                paddingTop: '1rem',
-                borderTop: '1px solid #333'
-              }}>
-                <button
-                  onClick={() => {
-                    setShowMasterTerminal(false);
-                    setShowSettings(false);
-                    setMasterPassword('');
-                    setEdits({});
-                  }}
-                  style={{
-                    padding: '0.5rem 1.5rem',
-                    backgroundColor: '#444',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Close Terminal
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
+    
   );
 }
