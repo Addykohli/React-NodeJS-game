@@ -223,7 +223,7 @@ io.on('connection', (socket) => {
 
       // purchase success emit
       io.emit('purchaseSuccess', {
-        socketId: socket.id,
+        socketId: playerId,
         money: updatedPlayer.money,
         properties: propertiesUpdate
       });

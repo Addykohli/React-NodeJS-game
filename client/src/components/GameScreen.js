@@ -469,17 +469,34 @@ export default function GameScreen() {
     }, [isMyTurn, movementDone, tileMeta, player, testRollMode, testRollInput, hasRolled]);
 
   useEffect(() => {
-    socket.on('purchaseSuccess', ({ socketId, money, properties }) => {
-      
-      const updated = players.map(p =>
-        p.socketId === socketId ? { ...p, money, properties } : p
+    const handlePurchaseSuccess = ({ socketId, money, properties }) => {
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === socketId 
+            ? { 
+                ...p, 
+                money,
+                properties: Array.isArray(properties) ? properties : (p.properties || [])
+              } 
+            : p
+        )
       );
-      setPlayers(updated);
-      if (player.socketId === socketId) {
-        setPlayer({ ...player, money, properties });
+
+      if (player?.socketId === socketId) {
+        setPlayer(prev => ({
+          ...prev,
+          money,
+          properties: Array.isArray(properties) ? properties : (prev.properties || [])
+        }));
       }
       setError(null);
-    });
+    };
+
+    socket.on('purchaseSuccess', handlePurchaseSuccess);
+    
+    return () => {
+      socket.off('purchaseSuccess', handlePurchaseSuccess);
+    };
 
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
