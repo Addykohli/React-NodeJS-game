@@ -140,17 +140,17 @@ io.on('connection', (socket) => {
       // Update in game engine
       engine.session.players = engine.session.players.map(p => {
         if (p.socketId === playerId) {
-          const updatedPlayer = {
+          const playerUpdate = {
             ...p,
             money: updatedPlayer.money,
             loan: updatedPlayer.loan
           };
           
           if (Array.isArray(updates.properties)) {
-            updatedPlayer.properties = [...updates.properties];
+            playerUpdate.properties = [...updates.properties];
           }
           
-          return updatedPlayer;
+          return playerUpdate;
         }
         return p;
       });
