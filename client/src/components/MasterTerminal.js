@@ -75,32 +75,38 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
   }, [socket]);
 
   const handleSaveChanges = (playerId) => {
-    const changes = { ...edits[playerId] };
-    if (changes) {
-      // Process properties field if it exists
-      if (changes.properties !== undefined) {
-        // If properties is a string, split it into an array
-        // If it's empty or falsy, set to empty array
-        changes.properties = typeof changes.properties === 'string' 
-          ? changes.properties
-              .split(',')
-              .map(p => parseInt(p.trim(), 10))
-              .filter(n => !isNaN(n))
-          : Array.isArray(changes.properties) 
-            ? changes.properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
-            : [];
-      }
-      
-      socket.emit('updatePlayerStats', {
-        playerId,
-        updates: changes
-      });
-      
-      // Clear the edits for this player
-      const newEdits = { ...edits };
-      delete newEdits[playerId];
-      setEdits(newEdits);
+    const player = players.find(p => p.socketId === playerId);
+    if (!player) return;
+    
+    // Start with the current player state
+    const changes = { 
+      money: player.money,
+      loan: player.loan,
+      properties: [...(player.properties || [])],
+      ...edits[playerId] // Apply any edits on top
+    };
+    
+    // Process properties field
+    if (edits[playerId]?.properties !== undefined) {
+      changes.properties = typeof edits[playerId].properties === 'string' 
+        ? edits[playerId].properties
+            .split(',')
+            .map(p => parseInt(p.trim(), 10))
+            .filter(n => !isNaN(n))
+        : Array.isArray(edits[playerId].properties) 
+          ? edits[playerId].properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
+          : [];
     }
+    
+    socket.emit('updatePlayerStats', {
+      playerId,
+      updates: changes
+    });
+    
+    // Clear the edits for this player
+    const newEdits = { ...edits };
+    delete newEdits[playerId];
+    setEdits(newEdits);
   };
 
   if (!authenticated) {
