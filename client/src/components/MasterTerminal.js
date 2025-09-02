@@ -4,6 +4,7 @@ import { tiles } from '../data/tiles';
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
   const [players, setPlayers] = useState(initialPlayers);
   
+  // Sync with parent's players prop
   useEffect(() => {
     setPlayers(initialPlayers);
   }, [initialPlayers]);
@@ -27,15 +28,23 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       [playerId]: {
         ...prev[playerId],
         [field]: field === 'properties' 
-          ? value 
+          ? value  // Store the raw string value, we'll split it only on save
           : parseInt(value, 10) || 0
       }
     }));
   };
 
+  // Listen for player updates from the server
   useEffect(() => {
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-
+      console.log('=== Client: Received Player Update ===');
+      console.log('Player ID:', playerId);
+      console.log('Updates:', {
+        ...updates,
+        propertiesType: Array.isArray(updates.properties) ? 'array' : typeof updates.properties,
+        propertiesLength: Array.isArray(updates.properties) ? updates.properties.length : 'N/A'
+      });
+      
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(player => 
           player.socketId === playerId 
@@ -43,6 +52,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
             : player
         );
         
+        // Log the updated player from context
         const updatedPlayer = updatedPlayers.find(p => p.socketId === playerId);
         if (updatedPlayer) {
           console.log('=== Client: Updated Player in Context ===');
@@ -69,30 +79,39 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     const player = players.find(p => p.socketId === playerId);
     if (!player) return;
     
+    // Start with the current player state
     const changes = { 
       money: player.money !== undefined ? player.money : 0,
       loan: player.loan !== undefined ? player.loan : 0,
       properties: [...(player.properties || [])]
     };
     
+    // Apply any edits on top, only updating fields that were actually edited
+    if (edits[playerId]) {
+      if (edits[playerId].money !== undefined) changes.money = edits[playerId].money;
+      if (edits[playerId].loan !== undefined) changes.loan = edits[playerId].loan;
+      if (edits[playerId].properties !== undefined) changes.properties = edits[playerId].properties;
+    }
+    
+    // Create a Set of property tile IDs for fast lookup
+    const propertyTileIds = new Set(
+      tiles.filter(tile => tile.type === 'property').map(tile => tile.id)
+    );
 
+    // Process properties field if it was edited
     if (changes.properties) {
-      let propertiesArray = [];
       if (typeof changes.properties === 'string') {
-        propertiesArray = changes.properties
+        changes.properties = changes.properties
           .split(',')
           .map(p => parseInt(p.trim(), 10))
-          .filter(n => !isNaN(n));
+          .filter(n => !isNaN(n) && propertyTileIds.has(n));
       } else if (Array.isArray(changes.properties)) {
-        propertiesArray = changes.properties
+        changes.properties = changes.properties
           .map(p => parseInt(p, 10))
-          .filter(n => !isNaN(n));
+          .filter(n => !isNaN(n) && propertyTileIds.has(n));
+      } else {
+        changes.properties = [];
       }
-      
-      changes.properties = propertiesArray.filter(propertyId => {
-        const tile = tiles.find(t => t.id === propertyId);
-        return tile && tile.type === 'property';
-      });
     } else {
       changes.properties = [];
     }
@@ -102,6 +121,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       updates: changes
     });
     
+    // Clear the edits for this player
     const newEdits = { ...edits };
     delete newEdits[playerId];
     setEdits(newEdits);
