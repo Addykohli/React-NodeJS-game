@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { tiles } from '../data/tiles';
 
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
   const [players, setPlayers] = useState(initialPlayers);
@@ -103,14 +104,20 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     
     // Process properties field if it was edited
     if (currentEdits.properties !== undefined) {
-      changes.properties = typeof currentEdits.properties === 'string' 
+      changes.properties = (typeof currentEdits.properties === 'string' 
         ? currentEdits.properties
             .split(',')
             .map(p => parseInt(p.trim(), 10))
             .filter(n => !isNaN(n))
         : Array.isArray(currentEdits.properties) 
           ? currentEdits.properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
-          : [];
+          : []
+      ).filter(num => {
+        const tile = tiles.find(t => t.id === num);
+        return tile && tile.type === 'property';
+      });
+      
+      console.log('Filtered properties:', changes.properties);
     }
     
     socket.emit('updatePlayerStats', {
