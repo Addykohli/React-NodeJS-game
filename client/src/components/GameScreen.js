@@ -499,10 +499,35 @@ export default function GameScreen() {
     };
 
     socket.on('purchaseSuccess', handlePurchaseSuccess);
-    
-    return () => {
-      socket.off('purchaseSuccess', handlePurchaseSuccess);
+
+    const handlePropertyUpdate = ({ socketId, properties }) => {      
+      
+      console.log('++++ Property change recieved ++++:', { socketId, properties });
+      // Update players list
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === socketId 
+            ? { 
+                ...p, 
+                properties: Array.isArray(properties) ? [...properties] : [...(p.properties || [])]
+              } 
+            : p
+        )
+      );
+
+      // Update current player if it's them
+      if (player?.socketId === socketId) {
+        setPlayer(prev => ({
+          ...prev,
+          properties: Array.isArray(properties) ? [...properties] : [...(prev.properties || [])]
+        }));
+        
+        // Force a re-render by updating a state
+        setError(prev => prev);
+      }
     };
+
+    socket.on('propertyUpdate', handlePropertyUpdate);
 
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {

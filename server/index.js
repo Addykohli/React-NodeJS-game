@@ -222,9 +222,8 @@ io.on('connection', (socket) => {
       });
 
       // purchase success emit
-      io.emit('purchaseSuccess', {
+      io.emit('propertyUpdate', {
         socketId: playerId,
-        money: updatedPlayer.money,
         properties: propertiesUpdate
       });
       
