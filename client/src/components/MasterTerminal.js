@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { tiles } from '../data/tiles';
 
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
   const [players, setPlayers] = useState(initialPlayers);
@@ -29,7 +28,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
         ...prev[playerId],
         [field]: field === 'properties' 
           ? value  // Store the raw string value, we'll split it only on save
-          : parseInt(value, 10) || 0
+          : value === '' ? '' : parseInt(value, 10)
       }
     }));
   };
@@ -79,41 +78,32 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     const player = players.find(p => p.socketId === playerId);
     if (!player) return;
     
+    // Get the current edits for this player
+    const currentEdits = edits[playerId] || {};
+    
     // Start with the current player state
     const changes = { 
-      money: player.money !== undefined ? player.money : 0,
-      loan: player.loan !== undefined ? player.loan : 0,
+      // Only include money/loan if they were explicitly edited
+      ...(currentEdits.money !== undefined && { 
+        money: currentEdits.money === '' ? 0 : Number(currentEdits.money) 
+      }),
+      ...(currentEdits.loan !== undefined && { 
+        loan: currentEdits.loan === '' ? 0 : Number(currentEdits.loan) 
+      }),
+      // Always include properties, defaulting to current player's properties
       properties: [...(player.properties || [])]
     };
     
-    // Apply any edits on top, only updating fields that were actually edited
-    if (edits[playerId]) {
-      if (edits[playerId].money !== undefined) changes.money = edits[playerId].money;
-      if (edits[playerId].loan !== undefined) changes.loan = edits[playerId].loan;
-      if (edits[playerId].properties !== undefined) changes.properties = edits[playerId].properties;
-    }
-    
-    // Create a Set of property tile IDs for fast lookup
-    const propertyTileIds = new Set(
-      tiles.filter(tile => tile.type === 'property').map(tile => tile.id)
-    );
-
     // Process properties field if it was edited
-    if (changes.properties) {
-      if (typeof changes.properties === 'string') {
-        changes.properties = changes.properties
-          .split(',')
-          .map(p => parseInt(p.trim(), 10))
-          .filter(n => !isNaN(n) && propertyTileIds.has(n));
-      } else if (Array.isArray(changes.properties)) {
-        changes.properties = changes.properties
-          .map(p => parseInt(p, 10))
-          .filter(n => !isNaN(n) && propertyTileIds.has(n));
-      } else {
-        changes.properties = [];
-      }
-    } else {
-      changes.properties = [];
+    if (currentEdits.properties !== undefined) {
+      changes.properties = typeof currentEdits.properties === 'string' 
+        ? currentEdits.properties
+            .split(',')
+            .map(p => parseInt(p.trim(), 10))
+            .filter(n => !isNaN(n))
+        : Array.isArray(currentEdits.properties) 
+          ? currentEdits.properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
+          : [];
     }
     
     socket.emit('updatePlayerStats', {
