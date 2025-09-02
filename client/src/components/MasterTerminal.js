@@ -84,10 +84,10 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
         changes.properties = typeof changes.properties === 'string' 
           ? changes.properties
               .split(',')
-              .map(p => p.trim())
-              .filter(Boolean)
+              .map(p => parseInt(p.trim(), 10))
+              .filter(n => !isNaN(n))
           : Array.isArray(changes.properties) 
-            ? changes.properties 
+            ? changes.properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
             : [];
       }
       

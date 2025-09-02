@@ -503,15 +503,21 @@ export default function GameScreen() {
     const handlePropertyUpdate = ({ socketId, properties }) => {      
       console.log('++++ Property change received ++++:', { socketId, properties });
       
+      // Ensure properties is an array of integers
+      const sanitizedProperties = Array.isArray(properties) 
+        ? properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
+        : [];
+      
+      console.log('Sanitized properties:', sanitizedProperties);
+      
       // Update players list
       setPlayers(prevPlayers => 
         prevPlayers.map(p => {
           if (p.socketId === socketId) {
-            const updatedProperties = Array.isArray(properties) ? [...properties] : [...(p.properties || [])];
-            console.log('Updating player properties:', p.name, 'new properties:', updatedProperties);
+            console.log('Updating player properties:', p.name, 'new properties:', sanitizedProperties);
             return {
               ...p,
-              properties: updatedProperties
+              properties: [...sanitizedProperties] // Create new array reference
             };
           }
           return p;
@@ -521,11 +527,10 @@ export default function GameScreen() {
       // Update current player if it's them
       if (player?.socketId === socketId) {
         setPlayer(prev => {
-          const updatedProperties = Array.isArray(properties) ? [...properties] : [...(prev.properties || [])];
-          console.log('Updating current player properties:', updatedProperties);
+          console.log('Updating current player properties:', sanitizedProperties);
           return {
             ...prev,
-            properties: updatedProperties
+            properties: [...sanitizedProperties] // Create new array reference
           };
         });
       }

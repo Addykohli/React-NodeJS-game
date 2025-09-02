@@ -221,10 +221,15 @@ io.on('connection', (socket) => {
         }
       });
 
-      // purchase success emit
+      // Ensure properties are integers
+      const sanitizedProperties = Array.isArray(propertiesUpdate) 
+        ? propertiesUpdate.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
+        : [];
+
+      // Emit property update
       io.emit('propertyUpdate', {
         socketId: playerId,
-        properties: propertiesUpdate
+        properties: sanitizedProperties
       });
       
       // Log the game event
