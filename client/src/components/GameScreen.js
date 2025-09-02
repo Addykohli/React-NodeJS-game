@@ -501,29 +501,33 @@ export default function GameScreen() {
     socket.on('purchaseSuccess', handlePurchaseSuccess);
 
     const handlePropertyUpdate = ({ socketId, properties }) => {      
+      console.log('++++ Property change received ++++:', { socketId, properties });
       
-      console.log('++++ Property change recieved ++++:', { socketId, properties });
       // Update players list
       setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
-          p.socketId === socketId 
-            ? { 
-                ...p, 
-                properties: Array.isArray(properties) ? [...properties] : [...(p.properties || [])]
-              } 
-            : p
-        )
+        prevPlayers.map(p => {
+          if (p.socketId === socketId) {
+            const updatedProperties = Array.isArray(properties) ? [...properties] : [...(p.properties || [])];
+            console.log('Updating player properties:', p.name, 'new properties:', updatedProperties);
+            return {
+              ...p,
+              properties: updatedProperties
+            };
+          }
+          return p;
+        })
       );
 
       // Update current player if it's them
       if (player?.socketId === socketId) {
-        setPlayer(prev => ({
-          ...prev,
-          properties: Array.isArray(properties) ? [...properties] : [...(prev.properties || [])]
-        }));
-        
-        // Force a re-render by updating a state
-        setError(prev => prev);
+        setPlayer(prev => {
+          const updatedProperties = Array.isArray(properties) ? [...properties] : [...(prev.properties || [])];
+          console.log('Updating current player properties:', updatedProperties);
+          return {
+            ...prev,
+            properties: updatedProperties
+          };
+        });
       }
     };
 
@@ -868,7 +872,8 @@ export default function GameScreen() {
     });
 
     return () => {
-      socket.off('purchaseSuccess');
+      socket.off('purchaseSuccess', handlePurchaseSuccess);
+      socket.off('propertyUpdate', handlePropertyUpdate);
       socket.off('purchaseFailed');
       socket.off('rentPaid');
       socket.off('playerMoved');
