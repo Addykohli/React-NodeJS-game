@@ -115,10 +115,9 @@ io.on('connection', (socket) => {
       const updatedPlayer = {
         ...player.toJSON(),
         ...updates,
-        // Ensure money and loan are numbers
-        money: parseInt(updates.money) || player.money,
-        loan: parseInt(updates.loan) || player.loan,
-
+        // Ensure money and loan are numbers, properly handling 0 values
+        money: typeof updates.money !== 'undefined' ? Number(updates.money) : player.money,
+        loan: typeof updates.loan !== 'undefined' ? Number(updates.loan) : player.loan,
       };
 
       // Convert properties to array if it's not already
