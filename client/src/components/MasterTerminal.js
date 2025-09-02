@@ -22,15 +22,19 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
   };
 
   const handleInputChange = (playerId, field, value) => {
-    setEdits(prev => ({
-      ...prev,
-      [playerId]: {
-        ...prev[playerId],
-        [field]: field === 'properties' 
-          ? value  // Store the raw string value, we'll split it only on save
-          : value === '' ? '' : parseInt(value, 10)
-      }
-    }));
+    setEdits(prev => {
+      const newValue = field === 'properties' 
+        ? value  // Store the raw string value for properties
+        : value === '' ? '' : Number(value);
+      
+      return {
+        ...prev,
+        [playerId]: {
+          ...prev[playerId],
+          [field]: newValue
+        }
+      };
+    });
   };
 
   // Listen for player updates from the server
@@ -81,18 +85,21 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     // Get the current edits for this player
     const currentEdits = edits[playerId] || {};
     
-    // Start with the current player state
-    const changes = { 
-      // Only include money/loan if they were explicitly edited
-      ...(currentEdits.money !== undefined && { 
-        money: currentEdits.money === '' ? 0 : Number(currentEdits.money) 
-      }),
-      ...(currentEdits.loan !== undefined && { 
-        loan: currentEdits.loan === '' ? 0 : Number(currentEdits.loan) 
-      }),
-      // Always include properties, defaulting to current player's properties
-      properties: [...(player.properties || [])]
-    };
+    // Start with an empty changes object
+    const changes = {};
+    
+    // Handle money - include it if it was edited or explicitly set to 0
+    if (currentEdits.money !== undefined) {
+      changes.money = currentEdits.money === '' ? 0 : Number(currentEdits.money);
+    }
+    
+    // Handle loan - include it if it was edited or explicitly set to 0
+    if (currentEdits.loan !== undefined) {
+      changes.loan = currentEdits.loan === '' ? 0 : Number(currentEdits.loan);
+    }
+    
+    // Always include properties, defaulting to current player's properties
+    changes.properties = [...(player.properties || [])];
     
     // Process properties field if it was edited
     if (currentEdits.properties !== undefined) {
