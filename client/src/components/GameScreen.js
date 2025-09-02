@@ -317,7 +317,6 @@ export default function GameScreen() {
   useEffect(() => {
     if (!socket) return;
 
-    // Handle player stats updates from master terminal
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
@@ -470,9 +469,6 @@ export default function GameScreen() {
 
   useEffect(() => {
     const handlePurchaseSuccess = ({ socketId, money, properties }) => {
-      console.log('Purchase success received:', { socketId, money, properties });
-      
-      // Update players list
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === socketId 
@@ -485,7 +481,6 @@ export default function GameScreen() {
         )
       );
 
-      // Update current player if it's them
       if (player?.socketId === socketId) {
         setPlayer(prev => ({
           ...prev,
@@ -493,7 +488,6 @@ export default function GameScreen() {
           properties: Array.isArray(properties) ? [...properties] : [...(prev.properties || [])]
         }));
         
-        // Force a re-render by updating a state
         setError(prev => prev);
       }
     };
@@ -501,36 +495,31 @@ export default function GameScreen() {
     socket.on('purchaseSuccess', handlePurchaseSuccess);
 
     const handlePropertyUpdate = ({ socketId, properties }) => {      
-      console.log('++++ Property change received ++++:', { socketId, properties });
-      
-      // Ensure properties is an array of integers
       const sanitizedProperties = Array.isArray(properties) 
         ? properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
         : [];
       
       console.log('Sanitized properties:', sanitizedProperties);
       
-      // Update players list
       setPlayers(prevPlayers => 
         prevPlayers.map(p => {
           if (p.socketId === socketId) {
             console.log('Updating player properties:', p.name, 'new properties:', sanitizedProperties);
             return {
               ...p,
-              properties: [...sanitizedProperties] // Create new array reference
+              properties: [...sanitizedProperties]
             };
           }
           return p;
         })
       );
 
-      // Update current player if it's them
       if (player?.socketId === socketId) {
         setPlayer(prev => {
           console.log('Updating current player properties:', sanitizedProperties);
           return {
             ...prev,
-            properties: [...sanitizedProperties] // Create new array reference
+            properties: [...sanitizedProperties]
           };
         });
       }
@@ -552,16 +541,13 @@ export default function GameScreen() {
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
       console.log('Property updated:', { playerId, propertyId, action, newMoney });
       
-      // Update players list
       setPlayers(prevPlayers => {
         const updated = prevPlayers.map(p => {
           if (p.socketId === playerId) {
             const newProperties = action === 'add'
-              ? [...new Set([...(p.properties || []), propertyId])] // Ensure no duplicates
+              ? [...new Set([...(p.properties || []), propertyId])]
               : (p.properties || []).filter(id => id !== propertyId);
               
-            console.log('Updating player in list:', p.name, 'properties:', newProperties);
-            
             return {
               ...p,
               properties: newProperties,
@@ -573,15 +559,12 @@ export default function GameScreen() {
         return updated;
       });
 
-      // Update current player if it's them
       if (player?.socketId === playerId) {
         setPlayer(prev => {
           const newProperties = action === 'add'
-            ? [...new Set([...(prev.properties || []), propertyId])] // Ensure no duplicates
+            ? [...new Set([...(prev.properties || []), propertyId])]
             : (prev.properties || []).filter(id => id !== propertyId);
             
-          console.log('Updating current player properties:', newProperties);
-          
           return {
             ...prev,
             properties: newProperties,

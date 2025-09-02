@@ -93,13 +93,11 @@ const TradePanel = () => {
 
   useEffect(() => {
     if (socket) {
-      console.log('Fetching loans...');
       fetchLoans();
     }
     
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && socket) {
-        console.log('Panel became visible, refreshing loans...');
         fetchLoans();
       }
     };
@@ -133,13 +131,10 @@ const TradePanel = () => {
   };
 
   const handleRequestLoan = () => {
-    console.log('handleRequestLoan called with:', { selectedLender, loanAmount, returnAmount });
     if (!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount) {
-      console.log('Validation failed - missing lender or invalid amounts');
       return;
     }
     
-    console.log('Requesting loan via context');
     requestLoan(selectedLender.socketId, loanAmount, returnAmount);
     
     setLoanAmount(0);

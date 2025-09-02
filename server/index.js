@@ -83,12 +83,13 @@ const disconnectedPlayers = new Map();
 const gameEvents = [];
 let activeTradeOffers = [];
 
-// Handle player stats update from master terminal
 io.on('connection', (socket) => {
+  if (!hasStarted) {
+    socket.emit('lobbyUpdate', lobbyPlayers);
+  }
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
     const transaction = await sequelize.transaction();
     try {
-      // Get the current game session
       const currentSession = await GameSession.findOne({
         where: {
           hasStarted: true,
@@ -101,7 +102,6 @@ io.on('connection', (socket) => {
         throw new Error('No active game session found');
       }
 
-      // Find the player in the database
       const player = await Player.findOne({
         where: { socketId: playerId },
         transaction
@@ -111,17 +111,14 @@ io.on('connection', (socket) => {
         throw new Error('Player not found');
       }
 
-      // Update player stats
       const updatedPlayer = {
         ...player.toJSON(),
         ...updates,
-        // Ensure money and loan are numbers
         money: parseInt(updates.money) || player.money,
         loan: parseInt(updates.loan) || player.loan,
 
       };
 
-      // Convert properties to array if it's not already
       const propertiesUpdate = Array.isArray(updates.properties) 
         ? updates.properties 
         : [];
@@ -143,7 +140,6 @@ io.on('connection', (socket) => {
         newProperties: propertiesUpdate
       });
       
-      // Update in database
       const [updatedCount] = await Player.update(
         {
           money: updatedPlayer.money,
@@ -160,7 +156,6 @@ io.on('connection', (socket) => {
         throw new Error('Failed to update player in database');
       }
       
-      // Fetch the updated player from DB to verify
       const updatedDbPlayer = await Player.findOne({ where: { socketId: playerId } });
       console.log('=== After Update ===');
       console.log('Game Engine Player:', {
@@ -175,14 +170,13 @@ io.on('connection', (socket) => {
         properties: updatedDbPlayer.properties || []
       });
 
-      // Update in game engine
       engine.session.players = engine.session.players.map(p => {
         if (p.socketId === playerId) {
           const playerUpdate = {
             ...p,
             money: updatedPlayer.money,
             loan: updatedPlayer.loan,
-            properties: [...propertiesUpdate] // Ensure properties is always an array
+            properties: [...propertiesUpdate]
           };
           
           return playerUpdate;
@@ -190,7 +184,6 @@ io.on('connection', (socket) => {
         return p;
       });
 
-      // Update in game session
       if (currentSession) {
         await GameSession.update(
           { players: engine.session.players },
@@ -201,7 +194,6 @@ io.on('connection', (socket) => {
         );
       }
 
-      // Update in game session
       await GameSession.update(
         { players: engine.session.players },
         { where: { id: currentSession.id }, transaction }
@@ -209,10 +201,8 @@ io.on('connection', (socket) => {
 
       await transaction.commit();
 
-      // Log the action
       const playerName = engine.session.players.find(p => p.socketId === playerId)?.name || 'Unknown';
       
-      // Broadcast the update to all clients
       io.emit('playerStatsUpdated', { 
         playerId,
         updates: {
@@ -221,18 +211,14 @@ io.on('connection', (socket) => {
         }
       });
 
-      // Ensure properties are integers
       const sanitizedProperties = Array.isArray(propertiesUpdate) 
         ? propertiesUpdate.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
         : [];
-
-      // Emit property update
       io.emit('propertyUpdate', {
         socketId: playerId,
         properties: sanitizedProperties
       });
       
-      // Log the game event
       const eventMessage = `[System] Updated stats for ${playerName}`;
       gameEvents.push({
         message: eventMessage,
@@ -1395,7 +1381,6 @@ io.on('connection', socket => {
     }
 
     if (finalTile?.type === 'property') {
-      // Ensure consistent types by converting both to string for comparison
       const currentPlayerProperties = (currentPlayer.properties || []).map(String);
       const isOwnedByCurrentPlayer = currentPlayerProperties.includes(String(finalTile.id));
       
@@ -1403,18 +1388,6 @@ io.on('connection', socket => {
         p.socketId !== socket.id && 
         (p.properties || []).map(String).includes(String(finalTile.id))
       );
-
-      console.log('[DEBUG] Property ownership check:', {
-        tileId: finalTile.id,
-        tileName: finalTile.name,
-        isOwnedByCurrentPlayer,
-        isOwnedByOther: !!propertyOwner,
-        ownerName: propertyOwner?.name,
-        currentPlayerMoney: currentPlayer.money,
-        ownerMoney: propertyOwner?.money,
-        currentPlayerProperties: currentPlayer.properties,
-        ownerProperties: propertyOwner?.properties
-      });
 
       if (propertyOwner && !isOwnedByCurrentPlayer) {
         const rentMultiplier = calculateRentMultiplier(finalTile.id, propertyOwner.properties);

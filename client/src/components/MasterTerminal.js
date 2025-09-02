@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { tiles } from '../data/tiles';
 
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
   const [players, setPlayers] = useState(initialPlayers);
   
-  // Sync with parent's players prop
   useEffect(() => {
     setPlayers(initialPlayers);
   }, [initialPlayers]);
@@ -27,23 +27,15 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       [playerId]: {
         ...prev[playerId],
         [field]: field === 'properties' 
-          ? value  // Store the raw string value, we'll split it only on save
+          ? value 
           : parseInt(value, 10) || 0
       }
     }));
   };
 
-  // Listen for player updates from the server
   useEffect(() => {
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-      console.log('=== Client: Received Player Update ===');
-      console.log('Player ID:', playerId);
-      console.log('Updates:', {
-        ...updates,
-        propertiesType: Array.isArray(updates.properties) ? 'array' : typeof updates.properties,
-        propertiesLength: Array.isArray(updates.properties) ? updates.properties.length : 'N/A'
-      });
-      
+
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(player => 
           player.socketId === playerId 
@@ -51,7 +43,6 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
             : player
         );
         
-        // Log the updated player from context
         const updatedPlayer = updatedPlayers.find(p => p.socketId === playerId);
         if (updatedPlayer) {
           console.log('=== Client: Updated Player in Context ===');
@@ -78,24 +69,32 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     const player = players.find(p => p.socketId === playerId);
     if (!player) return;
     
-    // Start with the current player state
     const changes = { 
-      money: player.money,
-      loan: player.loan,
-      properties: [...(player.properties || [])],
-      ...edits[playerId] // Apply any edits on top
+      money: player.money !== undefined ? player.money : 0,
+      loan: player.loan !== undefined ? player.loan : 0,
+      properties: [...(player.properties || [])]
     };
     
-    // Process properties field
-    if (edits[playerId]?.properties !== undefined) {
-      changes.properties = typeof edits[playerId].properties === 'string' 
-        ? edits[playerId].properties
-            .split(',')
-            .map(p => parseInt(p.trim(), 10))
-            .filter(n => !isNaN(n))
-        : Array.isArray(edits[playerId].properties) 
-          ? edits[playerId].properties.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
-          : [];
+
+    if (changes.properties) {
+      let propertiesArray = [];
+      if (typeof changes.properties === 'string') {
+        propertiesArray = changes.properties
+          .split(',')
+          .map(p => parseInt(p.trim(), 10))
+          .filter(n => !isNaN(n));
+      } else if (Array.isArray(changes.properties)) {
+        propertiesArray = changes.properties
+          .map(p => parseInt(p, 10))
+          .filter(n => !isNaN(n));
+      }
+      
+      changes.properties = propertiesArray.filter(propertyId => {
+        const tile = tiles.find(t => t.id === propertyId);
+        return tile && tile.type === 'property';
+      });
+    } else {
+      changes.properties = [];
     }
     
     socket.emit('updatePlayerStats', {
@@ -103,7 +102,6 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       updates: changes
     });
     
-    // Clear the edits for this player
     const newEdits = { ...edits };
     delete newEdits[playerId];
     setEdits(newEdits);

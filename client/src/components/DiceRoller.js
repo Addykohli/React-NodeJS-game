@@ -186,15 +186,6 @@ export default function DiceRoller({ testRollMode, hasCasinoPlayed }) {
 
       {(() => {
         const showButton = done && (!isOnCasino || casinoPlayed) && !rpsGame && hasRolled;
-        console.log('=== Done Button Debug ===');
-        console.log('done:', done);
-        console.log('isOnCasino:', isOnCasino);
-        console.log('casinoPlayed:', casinoPlayed);
-        console.log('!isOnCasino || casinoPlayed:', (!isOnCasino || casinoPlayed));
-        console.log('!rpsGame:', !rpsGame);
-        console.log('hasRolled:', hasRolled);
-        console.log('Show Done Button:', showButton);
-        console.log('======================');
         
         return showButton ? (
           <button
