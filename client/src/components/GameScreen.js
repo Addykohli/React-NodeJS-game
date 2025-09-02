@@ -470,29 +470,39 @@ export default function GameScreen() {
 
   useEffect(() => {
     const handlePurchaseSuccess = ({ socketId, money, properties }) => {
+      console.log('Purchase success received:', { socketId, money, properties });
+      
+      // Update players list
       setPlayers(prevPlayers => 
         prevPlayers.map(p => 
           p.socketId === socketId 
             ? { 
                 ...p, 
                 money,
-                properties: Array.isArray(properties) ? properties : (p.properties || [])
+                properties: Array.isArray(properties) ? [...properties] : [...(p.properties || [])]
               } 
             : p
         )
       );
 
+      // Update current player if it's them
       if (player?.socketId === socketId) {
         setPlayer(prev => ({
           ...prev,
           money,
-          properties: Array.isArray(properties) ? properties : (prev.properties || [])
+          properties: Array.isArray(properties) ? [...properties] : [...(prev.properties || [])]
         }));
+        
+        // Force a re-render by updating a state
+        setError(prev => prev);
       }
-      setError(null);
     };
 
     socket.on('purchaseSuccess', handlePurchaseSuccess);
+    
+    return () => {
+      socket.off('purchaseSuccess', handlePurchaseSuccess);
+    };
 
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
@@ -506,35 +516,51 @@ export default function GameScreen() {
     });
 
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
+      console.log('Property updated:', { playerId, propertyId, action, newMoney });
       
+      // Update players list
       setPlayers(prevPlayers => {
-        return prevPlayers.map(p => {
+        const updated = prevPlayers.map(p => {
           if (p.socketId === playerId) {
+            const newProperties = action === 'add'
+              ? [...new Set([...(p.properties || []), propertyId])] // Ensure no duplicates
+              : (p.properties || []).filter(id => id !== propertyId);
+              
+            console.log('Updating player in list:', p.name, 'properties:', newProperties);
+            
             return {
               ...p,
-              properties: action === 'add'
-                ? [...(p.properties || []), propertyId]
-                : (p.properties || []).filter(id => id !== propertyId),
+              properties: newProperties,
               money: newMoney 
             };
           }
           return p;
         });
+        return updated;
       });
 
-      if (player.socketId === playerId) {
-        setPlayer(prev => ({
-          ...prev,
-          properties: action === 'add'
-            ? [...(prev.properties || []), propertyId]
-            : (prev.properties || []).filter(id => id !== propertyId),
-          money: newMoney 
-        }));
+      // Update current player if it's them
+      if (player?.socketId === playerId) {
+        setPlayer(prev => {
+          const newProperties = action === 'add'
+            ? [...new Set([...(prev.properties || []), propertyId])] // Ensure no duplicates
+            : (prev.properties || []).filter(id => id !== propertyId);
+            
+          console.log('Updating current player properties:', newProperties);
+          
+          return {
+            ...prev,
+            properties: newProperties,
+            money: newMoney 
+          };
+        });
 
         if (action === 'remove') {
           const property = tiles.find(t => t.id === propertyId);
-          setError(`You sold ${property.name} for $${property.cost}`);
-          setTimeout(() => setError(null), 5000);
+          if (property) {
+            setError(`You sold ${property.name} for $${property.cost}`);
+            setTimeout(() => setError(null), 5000);
+          }
         }
       }
     });
