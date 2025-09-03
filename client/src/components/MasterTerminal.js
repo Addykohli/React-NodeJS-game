@@ -2,12 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { tiles } from '../data/tiles';
 
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
-  const [players, setPlayers] = useState(initialPlayers);
+  const [players, setPlayers] = useState(initialPlayers || []);
   
   // Sync with parent's players prop
   useEffect(() => {
-    setPlayers(initialPlayers);
+    if (initialPlayers && initialPlayers.length > 0) {
+      setPlayers(initialPlayers);
+    }
   }, [initialPlayers]);
+  
+  // Listen for player updates from the server
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handlePlayerStatsUpdated = ({ playerId, updates }) => {
+      setPlayers(prevPlayers => 
+        prevPlayers.map(p => 
+          p.socketId === playerId ? { ...p, ...updates } : p
+        )
+      );
+    };
+
+    socket.on('playerStatsUpdated', handlePlayerStatsUpdated);
+    return () => {
+      socket.off('playerStatsUpdated', handlePlayerStatsUpdated);
+    };
+  }, [socket]);
   const [password, setPassword] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [edits, setEdits] = useState({});
