@@ -2,32 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { tiles } from '../data/tiles';
 
 const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, socket }) => {
-  const [players, setPlayers] = useState(initialPlayers || []);
-  
-  // Sync with parent's players prop
-  useEffect(() => {
-    if (initialPlayers && initialPlayers.length > 0) {
-      setPlayers(initialPlayers);
-    }
-  }, [initialPlayers]);
-  
-  // Listen for player updates from the server
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handlePlayerStatsUpdated = ({ playerId, updates }) => {
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
-          p.socketId === playerId ? { ...p, ...updates } : p
-        )
-      );
-    };
+  const [players, setPlayers] = useState(initialPlayers);
 
-    socket.on('playerStatsUpdated', handlePlayerStatsUpdated);
-    return () => {
-      socket.off('playerStatsUpdated', handlePlayerStatsUpdated);
-    };
-  }, [socket]);
+  useEffect(() => {
+    setPlayers(initialPlayers);
+  }, [initialPlayers]);
   const [password, setPassword] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [edits, setEdits] = useState({});
@@ -45,7 +24,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
   const handleInputChange = (playerId, field, value) => {
     setEdits(prev => {
       const newValue = field === 'properties' 
-        ? value  // Store the raw string value for properties
+        ? value  
         : value === '' ? '' : Number(value);
       
       return {
@@ -58,7 +37,7 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     });
   };
 
-  // Listen for player updates from the server
+
   useEffect(() => {
     const handlePlayerStatsUpdated = ({ playerId, updates }) => {
       console.log('=== Client: Received Player Update ===');
@@ -76,7 +55,6 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
             : player
         );
         
-        // Log the updated player from context
         const updatedPlayer = updatedPlayers.find(p => p.socketId === playerId);
         if (updatedPlayer) {
           console.log('=== Client: Updated Player in Context ===');
@@ -103,26 +81,20 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
     const player = players.find(p => p.socketId === playerId);
     if (!player) return;
     
-    // Get the current edits for this player
     const currentEdits = edits[playerId] || {};
     
-    // Start with an empty changes object
     const changes = {};
     
-    // Handle money - include it if it was edited or explicitly set to 0
     if (currentEdits.money !== undefined) {
       changes.money = currentEdits.money === '' ? 0 : Number(currentEdits.money);
     }
     
-    // Handle loan - include it if it was edited or explicitly set to 0
     if (currentEdits.loan !== undefined) {
       changes.loan = currentEdits.loan === '' ? 0 : Number(currentEdits.loan);
     }
     
-    // Always include properties, defaulting to current player's properties
     changes.properties = [...(player.properties || [])];
     
-    // Process properties field if it was edited
     if (currentEdits.properties !== undefined) {
       changes.properties = (typeof currentEdits.properties === 'string' 
         ? currentEdits.properties
@@ -145,7 +117,6 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       updates: changes
     });
     
-    // Clear the edits for this player
     const newEdits = { ...edits };
     delete newEdits[playerId];
     setEdits(newEdits);

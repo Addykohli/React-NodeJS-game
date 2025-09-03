@@ -77,13 +77,23 @@ export function GameProvider({ children }) {
     };
   }, []); 
 
-  
+  useEffect(() => {
+    if (socket) {
+      socket.emit('requestLobbyState');
+    }
+  }, [socket]);
+
   useEffect(() => {
     if (!socket) {
       console.log('GameContext: Socket not available');
       return;
     }
     
+    const handleLobbyState = (players) => {
+      console.log('Received lobby state:', players);
+      setPlayers(players || []);
+    };
+
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
     
@@ -194,9 +204,10 @@ export function GameProvider({ children }) {
 
     return () => {
       socket.off('playerMoneyUpdate', handlePlayerMoneyUpdate);
-      socket.off('rpsStarted', handleRpsStarted);
-      socket.off('rpsEnded', handleRpsEnded);
-      socket.off('playerDiceRoll', handlePlayerDiceRoll);
+      socket.on('lobbyState', handleLobbyState);
+      socket.on('rpsStarted', handleRpsStarted);
+      socket.on('rpsEnded', handleRpsEnded);
+      socket.on('playerDiceRoll', handlePlayerDiceRoll);
       socket.off('activeLoans');
       socket.off('pendingLoanRequests');
       socket.off('loanRequest');
