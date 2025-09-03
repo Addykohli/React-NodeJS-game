@@ -84,6 +84,9 @@ const gameEvents = [];
 let activeTradeOffers = [];
 
 io.on('connection', (socket) => {
+  // Send current lobby state to newly connected client
+  socket.emit('lobbyState', lobbyPlayers);
+  console.log('Sent initial lobby state to client:', lobbyPlayers);
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
     const transaction = await sequelize.transaction();
     try {

@@ -77,11 +77,36 @@ export function GameProvider({ children }) {
     };
   }, []); 
 
+  // Handle lobby state updates
   useEffect(() => {
-    if (socket) {
-      socket.emit('requestLobbyState');
-    }
-  }, [socket]);
+    if (!socket) return;
+    
+    const handleLobbyState = (players) => {
+      console.log('Received lobby state update:', players);
+      setPlayers(players || []);
+      
+      // If we have a player and they're in the lobby, update their data
+      if (player) {
+        const updatedPlayer = players?.find(p => p.socketId === player.socketId);
+        if (updatedPlayer) {
+          setPlayer(prev => ({
+            ...prev,
+            ...updatedPlayer
+          }));
+        }
+      }
+    };
+    
+    // Listen for lobby state updates
+    socket.on('lobbyState', handleLobbyState);
+    
+    // Request initial lobby state
+    socket.emit('requestLobbyState');
+    
+    return () => {
+      socket.off('lobbyState', handleLobbyState);
+    };
+  }, [socket, player?.socketId]);
 
   useEffect(() => {
     if (!socket) {
@@ -89,10 +114,6 @@ export function GameProvider({ children }) {
       return;
     }
     
-    const handleLobbyState = (players) => {
-      console.log('Received lobby state:', players);
-      setPlayers(players || []);
-    };
 
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
