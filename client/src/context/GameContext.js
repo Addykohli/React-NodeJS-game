@@ -77,9 +77,13 @@ export function GameProvider({ children }) {
     };
   }, []); 
 
-  // Handle lobby state updates
+
+  // Handle lobby state and socket events
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log('GameContext: Socket not available');
+      return;
+    }
     
     const handleLobbyState = (players) => {
       console.log('Received lobby state update:', players);
@@ -97,24 +101,6 @@ export function GameProvider({ children }) {
       }
     };
     
-    // Listen for lobby state updates
-    socket.on('lobbyState', handleLobbyState);
-    
-    // Request initial lobby state
-    socket.emit('requestLobbyState');
-    
-    return () => {
-      socket.off('lobbyState', handleLobbyState);
-    };
-  }, [socket, player?.socketId]);
-
-  useEffect(() => {
-    if (!socket) {
-      console.log('GameContext: Socket not available');
-      return;
-    }
-    
-
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
     
@@ -135,10 +121,15 @@ export function GameProvider({ children }) {
       setPlayer(prev => ({ ...prev, money: data.money }));
     };
 
+    // Set up all socket event listeners
+    socket.on('lobbyState', handleLobbyState);
     socket.on('rpsStarted', handleRpsStarted);
     socket.on('rpsEnded', handleRpsEnded);
     socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
     socket.on('playerDiceRoll', handlePlayerDiceRoll);
+    
+    // Request initial lobby state
+    socket.emit('requestLobbyState');
     
     socket.on('activeLoans', (loans) => {
       setActiveLoans(loans || []);
@@ -224,11 +215,12 @@ export function GameProvider({ children }) {
     fetchLoans();
 
     return () => {
+      // Clean up all socket event listeners
+      socket.off('lobbyState', handleLobbyState);
+      socket.off('rpsStarted', handleRpsStarted);
+      socket.off('rpsEnded', handleRpsEnded);
       socket.off('playerMoneyUpdate', handlePlayerMoneyUpdate);
-      socket.on('lobbyState', handleLobbyState);
-      socket.on('rpsStarted', handleRpsStarted);
-      socket.on('rpsEnded', handleRpsEnded);
-      socket.on('playerDiceRoll', handlePlayerDiceRoll);
+      socket.off('playerDiceRoll', handlePlayerDiceRoll);
       socket.off('activeLoans');
       socket.off('pendingLoanRequests');
       socket.off('loanRequest');
