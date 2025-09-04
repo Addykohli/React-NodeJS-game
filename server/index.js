@@ -985,7 +985,7 @@ io.on('connection', socket => {
       }
 
       const s = new GameSession({
-        players: arr.map(pl => ({
+        players: sortedPlayers.map(pl => ({
           socketId: pl.socketId,
           name:     pl.name,
           piece:    pl.piece,
@@ -1001,7 +1001,7 @@ io.on('connection', socket => {
       await s.save();
       currentSessionId = s._id;
 
-      io.emit('gameStart', { players: arr, sessionId: currentSessionId, currentPlayerId: arr[0].socketId });
+      io.emit('gameStart', { players: sortedPlayers, sessionId: currentSessionId, currentPlayerId: sortedPlayers[0].socketId });
     }
   });
 
