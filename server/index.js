@@ -934,27 +934,43 @@ io.on('connection', socket => {
     io.emit('lobbyUpdate', lobbyPlayers);
   });
 
-  socket.on('playerReady', async () => {
-    console.log('[playerReady] socket:', socket.id);
+  socket.on('playerReady', async ({ die1, die2, total }) => {
+    console.log('[playerReady] socket:', socket.id, { die1, die2, total });
     const p = lobbyPlayers.find(x => x.socketId === socket.id);
     if (!p || p.ready) return;
+    
     p.ready = true;
+    p.die1 = die1;
+    p.die2 = die2;
+    p.rollTotal = total;
+    p.readyAt = Date.now();
     io.emit('lobbyUpdate', lobbyPlayers);
 
     const allReady = lobbyPlayers.length >= 2 && lobbyPlayers.every(x => x.ready && x.piece);
     if (!hasStarted && allReady) {
       console.log('All players ready, starting game');
       hasStarted = true;
-      const arr = [...lobbyPlayers];
-      const i   = Math.floor(Math.random() * arr.length);
-      if (i > 0) arr.unshift(arr.splice(i, 1)[0]);
-      lobbyPlayers = arr;
-      engine.session.players = arr;
+      
+      // Sort players by roll total in descending order
+      const sortedPlayers = [...lobbyPlayers].sort((a, b) => {
+        // If totals are equal, the player who rolled first goes first
+        if (b.rollTotal === a.rollTotal) {
+          return a.readyAt - b.readyAt;
+        }
+        return b.rollTotal - a.rollTotal;
+      });
+      
+      console.log('Player turn order (highest roll first):', 
+        sortedPlayers.map(p => `${p.name}: ${p.rollTotal}`)
+      );
+      
+      lobbyPlayers = sortedPlayers;
+      engine.session.players = sortedPlayers;
       engine.session.currentPlayerIndex = 0;
 
       try {
         const allPlayers = await Player.findAll();
-        const lobbyPlayerIds = arr.map(p => p.socketId);
+        const lobbyPlayerIds = lobbyPlayers.map(p => p.socketId);
         const playersToRemove = allPlayers.filter(p => !lobbyPlayerIds.includes(p.socketId));
         
         if (playersToRemove.length > 0) {

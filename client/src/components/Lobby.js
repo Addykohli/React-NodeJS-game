@@ -23,6 +23,11 @@ const Lobby = () => {
     socket,
     handleQuit
   } = useContext(GameContext);
+  
+  const diceImages = {};
+  for (let i = 1; i <= 6; i++) {
+    diceImages[i] = require(`../assets/dice/dice${i}.png`);
+  }
 
   const [name, setName] = useState(() => {
     
@@ -90,8 +95,11 @@ const Lobby = () => {
   };
 
   const handleReady = () => {
-    socket.emit('playerReady');
-    console.log('[Lobby.js] playerReady');
+    const die1 = Math.floor(Math.random() * 6) + 1;
+    const die2 = Math.floor(Math.random() * 6) + 1;
+    const total = die1 + die2;
+    console.log('[Lobby.js] playerReady with roll:', { die1, die2, total });
+    socket.emit('playerReady', { die1, die2, total });
   };
 
   const usedPieces = players.map(p => p.piece).filter(Boolean);
@@ -328,7 +336,7 @@ const Lobby = () => {
                         transition: 'background-color 0.3s'
                       }}
                     >
-                      Ready
+                      Roll to get Ready
                     </button>
                   )}
                 </div>
@@ -386,10 +394,19 @@ const Lobby = () => {
                   />
                 )}
                 {p.ready && (
-                  <span style={{
-                    color: '#4CAF50',
-                    fontSize: '1.8rem'
-                  }}>✓</span>
+                  <div style={{ display: 'flex', gap: '5px' }}>
+                    <img 
+                      src={diceImages[p.die1]} 
+                      alt={`Die ${p.die1}`} 
+                      style={{ width: '24px', height: '24px' }}
+                    />
+                    <img 
+                      src={diceImages[p.die2]} 
+                      alt={`Die ${p.die2}`} 
+                      style={{ width: '24px', height: '24px' }}
+                    />
+                    <span style={{ marginLeft: '5px', color: '#4CAF50' }}>({p.die1 + p.die2})</span>
+                  </div>
                 )}
               </li>
             ))}
