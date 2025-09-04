@@ -116,6 +116,8 @@ io.on('connection', (socket) => {
         ...updates,
         money: typeof updates.money !== 'undefined' ? Number(updates.money) : player.money,
         loan: typeof updates.loan !== 'undefined' ? Number(updates.loan) : player.loan,
+        tileId: typeof updates.tileId !== 'undefined' ? Math.max(1, Math.min(45, Number(updates.tileId) || 1)) : player.tileId,
+        prevTile: typeof updates.prevTile !== 'undefined' ? Math.max(1, Math.min(45, Number(updates.prevTile) || 1)) : player.prevTile
       };
 
       const propertiesUpdate = Array.isArray(updates.properties) 
@@ -143,7 +145,9 @@ io.on('connection', (socket) => {
         {
           money: updatedPlayer.money,
           loan: updatedPlayer.loan,
-          properties: propertiesUpdate
+          properties: propertiesUpdate,
+          tileId: updatedPlayer.tileId,
+          prevTile: updatedPlayer.prevTile
         },
         { 
           where: { socketId: playerId },
@@ -175,6 +179,8 @@ io.on('connection', (socket) => {
             ...p,
             money: updatedPlayer.money,
             loan: updatedPlayer.loan,
+            tileId: updatedPlayer.tileId,
+            prevTile: updatedPlayer.prevTile,
             properties: [...propertiesUpdate] 
           };
           
@@ -198,6 +204,8 @@ io.on('connection', (socket) => {
         updates: {
           money: updatedPlayer.money,
           loan: updatedPlayer.loan,
+          tileId: updatedPlayer.tileId,
+          prevTile: updatedPlayer.prevTile,
         }
       });
 
@@ -1194,7 +1202,7 @@ io.on('connection', socket => {
       }
 
       remaining--;
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 400));
     }
     const { tiles } = require('./data/tiles.cjs');
     const finalPlayer = engine.getPlayer(socket.id);

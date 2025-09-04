@@ -93,6 +93,16 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       changes.loan = currentEdits.loan === '' ? 0 : Number(currentEdits.loan);
     }
     
+    if (currentEdits.tileId !== undefined) {
+      const newTileId = Math.max(1, Math.min(45, currentEdits.tileId === '' ? 1 : Number(currentEdits.tileId)));
+      changes.tileId = newTileId;
+    }
+    
+    if (currentEdits.prevTile !== undefined) {
+      const newPrevTile = Math.max(1, Math.min(45, currentEdits.prevTile === '' ? 1 : Number(currentEdits.prevTile)));
+      changes.prevTile = newPrevTile;
+    }
+    
     changes.properties = [...(player.properties || [])];
     
     if (currentEdits.properties !== undefined) {
@@ -189,6 +199,28 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
                   type="text"
                   value={edits[player.socketId]?.properties ?? (player.properties?.join(', ') || '')}
                   onChange={(e) => handleInputChange(player.socketId, 'properties', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label>Current Tile (1-45):</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="45"
+                  value={edits[player.socketId]?.tileId ?? (player.tileId || 1)}
+                  onChange={(e) => handleInputChange(player.socketId, 'tileId', e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label>Previous Tile (1-45):</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="45"
+                  value={edits[player.socketId]?.prevTile ?? (player.prevTile || 1)}
+                  onChange={(e) => handleInputChange(player.socketId, 'prevTile', e.target.value)}
                   style={styles.input}
                 />
               </div>
