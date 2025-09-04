@@ -373,14 +373,14 @@ const Lobby = () => {
               <li
                 key={i}
                 style={{
-                  padding: '20px',
+                  padding: '20px 40px 20px 40px',
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '10px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '15px',
-                  fontSize: '1.6rem'
+                  gap: '25px',
+                  fontSize: '2rem'
                 }}
               >
                 <span>{p.name}</span>
@@ -388,24 +388,23 @@ const Lobby = () => {
                   <img
                     src={pieceImages[p.piece]}
                     alt=""
-                    width={36}
-                    height={36}
+                    width={50}
+                    height={50}
                     style={{ verticalAlign: 'middle' }}
                   />
                 )}
                 {p.ready && (
-                  <div style={{ display: 'flex', gap: '5px' }}>
+                  <div style={{ display: 'flex', gap: '5px' , marginLeft: 'auto'}}>
                     <img 
                       src={diceImages[p.die1]} 
                       alt={`Die ${p.die1}`} 
-                      style={{ width: '24px', height: '24px' }}
+                      style={{ width: '40px', height: '40px' }}
                     />
                     <img 
                       src={diceImages[p.die2]} 
                       alt={`Die ${p.die2}`} 
-                      style={{ width: '24px', height: '24px' }}
+                      style={{ width: '40px', height: '40px' }}
                     />
-                    <span style={{ marginLeft: '5px', color: '#4CAF50' }}>({p.die1 + p.die2})</span>
                   </div>
                 )}
               </li>

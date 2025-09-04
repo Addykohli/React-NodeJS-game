@@ -1001,7 +1001,16 @@ io.on('connection', socket => {
       await s.save();
       currentSessionId = s._id;
 
-      io.emit('gameStart', { players: sortedPlayers, sessionId: currentSessionId, currentPlayerId: sortedPlayers[0].socketId });
+      // Broadcast player turn order
+      const playerOrderMessage = 'Game starting! Turn order: ' + 
+        sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`).join(', ');
+      broadcastGameEvent(playerOrderMessage);
+      
+      io.emit('gameStart', { 
+        players: sortedPlayers, 
+        sessionId: currentSessionId, 
+        currentPlayerId: sortedPlayers[0].socketId 
+      });
     }
   });
 
