@@ -163,7 +163,7 @@ const Lobby = () => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'flex-start',
-          gap: '40px',
+          gap: '80px',
           padding: '40px'
         }}
       >
@@ -174,7 +174,7 @@ const Lobby = () => {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             padding: '3rem',
             borderRadius: '15px',
-            width: '500px',
+            width: '600px',
             alignSelf: 'flex-start'
           }}
         >
@@ -352,7 +352,7 @@ const Lobby = () => {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             padding: '3rem',
             borderRadius: '15px',
-            width: '500px',
+            width: '600px',
             alignSelf: 'flex-start',
             minHeight: '200px'
           }}
@@ -360,7 +360,7 @@ const Lobby = () => {
           <h2 style={{ 
             textAlign: 'center', 
             marginBottom: '2rem',
-            fontSize: '2.2rem'
+            fontSize: '2.6rem'
           }}>Players in Lobby</h2>
           <ul style={{
             listStyle: 'none',
@@ -373,7 +373,7 @@ const Lobby = () => {
               <li
                 key={i}
                 style={{
-                  padding: '20px 40px 20px 40px',
+                  padding: '20px 30px 20px 40px',
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '10px',
                   display: 'flex',
@@ -398,12 +398,12 @@ const Lobby = () => {
                     <img 
                       src={diceImages[p.die1]} 
                       alt={`Die ${p.die1}`} 
-                      style={{ width: '40px', height: '40px' }}
+                      style={{ width: '50px', height: '50px' }}
                     />
                     <img 
                       src={diceImages[p.die2]} 
                       alt={`Die ${p.die2}`} 
-                      style={{ width: '40px', height: '40px' }}
+                      style={{ width: '50px', height: '50px' }}
                     />
                   </div>
                 )}
