@@ -250,7 +250,7 @@ const Board = () => {
             const isPiece6 = p.piece === 'piece6.png';
             const isPiece9 = p.piece === 'piece9.png';
             const imgSrc = pieceImages[p.piece];
-            if (!imgSrc && !isPiece3 && !isPiece5 && !isPiece6 && !isPiece7) {
+            if (!imgSrc && !isPiece3 && !isPiece5 && !isPiece6 && !isPiece9) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
               return null;
             }

@@ -287,6 +287,11 @@ export default function GameScreen() {
   const [inCasino, setInCasino] = useState(false);
   const [anyInCasino, setAnyInCasino] = useState(false);
   const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
+  const [betAmount, setBetAmount] = useState(1000);
+  const [selectedBet, setSelectedBet] = useState(null);
+  const [showResult, setShowResult] = useState(null);
+  const [diceResult, setDiceResult] = useState(null);
+  const [isActive, setIsActive] = useState(true);
   const [hasChosenCorner, setHasChosenCorner] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
@@ -2082,6 +2087,16 @@ export default function GameScreen() {
                       setAnyInCasino(false);
                     }}
                     isRpsActive={isRpsActive}
+                    betAmount={betAmount}
+                    setBetAmount={setBetAmount}
+                    selectedBet={selectedBet}
+                    setSelectedBet={setSelectedBet}
+                    showResult={showResult}
+                    setShowResult={setShowResult}
+                    diceResult={diceResult}
+                    setDiceResult={setDiceResult}
+                    isActive={isActive}
+                    setIsActive={setIsActive}
                   />
                 );
               }
