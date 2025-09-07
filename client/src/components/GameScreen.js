@@ -292,6 +292,7 @@ export default function GameScreen() {
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
   const [isActive, setIsActive] = useState(true);
+  const [onCasinoPlayed, setOnCasinoPlayed] = useState(false);
   const [hasChosenCorner, setHasChosenCorner] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
