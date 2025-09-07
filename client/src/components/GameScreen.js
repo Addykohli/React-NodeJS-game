@@ -21,7 +21,7 @@ for (let i = 1; i <= 6; i++) {
   diceImages[i] = require(`../assets/dice/dice${i}.png`);
 }
 
-const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
+const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive = false }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
@@ -114,6 +114,8 @@ if (!isActive) {
     return null;
   }
 
+  if (isRpsActive) return null;
+  
   return (
     <div style={{
       display: 'flex',
@@ -121,8 +123,9 @@ if (!isActive) {
       alignItems: 'center',
       justifyContent: 'space-between',
       height: '100%',
-      padding: '0px',
-      gap: '10px'
+      padding: '20px',
+      gap: '10px',
+      minHeight: '200px'
     }}>
       {/* Money Input */}
       <div style={{
