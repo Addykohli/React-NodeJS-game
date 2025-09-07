@@ -7,7 +7,7 @@ import PropertyDisplay from './PropertyDisplay';
 import TopPropertyDisplay from './TopPropertyDisplay';
 
 const pieceImages = {};
-for (let i = 1; i <= 8; i++) {
+for (let i = 1; i <= 9; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
 
@@ -44,7 +44,7 @@ const Board = () => {
   const getTileOwner = (tile) => {
     return players.find(p => p.properties?.includes(tile.id));
   };
-  
+
 
   useEffect(() => {
     const img = new window.Image();
@@ -56,7 +56,7 @@ const Board = () => {
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};
-      for (let i = 1; i <= 8; i++) {
+      for (let i = 1; i <= 9; i++) {
         const img = new Image();
         img.src = pieceImages[`piece${i}.png`];
         await new Promise(resolve => img.onload = resolve);
@@ -248,8 +248,9 @@ const Board = () => {
             const isPiece3 = p.piece === 'piece3.png';
             const isPiece5 = p.piece === 'piece5.png';
             const isPiece6 = p.piece === 'piece6.png';
+            const isPiece9 = p.piece === 'piece9.png';
             const imgSrc = pieceImages[p.piece];
-            if (!imgSrc && !isPiece3 && !isPiece5 && !isPiece6) {
+            if (!imgSrc && !isPiece3 && !isPiece5 && !isPiece6 && !isPiece7) {
               console.log(`[Board] Invalid piece for ${p.name}:`, p.piece);
               return null;
             }
@@ -352,6 +353,43 @@ const Board = () => {
                     style={{
                       width: '150px',
                       height: '190px',
+                      objectFit: 'contain',
+                      pointerEvents: 'none',
+                      transform: 'translateY(-20%)' 
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            if (isPiece9) {
+              return (
+                <div 
+                  key={p.socketId}
+                  title={p.name}
+                  style={{
+                    position: 'absolute',
+                    top: y + offsetY,
+                    left: x + offsetX,
+                    transform: 'translate(-50%, -50%)',
+                    transition: 'top 0.3s, left 0.3s',
+                    zIndex: 10,
+                    width: '150px',
+                    height: '220px',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                    background: 'transparent'
+                  }}
+                >
+                  <img 
+                    src="https://media.tenor.com/6nHb-yHC2pkAAAAi/bulbasaur.gif" 
+                    alt="Player Piece"
+                    style={{
+                      width: '140px',
+                      height: '150px',
                       objectFit: 'contain',
                       pointerEvents: 'none',
                       transform: 'translateY(-20%)' 

@@ -51,21 +51,6 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
     }
   };
 
-  useEffect(() => {
-    const handleCasinoResult = ({ playerId, dice, amount, won, playerMoney }) => {
-      if (playerId === player.socketId) {
-        setDiceResult(dice);
-        setShowResult({ won, amount });
-        setIsActive(false);
-        onCasinoPlayed();
-      }
-    };
-
-    socket.on('casinoResult', handleCasinoResult);
-    return () => socket.off('casinoResult', handleCasinoResult);
-  }, [socket, player.socketId, onCasinoPlayed]);
-
-  
   const diceImages = {
   1: require('../assets/dice/dice1.png'),
   2: require('../assets/dice/dice2.png'),
@@ -679,6 +664,13 @@ export default function GameScreen() {
 
     socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
       setAnyInCasino(false);
+
+      if (playerId === player.socketId) {
+        setDiceResult(dice);
+        setShowResult({ won, amount });
+        setIsActive(false);
+        onCasinoPlayed();
+      }
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerId ? { ...p, money: playerMoney } : p
@@ -1018,7 +1010,7 @@ export default function GameScreen() {
                   backgroundColor: `${config.color}`,
                   transform: 'translateX(0)',
                   transition: 'transform 0.3s ease',
-                  padding: '60px 40px 20px 20px',
+                  padding: '60px 20px 20px 20px',
                   color: 'white',
                   overflowY: 'auto',
                   display: 'flex',

@@ -5,11 +5,11 @@ import bgImage from '../assets/bg.png';
 
 const allPieces = [
   'piece1.png', 'piece2.png', 'piece3.png', 'piece4.png',
-  'piece5.png', 'piece6.png', 'piece7.png', 'piece8.png'
+  'piece5.png', 'piece6.png', 'piece7.png', 'piece8.png', 'piece9.png'
 ];
 
 const pieceImages = {};
-for (let i = 1; i <= 8; i++) {
+for (let i = 1; i <= 9; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
 
@@ -297,7 +297,6 @@ const Lobby = () => {
                         height={90}
                         style={{ marginBottom: '10px' }}
                       />
-                      <div style={{ fontSize: '1.2rem' }}>{piece.replace('.png', '')}</div>
                     </div>
                   ))}
                 </div>

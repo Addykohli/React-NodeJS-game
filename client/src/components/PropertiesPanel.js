@@ -206,7 +206,7 @@ const PropertiesPanel = () => {
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '18px',
-                width: '100%',
+                width: '95%',
                 textAlign: 'left',
                 display: 'flex',
                 justifyContent: 'space-between',

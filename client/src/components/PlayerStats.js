@@ -3,7 +3,7 @@ import { GameContext } from '../context/GameContext';
 import { tiles } from '../data/tiles';
 
 const pieceImages = {};
-for (let i = 1; i <= 8; i++) {
+for (let i = 1; i <= 9; i++) {
   pieceImages[`piece${i}.png`] = require(`../assets/pieces/piece${i}.png`);
 }
 const PIECE_DISPLAY_WIDTH = 70; 
@@ -61,7 +61,7 @@ const PlayerStats = () => {
   useEffect(() => {
     const calculateScales = async () => {
       const scales = {};
-      for (let i = 1; i <= 8; i++) {
+      for (let i = 1; i <= 9; i++) {
         const img = new window.Image();
         img.src = pieceImages[`piece${i}.png`];
         await new Promise(resolve => img.onload = resolve);
