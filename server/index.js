@@ -73,10 +73,10 @@ app.get('/healthz', async (req, res) => {
   }
 });
 
-const engine          = new GameEngine();
-let lobbyPlayers      = [];
-let hasStarted        = false;
-let currentSessionId  = null;
+const engine  = new GameEngine();
+let lobbyPlayers = [];
+let hasStarted = false;
+let currentSessionId = null;
 const branchResolvers = {};
 const activeRPSGames = {};
 const disconnectedPlayers = new Map();
@@ -997,13 +997,15 @@ io.on('connection', socket => {
       });
       await s.save();
       currentSessionId = s._id;
+
+      const playerOrderMessage = 'Game starting! Turn order: ' + 
+        sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`).join(', ');
+      broadcastGameEvent(playerOrderMessage);
       
-      // Emit game start with turn order information
       io.emit('gameStart', { 
         players: sortedPlayers, 
         sessionId: currentSessionId, 
-        currentPlayerId: sortedPlayers[0].socketId,
-        turnOrder: sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`)
+        currentPlayerId: sortedPlayers[0].socketId 
       });
     }
   });

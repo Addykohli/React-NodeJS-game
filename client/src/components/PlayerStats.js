@@ -73,9 +73,17 @@ const PlayerStats = () => {
   }, []);
 
   
-  const others = players && player
-    ? players.filter(p => p && p.socketId !== player?.socketId)
-    : [];
+  const others = useMemo(() => {
+    if (!players || !player) return [];
+    
+    const playersCopy = [...players];
+    while (playersCopy.length > 0 && playersCopy[0]?.socketId !== player.socketId) {
+      const first = playersCopy.shift();
+      if (first) playersCopy.push(first);
+    }
+    
+    return playersCopy.slice(1).filter(p => p);
+  }, [players, player]);
 
   
   const getPositions = (numPlayers) => {
@@ -87,42 +95,43 @@ const PlayerStats = () => {
       case 3: 
         return [
           { position: 'left', top: '50%' },
-          { position: 'right', top: '50%' },
-          { position: 'top' , left: '50%'}
+          { position: 'top' , left: '50%'},
+          { position: 'right', top: '50%' }
         ];
       case 4: 
         return [
           { position: 'left', top: '50%' },
-          { position: 'right', top: '50%' },
           { position: 'top' , left: '33%'},
-          { position: 'top' , left: '66%'}
+          { position: 'top' , left: '66%'},
+          { position: 'right', top: '50%' }
         ];
       case 5: 
         return [
-          { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
+          { position: 'left', top: '25%' },
+          { position: 'top' , left: '50%'},
           { position: 'right', top: '25%' },
-          { position: 'right', top: '75%' },
-          { position: 'top' , left: '50%'}
+          { position: 'right', top: '75%' }
+
         ];
       case 6: 
         return [
-          { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
-          { position: 'right', top: '25%' },
-          { position: 'right', top: '75%' },
+          { position: 'left', top: '25%' },
           { position: 'top' , left: '33%'},
-          { position: 'top' , left: '66%'}
+          { position: 'top' , left: '66%'},
+          { position: 'right', top: '25%' },
+          { position: 'right', top: '75%' }
         ];
       case 7: 
         return [
-          { position: 'left', top: '25%' },
           { position: 'left', top: '75%' },
-          { position: 'right', top: '25%' },
-          { position: 'right', top: '75%' },
+          { position: 'left', top: '25%' },
           { position: 'top' , left: '25%'},
           { position: 'top' , left: '50%'},
-          { position: 'top' , left: '75%'}
+          { position: 'top' , left: '75%'},
+          { position: 'right', top: '25%' },
+          { position: 'right', top: '75%' }
         ];
       default:
         return [];

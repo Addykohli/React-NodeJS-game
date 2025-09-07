@@ -7,10 +7,7 @@ export function GameProvider({ children }) {
   
   const [isRpsActive, setIsRpsActive] = useState(false);
   
-  const [chatMessages, setChatMessages] = useState(() => {
-    const savedChat = localStorage.getItem('gameChatMessages');
-    return savedChat ? JSON.parse(savedChat) : [];
-  });
+  const [chatMessages, setChatMessages] = useState([]);
   
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
@@ -331,23 +328,10 @@ export function GameProvider({ children }) {
     socket.on('lobbyUpdate', updated => {
       setPlayers(prev => ensurePiece(updated, prev));
     });
-    socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid, turnOrder }) => {
+    socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid }) => {
       setPlayers(prev => ensurePiece(ps, prev));
       setSessionId(sid);
       setGameState('playing');
-      
-      // Add turn order message to chat
-      if (turnOrder && turnOrder.length > 0) {
-        const turnOrderMessage = {
-          message: `Game starting! Turn order: ${turnOrder.join(', ')}`,
-          timestamp: new Date().toISOString()
-        };
-        setChatMessages(prev => {
-          const updated = [...prev, turnOrderMessage];
-          localStorage.setItem('gameChatMessages', JSON.stringify(updated));
-          return updated;
-        });
-      }
       setCurrentPlayerId(cid);
       setDiceRoll(null);
       setMovementDone(false);

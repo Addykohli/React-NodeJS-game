@@ -44,6 +44,7 @@ const Board = () => {
   const getTileOwner = (tile) => {
     return players.find(p => p.properties?.includes(tile.id));
   };
+  
 
   useEffect(() => {
     const img = new window.Image();

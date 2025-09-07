@@ -274,8 +274,8 @@ if (!isActive) {
 export default function GameScreen() {
   const {
     player,
-    players,
     setPlayer,
+    players,
     setPlayers,
     currentPlayerId,
     socket,
@@ -292,13 +292,13 @@ export default function GameScreen() {
   const [testRollInput, setTestRollInput] = useState('');
   const [testRollMode, setTestRollMode] = useState(false);
   const [inCasino, setInCasino] = useState(false);
+  const [anyInCasino, setAnyInCasino] = useState(false);
   const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
   const [hasChosenCorner, setHasChosenCorner] = useState(false);
   const [rpsGame, setRpsGame] = useState(null);
   const [rpsChoice, setRpsChoice] = useState(null);
   const [rpsResult, setRpsResult] = useState(null);
   
-
   useEffect(() => {
     if (rpsResult) {
       const timeout = setTimeout(() => setRpsResult(null), 5000);
@@ -878,11 +878,11 @@ export default function GameScreen() {
   }, [socket, player, players, setPlayer, setPlayers]);
 
   useEffect(() => {
-    const isCasinoTile = tileMeta?.id === 16;
-    setInCasino(isCasinoTile);
-    if (isCasinoTile) {
+    setInCasino(tileMeta?.id === 16);
+    if (tileMeta?.id === 16) {
       setHasCasinoPlayed(false);
     }
+    setAnyInCasino(players.some(p => p.tileId === 16));
   }, [tileMeta]);
 
   useEffect(() => {
@@ -2065,14 +2065,17 @@ export default function GameScreen() {
                 );
               }
 
-              if (inCasino) {
+              if (anyInCasino) {
                 return (
                   <CasinoBetting 
                     isMyTurn={isMyTurn} 
                     currentMoney={player?.money || 0}
                     socket={socket}
                     player={player}
-                    onCasinoPlayed={() => setHasCasinoPlayed(true)}
+                    onCasinoPlayed={() => {
+                      setHasCasinoPlayed(true);
+                      setAnyInCasino(false);
+                    }}
                     isRpsActive={isRpsActive}
                   />
                 );
