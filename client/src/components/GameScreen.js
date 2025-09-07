@@ -669,14 +669,16 @@ export default function GameScreen() {
     });
 
     socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
-      setAnyInCasino(false);
 
-      if (playerId === player.socketId) {
-        setDiceResult(dice);
-        setShowResult({ won, amount });
-        setIsActive(false);
-        onCasinoPlayed();
-      }
+      setDiceResult(dice);
+      setShowResult({ won, amount });
+      setIsActive(false);
+      onCasinoPlayed();
+      
+
+      setAnyInCasino(false);
+      setInCasino(false);
+
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerId ? { ...p, money: playerMoney } : p
