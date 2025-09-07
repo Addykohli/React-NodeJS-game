@@ -21,7 +21,7 @@ for (let i = 1; i <= 6; i++) {
   diceImages[i] = require(`../assets/dice/dice${i}.png`);
 }
 
-const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive = false }) => {
+const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
@@ -65,9 +65,9 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   4: require('../assets/dice/dice4.png'),
   5: require('../assets/dice/dice5.png'),
   6: require('../assets/dice/dice6.png'),
-};
+  };
 
-if (!isActive) {
+  if (!isActive) {
     if (showResult && diceResult) {
       return (
         <div style={{
@@ -114,8 +114,6 @@ if (!isActive) {
     return null;
   }
 
-  if (isRpsActive) return null;
-  
   return (
     <div style={{
       display: 'flex',
@@ -123,9 +121,8 @@ if (!isActive) {
       alignItems: 'center',
       justifyContent: 'space-between',
       height: '100%',
-      padding: '20px',
-      gap: '10px',
-      minHeight: '200px'
+      padding: '0px',
+      gap: '10px'
     }}>
       {/* Money Input */}
       <div style={{
@@ -881,22 +878,12 @@ export default function GameScreen() {
   }, [socket, player, players, setPlayer, setPlayers]);
 
   useEffect(() => {
-    const isOnCasino = tileMeta?.id === 16;
-    setInCasino(isOnCasino);
-    
-    if (isOnCasino) {
+    setInCasino(tileMeta?.id === 16);
+    if (tileMeta?.id === 16) {
       setHasCasinoPlayed(false);
     }
-    
-    const someoneInCasino = players.some(p => p.tileId === 16);
-    console.log('anyInCasino update:', { 
-      someoneInCasino, 
-      playerTile: player?.tileId,
-      currentPlayerId,
-      players: players.map(p => ({ name: p.name, tileId: p.tileId }))
-    });
-    setAnyInCasino(someoneInCasino);
-  }, [tileMeta, players, player, currentPlayerId]);
+    setAnyInCasino(players.some(p => p.tileId === 16));
+  }, [tileMeta]);
 
   useEffect(() => {
     if (!isMyTurn) {
@@ -2078,21 +2065,21 @@ export default function GameScreen() {
                 );
               }
 
-              {console.log('Rendering check - anyInCasino:', anyInCasino, 'isMyTurn:', isMyTurn, 'playerInCasino:', player?.tileId === 16)}
-              {anyInCasino && (
-                <CasinoBetting 
-                  isMyTurn={isMyTurn} 
-                  currentMoney={player?.money || 0}
-                  socket={socket}
-                  player={player}
-                  onCasinoPlayed={() => {
-                    console.log('Casino played, updating states');
-                    setHasCasinoPlayed(true);
-                    setAnyInCasino(false);
-                  }}
-                  isRpsActive={isRpsActive}
-                />
-              )}
+              if (inCasino) {
+                return (
+                  <CasinoBetting 
+                    isMyTurn={isMyTurn} 
+                    currentMoney={player?.money || 0}
+                    socket={socket}
+                    player={player}
+                    onCasinoPlayed={() => {
+                      setHasCasinoPlayed(true);
+                      setAnyInCasino(false);
+                    }}
+                    isRpsActive={isRpsActive}
+                  />
+                );
+              }
 
               if (isMyTurn && tileMeta?.name?.toLowerCase().includes('choose corner')) {
                 return (
