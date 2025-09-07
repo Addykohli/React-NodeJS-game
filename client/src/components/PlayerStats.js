@@ -207,18 +207,7 @@ const PlayerStats = () => {
                 fontSize: '1.3em',
                 marginLeft: '70px'
               }}>
-
-                {p.name && p.name.length > 8
-                  ? (
-                      <>
-                        {p.name.slice(0, 8)}
-                        <wbr />
-                        {'\n'}
-                        {p.name.slice(8)}
-                      </>
-                    )
-                  : p.name
-                }
+                 p.name
               </div>
               <div style={{ 
                 fontSize: '1.1em', 
