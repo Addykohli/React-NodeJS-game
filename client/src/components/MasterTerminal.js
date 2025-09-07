@@ -122,6 +122,10 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
       console.log('Filtered properties:', changes.properties);
     }
     
+    if (currentEdits.hasRolled !== undefined) {
+      changes.hasRolled = Boolean(currentEdits.hasRolled);
+    }
+    
     socket.emit('updatePlayerStats', {
       playerId,
       updates: changes
@@ -223,6 +227,17 @@ const MasterTerminal = ({ players: initialPlayers, onClose, onUpdatePlayer, sock
                   onChange={(e) => handleInputChange(player.socketId, 'prevTile', e.target.value)}
                   style={styles.input}
                 />
+              </div>
+              <div style={{...styles.formGroup, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+                <label>Has Rolled:</label>
+                <label style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                  <input
+                    type="checkbox"
+                    checked={edits[player.socketId]?.hasRolled ?? player.hasRolled ?? false}
+                    onChange={(e) => handleInputChange(player.socketId, 'hasRolled', e.target.checked)}
+                    style={{marginLeft: '10px', width: '20px', height: '20px'}}
+                  />
+                </label>
               </div>
               <button 
                 onClick={() => handleSaveChanges(player.socketId)}

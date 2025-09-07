@@ -73,17 +73,15 @@ const PlayerStats = () => {
   }, []);
 
   
-  const others = useMemo(() => {
-    if (!players || !player) return [];
-    
+  let others = [];
+  if (players && player) {
     const playersCopy = [...players];
     while (playersCopy.length > 0 && playersCopy[0]?.socketId !== player.socketId) {
       const first = playersCopy.shift();
       if (first) playersCopy.push(first);
     }
-    
-    return playersCopy.slice(1).filter(p => p);
-  }, [players, player]);
+    others = playersCopy.slice(1).filter(p => p);
+  }
 
   
   const getPositions = (numPlayers) => {
