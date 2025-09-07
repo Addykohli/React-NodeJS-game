@@ -889,6 +889,7 @@ export default function GameScreen() {
     if (!isMyTurn) {
       setInCasino(false);
       setHasCasinoPlayed(false);
+      setAnyInCasino(false);
     }
   }, [isMyTurn]);
 
@@ -2065,7 +2066,7 @@ export default function GameScreen() {
                 );
               }
 
-              if (inCasino) {
+              if (anyInCasino) {
                 return (
                   <CasinoBetting 
                     isMyTurn={isMyTurn} 
