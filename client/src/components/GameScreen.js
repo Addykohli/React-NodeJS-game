@@ -878,12 +878,22 @@ export default function GameScreen() {
   }, [socket, player, players, setPlayer, setPlayers]);
 
   useEffect(() => {
-    setInCasino(tileMeta?.id === 16);
-    if (tileMeta?.id === 16) {
+    const isOnCasino = tileMeta?.id === 16;
+    setInCasino(isOnCasino);
+    
+    if (isOnCasino) {
       setHasCasinoPlayed(false);
     }
-    setAnyInCasino(players.some(p => p.tileId === 16));
-  }, [tileMeta]);
+    
+    const someoneInCasino = players.some(p => p.tileId === 16);
+    console.log('anyInCasino update:', { 
+      someoneInCasino, 
+      playerTile: player?.tileId,
+      currentPlayerId,
+      players: players.map(p => ({ name: p.name, tileId: p.tileId }))
+    });
+    setAnyInCasino(someoneInCasino);
+  }, [tileMeta, players, player, currentPlayerId]);
 
   useEffect(() => {
     if (!isMyTurn) {
@@ -2065,21 +2075,21 @@ export default function GameScreen() {
                 );
               }
 
-              if (anyInCasino) {
-                return (
-                  <CasinoBetting 
-                    isMyTurn={isMyTurn} 
-                    currentMoney={player?.money || 0}
-                    socket={socket}
-                    player={player}
-                    onCasinoPlayed={() => {
-                      setHasCasinoPlayed(true);
-                      setAnyInCasino(false);
-                    }}
-                    isRpsActive={isRpsActive}
-                  />
-                );
-              }
+              {console.log('Rendering check - anyInCasino:', anyInCasino, 'isMyTurn:', isMyTurn, 'playerInCasino:', player?.tileId === 16)}
+              {anyInCasino && (
+                <CasinoBetting 
+                  isMyTurn={isMyTurn} 
+                  currentMoney={player?.money || 0}
+                  socket={socket}
+                  player={player}
+                  onCasinoPlayed={() => {
+                    console.log('Casino played, updating states');
+                    setHasCasinoPlayed(true);
+                    setAnyInCasino(false);
+                  }}
+                  isRpsActive={isRpsActive}
+                />
+              )}
 
               if (isMyTurn && tileMeta?.name?.toLowerCase().includes('choose corner')) {
                 return (
