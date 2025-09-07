@@ -527,6 +527,10 @@ export default function GameScreen() {
 
     socket.on('propertyUpdate', handlePropertyUpdate);
 
+    socket.on('setCasino', ({ casino }) => {
+      setAnyInCasino(casino);
+    });
+
     socket.on('playerDisconnected', ({ playerName, temporary }) => {
       if (temporary) {
         setError(`${playerName} temporarily disconnected. They can rejoin with the same name.`);
@@ -666,7 +670,7 @@ export default function GameScreen() {
     });
 
     socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
-      
+      setAnyInCasino(false);
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
           p.socketId === playerId ? { ...p, money: playerMoney } : p

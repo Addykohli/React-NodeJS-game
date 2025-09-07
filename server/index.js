@@ -1374,8 +1374,10 @@ io.on('connection', socket => {
       tileType: finalTile?.type
     });
 
+    if (finalTile?.id === 16) {
+      io.emit('setCasino', {casino: true});
+    }
 
-    
     if (finalTile?.name === 'RPS') {
       console.log('\nLanded on RPS! Finding shortest paths to other players...');
       const pathInfo = engine.findShortestPathsToPlayers(finalTileId);
