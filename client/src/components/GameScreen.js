@@ -31,11 +31,19 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
     setBetAmount(newAmount);
+    socket.emit('setBetAmountFromClient', newAmount );
   };
-
+  socket.on('setBetAmountToClients', ( betAmount ) => {
+    setBetAmount(betAmount);
+  });
+    
   const handleBetSelect = (bet) => {
     setSelectedBet(bet);
+    socket.emit('setBetTypeFromClient', bet);
   };
+  socket.on('setBetTypeToClients', ( betType ) => {
+    setSelectedBet(betType);
+  });
 
   const handleRoll = () => {
     if (selectedBet && betAmount >= 1000 && betAmount <= currentMoney) {

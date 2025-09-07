@@ -3110,6 +3110,14 @@ io.on('connection', socket => {
     }
   });
 
+  socket.on('setBetAmountFromClient', (betAmount) => {
+    socket.broadcast.emit('setBetAmountToClients', betAmount);
+  });
+
+  socket.on('setBetTypeFromClient', (betType) => {
+    socket.broadcast.emit('setBetTypeToClients', betType);
+  });
+
   socket.on('quitGame', () => {
     console.log('[Player quit game]', socket.id);
     
