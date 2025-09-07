@@ -206,8 +206,8 @@ const PlayerStats = () => {
                 overflowWrap: 'break-word',
                 fontSize: '1.3em',
                 marginLeft: '70px'
-              }}>
-                 p.name
+              }}>{p.name}
+
               </div>
               <div style={{ 
                 fontSize: '1.1em', 
