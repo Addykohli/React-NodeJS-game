@@ -84,7 +84,6 @@ const gameEvents = [];
 let activeTradeOffers = [];
 
 io.on('connection', (socket) => {
-  // Send current lobby state to newly connected client
   socket.emit('lobbyState', lobbyPlayers);
   console.log('Sent initial lobby state to client:', lobbyPlayers);
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
@@ -951,9 +950,7 @@ io.on('connection', socket => {
       console.log('All players ready, starting game');
       hasStarted = true;
       
-      // Sort players by roll total in descending order
       const sortedPlayers = [...lobbyPlayers].sort((a, b) => {
-        // If totals are equal, the player who rolled first goes first
         if (b.rollTotal === a.rollTotal) {
           return a.readyAt - b.readyAt;
         }
@@ -1000,16 +997,13 @@ io.on('connection', socket => {
       });
       await s.save();
       currentSessionId = s._id;
-
-      // Broadcast player turn order
-      const playerOrderMessage = 'Game starting! Turn order: ' + 
-        sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`).join(', ');
-      broadcastGameEvent(playerOrderMessage);
       
+      // Emit game start with turn order information
       io.emit('gameStart', { 
         players: sortedPlayers, 
         sessionId: currentSessionId, 
-        currentPlayerId: sortedPlayers[0].socketId 
+        currentPlayerId: sortedPlayers[0].socketId,
+        turnOrder: sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`)
       });
     }
   });

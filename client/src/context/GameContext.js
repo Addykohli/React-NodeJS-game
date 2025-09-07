@@ -7,7 +7,10 @@ export function GameProvider({ children }) {
   
   const [isRpsActive, setIsRpsActive] = useState(false);
   
-  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessages, setChatMessages] = useState(() => {
+    const savedChat = localStorage.getItem('gameChatMessages');
+    return savedChat ? JSON.parse(savedChat) : [];
+  });
   
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
@@ -78,7 +81,6 @@ export function GameProvider({ children }) {
   }, []); 
 
 
-  // Handle lobby state and socket events
   useEffect(() => {
     if (!socket) {
       console.log('GameContext: Socket not available');
@@ -89,7 +91,6 @@ export function GameProvider({ children }) {
       console.log('Received lobby state update:', players);
       setPlayers(players || []);
       
-      // If we have a player and they're in the lobby, update their data
       if (player) {
         const updatedPlayer = players?.find(p => p.socketId === player.socketId);
         if (updatedPlayer) {
@@ -121,14 +122,12 @@ export function GameProvider({ children }) {
       setPlayer(prev => ({ ...prev, money: data.money }));
     };
 
-    // Set up all socket event listeners
     socket.on('lobbyState', handleLobbyState);
     socket.on('rpsStarted', handleRpsStarted);
     socket.on('rpsEnded', handleRpsEnded);
     socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
     socket.on('playerDiceRoll', handlePlayerDiceRoll);
     
-    // Request initial lobby state
     socket.emit('requestLobbyState');
     
     socket.on('activeLoans', (loans) => {
@@ -215,7 +214,6 @@ export function GameProvider({ children }) {
     fetchLoans();
 
     return () => {
-      // Clean up all socket event listeners
       socket.off('lobbyState', handleLobbyState);
       socket.off('rpsStarted', handleRpsStarted);
       socket.off('rpsEnded', handleRpsEnded);
@@ -333,10 +331,23 @@ export function GameProvider({ children }) {
     socket.on('lobbyUpdate', updated => {
       setPlayers(prev => ensurePiece(updated, prev));
     });
-    socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid }) => {
+    socket.on('gameStart', ({ players: ps, sessionId: sid, currentPlayerId: cid, turnOrder }) => {
       setPlayers(prev => ensurePiece(ps, prev));
       setSessionId(sid);
       setGameState('playing');
+      
+      // Add turn order message to chat
+      if (turnOrder && turnOrder.length > 0) {
+        const turnOrderMessage = {
+          message: `Game starting! Turn order: ${turnOrder.join(', ')}`,
+          timestamp: new Date().toISOString()
+        };
+        setChatMessages(prev => {
+          const updated = [...prev, turnOrderMessage];
+          localStorage.setItem('gameChatMessages', JSON.stringify(updated));
+          return updated;
+        });
+      }
       setCurrentPlayerId(cid);
       setDiceRoll(null);
       setMovementDone(false);

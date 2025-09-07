@@ -2065,7 +2065,7 @@ export default function GameScreen() {
                 );
               }
 
-              if (inCasino && isMyTurn) {
+              if (inCasino) {
                 return (
                   <CasinoBetting 
                     isMyTurn={isMyTurn} 

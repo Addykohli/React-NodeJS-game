@@ -21,7 +21,6 @@ const PropertiesPanel = () => {
     window.dispatchEvent(event);
   }, [showOwnership]);
 
-  // Group properties by division and sort by cost (highest first)
   const propertiesByDivision = useMemo(() => {
     const divisions = {};
     tiles
@@ -33,7 +32,6 @@ const PropertiesPanel = () => {
         divisions[property.division].push(property);
       });
     
-    // Sort properties within each division by cost (highest first)
     Object.values(divisions).forEach(properties => {
       properties.sort((a, b) => (b.cost || 0) - (a.cost || 0));
     });
@@ -51,12 +49,16 @@ const PropertiesPanel = () => {
   };
   
   const getOwnerColor = (tileId) => {
-    if (!players) return 'white';
+    if (!players) return 'rgba(255, 255, 255, 0.6)';
     const owner = Object.values(players).find(p => 
       p.properties && p.properties.some(prop => prop.id === tileId)
     );
-    if (!owner) return 'white';
-    return owner.color || 'white';
+    
+    if (!owner) return 'rgba(255, 255, 255, 0.6)';
+    
+    return owner.socketId === player?.socketId 
+      ? 'rgba(0, 255, 0, 0.6)' 
+      : 'rgba(255, 0, 0, 0.6)';
   };
 
   return (
