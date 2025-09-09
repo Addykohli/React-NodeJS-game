@@ -26,7 +26,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
-  const [hasCasinoPlayed, setHasCasinoPlayed] = useState(hasCasinoPlayed);
+  const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
 
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
