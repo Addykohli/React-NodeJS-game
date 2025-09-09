@@ -26,6 +26,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, hasCasinoPlayed
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
+  const [hasCasinoPlayed, setHasCasinoPlayed] = useState(hasCasinoPlayed);
 
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
@@ -54,7 +55,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, hasCasinoPlayed
 
     setDiceResult(dice);
     setShowResult({ won, amount });
-    
+    setHasCasinoPlayed(true);
   });
 
   const diceImages = {
@@ -1086,13 +1087,13 @@ export default function GameScreen() {
                   <div>
                     {/* Borrow Section */}
                     <div style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.53)',
                       padding: '20px',
                       borderRadius: '8px',
                       marginTop: '70px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h4 style={{ marginBottom: '15px', fontSize: '1em' }}>Borrow Money</h4>
+                      <h4 style={{ marginBottom: '25px', fontSize: '1.8em', textAlign: 'center' }}>Borrow Money</h4>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1229,13 +1230,13 @@ export default function GameScreen() {
 
                     {/* Pay Off Section */}
                     <div style={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.33)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.53)',
                       padding: '20px',
                       borderRadius: '8px',
                       marginTop: '20px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h4 style={{ marginBottom: '15px' }}>Pay Off Loan</h4>
+                      <h4 style={{ marginBottom: '25px', textAlign: 'center', fontSize: '1.8em' }}>Pay Off Loan</h4>
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -1252,7 +1253,7 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             cursor: (!player?.loan || rpsGame) ? 'not-allowed' : 'pointer',
                             backgroundColor: (!player?.loan || rpsGame) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-                            color: 'white',
+                            color: player?.loan ? 'rgb(255, 255, 255)' : '#888',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
                             minWidth: '50px',
@@ -1297,7 +1298,7 @@ export default function GameScreen() {
                             fontSize: '1.7em',
                             cursor: (!player?.loan || rpsGame) ? 'not-allowed' : 'pointer',
                             backgroundColor: (!player?.loan || rpsGame) ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-                            color: 'white',
+                            color: player?.loan ? 'rgb(255, 255, 255)' : '#888',
                             borderRadius: '4px',
                             border: '2px inset rgb(80, 80, 170)',
                             minWidth: '50px',
@@ -1329,7 +1330,7 @@ export default function GameScreen() {
                             ? 'rgba(255, 255, 255, 0.3)' 
                             : 'rgba(255, 255, 255, 0.1)',
                           border: '2px outset rgb(80, 80, 170)',
-                          color: 'white',
+                          color: player?.loan ? 'rgb(255, 255, 255)' : '#888',
                           borderRadius: '4px',
                           cursor: player?.loan && player?.money >= payoffAmount ? 'pointer' : 'not-allowed',
                           fontSize: '1.1em',
@@ -1388,7 +1389,7 @@ export default function GameScreen() {
                       borderRadius: '8px',
                       border: '3px outset rgb(80, 80, 170)',
                     }}>
-                      <h3>Player Net Worth</h3>
+                      <h3 style={{ textAlign: 'center', fontSize: '1.8em', marginBottom: '25px' }}>Player Net Worth</h3>
                       <div style={{ marginTop: '10px', fontSize: '1.7em' }}>
                         {players
                           .map(p => {

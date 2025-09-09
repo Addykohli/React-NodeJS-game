@@ -504,10 +504,11 @@ const TradePanel = () => {
                 style={{ 
                   width: '100%', 
                   padding: '8px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.0)',
                   border: 'none',
                   borderRadius: '5px',
                   fontSize: '1.3em',
+                  color: 'white',
                   textAlign: 'center'
                 }}
               >
@@ -751,9 +752,6 @@ const TradePanel = () => {
             {/* Request Loan Form */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ marginBottom: '10px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
-                  Select Player to Request From:
-                </label>
                 <select 
                   value={selectedLender?.socketId || ''}
                   onChange={(e) => {
@@ -764,7 +762,9 @@ const TradePanel = () => {
                     width: '100%',
                     padding: '8px',
                     borderRadius: '5px',
-                    fontSize: '1.3em'
+                    fontSize: '1.3em',
+                    color: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   }}
                 >
                   <option value="">Select a player</option>
@@ -779,9 +779,9 @@ const TradePanel = () => {
               </div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', color: 'white' }}>
+                <div style={{ display: 'block', marginBottom: '15px', color: 'white', textAlign: 'center' }}>
                   Loan Amount:
-                </label>
+                </div>
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'center',
@@ -894,17 +894,19 @@ const TradePanel = () => {
                 onClick={handleRequestLoan}
                 disabled={!selectedLender || loanAmount <= 0 || returnAmount <= loanAmount}
                 style={{
-                  width: '100%',
+                  width: '90%',
                   padding: '10px',
                   backgroundColor: returnAmount > loanAmount ? '#4CAF50' : '#888',
                   color: 'white',
                   border: 'none',
                   borderRadius: '5px',
                   cursor: returnAmount > loanAmount ? 'pointer' : 'not-allowed',
-                  fontSize: '1.4em'
+                  fontSize: '1.4em',
+                  display: 'block',
+                  margin: '30px auto 30px'
                 }}
               >
-                Request ${loanAmount} (Pay back ${returnAmount})
+                Request Loan
               </button>
             </div>
 
