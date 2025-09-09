@@ -27,6 +27,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
   const [hasCasinoPlayed, setHasCasinoPlayed] = useState(false);
+  const [diceRolled, setDiceRolled] = useState(false);
 
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
@@ -49,6 +50,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
     if (selectedBet && betAmount >= 1000 && betAmount <= currentMoney) {
       socket.emit('casinoRoll', { betAmount, betType: selectedBet });
     }
+    setDiceRolled(true);
   };
 
   socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
@@ -106,7 +108,9 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
             borderRadius: '8px',
             textAlign: 'center'
           }}>
-            {showResult.won ? `You won $${showResult.amount}!` : `You lost $${showResult.amount}`}
+            {showResult.won 
+              ? `${isMyTurn ? 'You' : players.find(p => p.socketId === currentPlayerId)?.name || 'Player'} won $${showResult.amount}!` 
+              : `${isMyTurn ? 'You' : players.find(p => p.socketId === currentPlayerId)?.name || 'Player'} lost $${showResult.amount}`}
           </div>
         </div>
       );
@@ -236,7 +240,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
         {/* Roll button */}
         <button
           onClick={handleRoll}
-          disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney || isRpsActive}
+          disabled={!isMyTurn || !selectedBet || betAmount < 1000 || betAmount > currentMoney || isRpsActive || diceRolled}
           style={{
             padding: '10px 30px',
             backgroundColor: isMyTurn && selectedBet && betAmount >= 1000 && betAmount <= currentMoney 

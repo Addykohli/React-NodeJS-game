@@ -512,11 +512,11 @@ const TradePanel = () => {
                   textAlign: 'center'
                 }}
               >
-                <option value="">Select Player</option>
+                <option value="">Select a Player</option>
                 {players
                   .filter(p => p.socketId !== player.socketId)
                   .map(p => (
-                    <option key={p.socketId} value={p.socketId}>
+                    <option style={{ color: 'black' }} key={p.socketId} value={p.socketId}>
                       {p.name}
                     </option>
                   ))
@@ -771,7 +771,7 @@ const TradePanel = () => {
                   {players
                     .filter(p => p.socketId !== player.socketId)
                     .map(p => (
-                      <option key={p.socketId} value={p.socketId}>
+                      <option style={{ color: 'black' }} key={p.socketId} value={p.socketId}>
                         {p.name} (${p.money})
                       </option>
                     ))}
