@@ -21,7 +21,7 @@ for (let i = 1; i <= 6; i++) {
   diceImages[i] = require(`../assets/dice/dice${i}.png`);
 }
 
-const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, hasCasinoPlayed, isRpsActive }) => {
+const CasinoBetting = ({ isMyTurn, currentMoney, socket, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
@@ -2094,8 +2094,6 @@ export default function GameScreen() {
                     isMyTurn={isMyTurn} 
                     currentMoney={player?.money || 0}
                     socket={socket}
-                    player={player}
-                    hasCasinoPlayed={hasCasinoPlayed}
                     isRpsActive={isRpsActive}
                     betAmount={betAmount}
                     setBetAmount={setBetAmount}
