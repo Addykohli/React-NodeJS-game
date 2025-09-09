@@ -454,7 +454,10 @@ export default function GameScreen() {
         setTestRollInput(prev => prev.slice(0, -1));
       } else if (e.key.length === 1) { 
         setTestRollInput(prev => prev + e.key);
+      } else if (e.key === '*') {
+        setTestRollInput('');
       }
+
     };
 
     window.addEventListener('keydown', handleKeyPress);
@@ -679,10 +682,6 @@ export default function GameScreen() {
       setDiceResult(dice);
       setShowResult({ won, amount });
       setIsActive(false);
-      
-
-      setAnyInCasino(false);
-      setInCasino(false);
 
       setPlayers(prevPlayers => {
         const updatedPlayers = prevPlayers.map(p =>
@@ -695,6 +694,11 @@ export default function GameScreen() {
           setError(`${playerName} ${won ? 'won' : 'lost'} $${amount} at the casino!`);
           setTimeout(() => setError(null), 5000);
         }
+
+        setTimeout(() => {
+          setAnyInCasino(false);
+          setInCasino(false);
+        }, 5000);
 
         return updatedPlayers;
       });
