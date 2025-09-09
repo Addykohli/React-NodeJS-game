@@ -21,12 +21,11 @@ for (let i = 1; i <= 6; i++) {
   diceImages[i] = require(`../assets/dice/dice${i}.png`);
 }
 
-const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed, isRpsActive }) => {
+const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, hasCasinoPlayed, isRpsActive }) => {
   const [betAmount, setBetAmount] = useState(1000);
   const [selectedBet, setSelectedBet] = useState(null);
   const [showResult, setShowResult] = useState(null);
   const [diceResult, setDiceResult] = useState(null);
-  const [isActive, setIsActive] = useState(true);
 
   const handleAmountChange = (delta) => {
     const newAmount = Math.max(1000, Math.min(15000, currentMoney, betAmount + delta));
@@ -51,6 +50,13 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
     }
   };
 
+  socket.on('casinoResult', ({ playerId, dice, amount, won, playerName, playerMoney }) => {
+
+    setDiceResult(dice);
+    setShowResult({ won, amount });
+    
+  });
+
   const diceImages = {
   1: require('../assets/dice/dice1.png'),
   2: require('../assets/dice/dice2.png'),
@@ -60,7 +66,7 @@ const CasinoBetting = ({ isMyTurn, currentMoney, socket, player, onCasinoPlayed,
   6: require('../assets/dice/dice6.png'),
   };
 
-  if (!isActive) {
+  if (hasCasinoPlayed) {
     if (showResult && diceResult) {
       return (
         <div style={{
@@ -673,7 +679,6 @@ export default function GameScreen() {
       setDiceResult(dice);
       setShowResult({ won, amount });
       setIsActive(false);
-      onCasinoPlayed();
       
 
       setAnyInCasino(false);
@@ -2085,10 +2090,7 @@ export default function GameScreen() {
                     currentMoney={player?.money || 0}
                     socket={socket}
                     player={player}
-                    onCasinoPlayed={() => {
-                      setHasCasinoPlayed(true);
-                      setAnyInCasino(false);
-                    }}
+                    hasCasinoPlayed={hasCasinoPlayed}
                     isRpsActive={isRpsActive}
                     betAmount={betAmount}
                     setBetAmount={setBetAmount}
