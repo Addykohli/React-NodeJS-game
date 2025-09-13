@@ -75,7 +75,7 @@ export function GameProvider({ children }) {
     return () => {
       socket.off('chatMessage', handleChatMessage);
     };
-  }, []); 
+  }, [socket]); 
 
 
   useEffect(() => {
@@ -84,85 +84,48 @@ export function GameProvider({ children }) {
       return;
     }
     
-    const handleLobbyState = (players) => {
+    const handleLobbyState = useCallback((players) => {
       console.log('Received lobby state update:', players);
       setPlayers(players || []);
-      
-      if (player) {
-        const updatedPlayer = players?.find(p => p.socketId === player.socketId);
-        if (updatedPlayer) {
-          setPlayer(prev => ({
-            ...prev,
-            ...updatedPlayer
-          }));
-        }
-      }
-
       socket.emit('getCurrentPlayerId');
-    };
+    }, [socket]);
     
-    const handleRpsStarted = () => setIsRpsActive(true);
-    const handleRpsEnded = () => setIsRpsActive(false);
+    const handleRpsStarted = useCallback(() => setIsRpsActive(true), []);
+    const handleRpsEnded = useCallback(() => setIsRpsActive(false), []);
     
-    const handlePlayerDiceRoll = (data) => {
+    const handlePlayerDiceRoll = useCallback((data) => {
       console.log('GameContext: Received playerDiceRoll event:', data);
-      socket.emit('forwardedPlayerDiceRoll', data);
-    };
+      console.log('GameContext: Current socket ID:', socket?.id);
+      console.log('GameContext: Event player ID:', data.playerId);
+      console.log('GameContext: Forwarding as forwardedPlayerDiceRoll');
+      socket?.emit('forwardedPlayerDiceRoll', data);
+    }, [socket]);
 
-    const handlePlayerMoneyUpdate = (data) => {
+    const handlePlayerMoneyUpdate = useCallback((data) => {
       console.log('GameContext: Received playerMoneyUpdate event:', data);
       setPlayer(prev => ({ ...prev, money: data.money }));
-    };
+    }, []);
 
-    // Clean up any existing listeners first
-    const cleanup = () => {
-      socket.off('lobbyState', handleLobbyState);
-      socket.off('rpsStarted', handleRpsStarted);
-      socket.off('rpsEnded', handleRpsEnded);
-      socket.off('playerMoneyUpdate', handlePlayerMoneyUpdate);
-      socket.off('playerDiceRoll', handlePlayerDiceRoll);
-      socket.off('currentPlayerId');
-      socket.off('activeLoans');
-      socket.off('pendingLoanRequests');
-      socket.off('loanRequest');
-    };
-
-    // Clean up first
-    cleanup();
-
-    // Set up new listeners
-    socket.on('lobbyState', handleLobbyState);
-    socket.on('rpsStarted', handleRpsStarted);
-    socket.on('rpsEnded', handleRpsEnded);
-    socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
-    socket.on('playerDiceRoll', handlePlayerDiceRoll);
-    socket.on('currentPlayerId', (id) => {
+    const handleCurrentPlayerId = useCallback((id) => {
       setCurrentPlayerId(id);
-    });
-    
-    socket.emit('requestLobbyState');
-    
-    socket.on('activeLoans', (loans) => {
+    }, []);
+
+    const handleActiveLoans = useCallback((loans) => {
       setActiveLoans(loans || []);
-    });
+    }, []);
     
-    socket.on('pendingLoanRequests', (requests) => {
+    const handlePendingLoanRequests = useCallback((requests) => {
       setLoanRequests(requests || []);
-    });
+    }, []);
     
-    socket.on('loanRequest', (request) => {
+    const handleLoanRequest = useCallback((request) => {
       setLoanRequests(prev => {
         if (prev.some(req => req.id === request.id)) return prev;
         return [...prev, request];
       });
-    });
+    }, []);
 
-    // Clean up on unmount
-    return () => {
-      cleanup();
-    };
-
-    socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
+    const handleLoanAccepted = useCallback(({ loan, borrowerUpdate, lenderUpdate }) => {
       console.log('Loan accepted:', loan);
       
       setActiveLoans(prev => {
@@ -284,57 +247,55 @@ export function GameProvider({ children }) {
   }, [movementDone]); 
 
   
+  // Handle reconnection when socket reconnects
   useEffect(() => {
+    if (!socket) return;
+    
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
-        const playerData = JSON.parse(savedPlayer);
-        
-        socket.emit('joinLobby', { 
-          name: playerData.name,
-          piece: playerData.piece 
-        });
+        try {
+          const playerData = JSON.parse(savedPlayer);
+          socket.emit('joinLobby', { 
+            name: playerData.name,
+            piece: playerData.piece 
+          });
+        } catch (error) {
+          console.error('Error parsing player data:', error);
+        }
       }
     };
 
     socket.on('connect', handleReconnect);
-    return () => socket.off('connect', handleReconnect);
-  }, []); 
-
-  useEffect(() => {
-    if (socket?.id && players.length > 0) {
-      const me = players.find(p => p.socketId === socket.id);
-      
-      if (me) {
-        setPlayer(prev => ({
-          ...me,
-          piece: me.piece || prev?.piece
-        }));
-      }
-    }
-  }, [players]); 
-
-  const handleQuit = () => {
-    localStorage.removeItem('gamePlayer');
-    localStorage.removeItem('gameState');
-    localStorage.removeItem('sessionId');
-    localStorage.removeItem('gameDiceRoll');
-    localStorage.removeItem('gameMovementDone');
-    setPlayer(null);
-    setGameState('lobby');
+    
+    // Initial cleanup
     setSessionId(null);
     setDiceRoll(null);
     setMovementDone(false);
-  };
+    
+    return () => {
+      socket.off('connect', handleReconnect);
+    };
+  }, [socket]);
 
+  // Update player state when players array changes
   useEffect(() => {
-    if (socket?.id && players.length > 0) {
-      const me = players.find(p => p.socketId === socket.id);
-      if (me) {
-        setPlayer(me);
-      }
-    }
-  }, [players]); 
+    if (!socket?.id || !players.length) return;
+    
+    const currentPlayer = players.find(p => p.socketId === socket.id);
+    if (!currentPlayer) return;
+    
+    setPlayer(prev => {
+      // Only update if there are actual changes to prevent unnecessary re-renders
+      const hasChanges = Object.keys(currentPlayer).some(
+        key => prev?.[key] !== currentPlayer[key]
+      );
+      
+      return hasChanges 
+        ? { ...currentPlayer, piece: currentPlayer.piece || prev?.piece }
+        : prev;
+    });
+  }, [players, socket?.id]); 
 
   function ensurePiece(players, prevPlayers = []) {
     return players.map(p => {
