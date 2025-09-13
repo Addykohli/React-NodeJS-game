@@ -75,7 +75,7 @@ export function GameProvider({ children }) {
     return () => {
       socket.off('chatMessage', handleChatMessage);
     };
-  }, [socket]); 
+  }, []); 
 
 
   useEffect(() => {
@@ -84,48 +84,70 @@ export function GameProvider({ children }) {
       return;
     }
     
-    const handleLobbyState = useCallback((players) => {
+    const handleLobbyState = (players) => {
       console.log('Received lobby state update:', players);
       setPlayers(players || []);
+      
+      if (player) {
+        const updatedPlayer = players?.find(p => p.socketId === player.socketId);
+        if (updatedPlayer) {
+          setPlayer(prev => ({
+            ...prev,
+            ...updatedPlayer
+          }));
+        }
+      }
+
       socket.emit('getCurrentPlayerId');
-    }, [socket]);
+    };
     
-    const handleRpsStarted = useCallback(() => setIsRpsActive(true), []);
-    const handleRpsEnded = useCallback(() => setIsRpsActive(false), []);
+    const handleRpsStarted = () => setIsRpsActive(true);
+    const handleRpsEnded = () => setIsRpsActive(false);
     
-    const handlePlayerDiceRoll = useCallback((data) => {
+    const handlePlayerDiceRoll = (data) => {
       console.log('GameContext: Received playerDiceRoll event:', data);
-      console.log('GameContext: Current socket ID:', socket?.id);
+      console.log('GameContext: Current socket ID:', socket.id);
       console.log('GameContext: Event player ID:', data.playerId);
       console.log('GameContext: Forwarding as forwardedPlayerDiceRoll');
-      socket?.emit('forwardedPlayerDiceRoll', data);
-    }, [socket]);
+      socket.emit('forwardedPlayerDiceRoll', data);
+      console.log('GameContext: Current socket event listeners:', {
+        events: socket._callbacks ? Object.keys(socket._callbacks) : 'No callbacks',
+        hasForwardedListener: socket._callbacks?.forwardedPlayerDiceRoll ? 'Yes' : 'No'
+      });
+    };
 
-    const handlePlayerMoneyUpdate = useCallback((data) => {
+    const handlePlayerMoneyUpdate = (data) => {
       console.log('GameContext: Received playerMoneyUpdate event:', data);
       setPlayer(prev => ({ ...prev, money: data.money }));
-    }, []);
+    };
 
-    const handleCurrentPlayerId = useCallback((id) => {
+    socket.on('lobbyState', handleLobbyState);
+    socket.on('rpsStarted', handleRpsStarted);
+    socket.on('rpsEnded', handleRpsEnded);
+    socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
+    socket.on('playerDiceRoll', handlePlayerDiceRoll);
+    socket.on('currentPlayerId', (id) => {
       setCurrentPlayerId(id);
-    }, []);
-
-    const handleActiveLoans = useCallback((loans) => {
+    });
+    
+    socket.emit('requestLobbyState');
+    
+    socket.on('activeLoans', (loans) => {
       setActiveLoans(loans || []);
-    }, []);
+    });
     
-    const handlePendingLoanRequests = useCallback((requests) => {
+    socket.on('pendingLoanRequests', (requests) => {
       setLoanRequests(requests || []);
-    }, []);
+    });
     
-    const handleLoanRequest = useCallback((request) => {
+    socket.on('loanRequest', (request) => {
       setLoanRequests(prev => {
         if (prev.some(req => req.id === request.id)) return prev;
         return [...prev, request];
       });
-    }, []);
+    });
 
-    const handleLoanAccepted = useCallback(({ loan, borrowerUpdate, lenderUpdate }) => {
+    socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
       console.log('Loan accepted:', loan);
       
       setActiveLoans(prev => {
@@ -247,55 +269,57 @@ export function GameProvider({ children }) {
   }, [movementDone]); 
 
   
-  // Handle reconnection when socket reconnects
   useEffect(() => {
-    if (!socket) return;
-    
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
-        try {
-          const playerData = JSON.parse(savedPlayer);
-          socket.emit('joinLobby', { 
-            name: playerData.name,
-            piece: playerData.piece 
-          });
-        } catch (error) {
-          console.error('Error parsing player data:', error);
-        }
+        const playerData = JSON.parse(savedPlayer);
+        
+        socket.emit('joinLobby', { 
+          name: playerData.name,
+          piece: playerData.piece 
+        });
       }
     };
 
     socket.on('connect', handleReconnect);
-    
-    // Initial cleanup
+    return () => socket.off('connect', handleReconnect);
+  }, []); 
+
+  useEffect(() => {
+    if (socket?.id && players.length > 0) {
+      const me = players.find(p => p.socketId === socket.id);
+      
+      if (me) {
+        setPlayer(prev => ({
+          ...me,
+          piece: me.piece || prev?.piece
+        }));
+      }
+    }
+  }, [players]); 
+
+  const handleQuit = () => {
+    localStorage.removeItem('gamePlayer');
+    localStorage.removeItem('gameState');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('gameDiceRoll');
+    localStorage.removeItem('gameMovementDone');
+    setPlayer(null);
+    setGameState('lobby');
     setSessionId(null);
     setDiceRoll(null);
     setMovementDone(false);
-    
-    return () => {
-      socket.off('connect', handleReconnect);
-    };
-  }, [socket]);
+  };
 
-  // Update player state when players array changes
   useEffect(() => {
-    if (!socket?.id || !players.length) return;
-    
-    const currentPlayer = players.find(p => p.socketId === socket.id);
-    if (!currentPlayer) return;
-    
-    setPlayer(prev => {
-      // Only update if there are actual changes to prevent unnecessary re-renders
-      const hasChanges = Object.keys(currentPlayer).some(
-        key => prev?.[key] !== currentPlayer[key]
-      );
-      
-      return hasChanges 
-        ? { ...currentPlayer, piece: currentPlayer.piece || prev?.piece }
-        : prev;
-    });
-  }, [players, socket?.id]); 
+    if (socket?.id && players.length > 0) {
+      const me = players.find(p => p.socketId === socket.id);
+      if (me) {
+        setPlayer(me);
+      }
+    }
+  }, [players]); 
 
   function ensurePiece(players, prevPlayers = []) {
     return players.map(p => {
