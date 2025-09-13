@@ -106,14 +106,7 @@ export function GameProvider({ children }) {
     
     const handlePlayerDiceRoll = (data) => {
       console.log('GameContext: Received playerDiceRoll event:', data);
-      console.log('GameContext: Current socket ID:', socket.id);
-      console.log('GameContext: Event player ID:', data.playerId);
-      console.log('GameContext: Forwarding as forwardedPlayerDiceRoll');
       socket.emit('forwardedPlayerDiceRoll', data);
-      console.log('GameContext: Current socket event listeners:', {
-        events: socket._callbacks ? Object.keys(socket._callbacks) : 'No callbacks',
-        hasForwardedListener: socket._callbacks?.forwardedPlayerDiceRoll ? 'Yes' : 'No'
-      });
     };
 
     const handlePlayerMoneyUpdate = (data) => {
@@ -121,6 +114,23 @@ export function GameProvider({ children }) {
       setPlayer(prev => ({ ...prev, money: data.money }));
     };
 
+    // Clean up any existing listeners first
+    const cleanup = () => {
+      socket.off('lobbyState', handleLobbyState);
+      socket.off('rpsStarted', handleRpsStarted);
+      socket.off('rpsEnded', handleRpsEnded);
+      socket.off('playerMoneyUpdate', handlePlayerMoneyUpdate);
+      socket.off('playerDiceRoll', handlePlayerDiceRoll);
+      socket.off('currentPlayerId');
+      socket.off('activeLoans');
+      socket.off('pendingLoanRequests');
+      socket.off('loanRequest');
+    };
+
+    // Clean up first
+    cleanup();
+
+    // Set up new listeners
     socket.on('lobbyState', handleLobbyState);
     socket.on('rpsStarted', handleRpsStarted);
     socket.on('rpsEnded', handleRpsEnded);
@@ -146,6 +156,11 @@ export function GameProvider({ children }) {
         return [...prev, request];
       });
     });
+
+    // Clean up on unmount
+    return () => {
+      cleanup();
+    };
 
     socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
       console.log('Loan accepted:', loan);
