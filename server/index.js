@@ -1566,6 +1566,11 @@ io.on('connection', socket => {
   });
 
   socket.on('getCurrentPlayerId', () => {
+
+    if (!hasStarted) {
+      socket.emit('currentPlayerId', null);
+      return;
+    }
     socket.emit('currentPlayerId', engine.session.players[engine.session.currentPlayerIndex].socketId);
   });
   
