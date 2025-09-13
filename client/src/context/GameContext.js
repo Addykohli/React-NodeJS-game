@@ -275,29 +275,60 @@ export function GameProvider({ children }) {
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
         
-        socket.emit('joinLobby', { 
-          name: playerData.name,
-          piece: playerData.piece 
-        });
+        // Only try to rejoin if we're not already in the process of joining
+        if (!playerData.isJoining) {
+          const updatedPlayer = { ...playerData, isJoining: true };
+          localStorage.setItem('gamePlayer', JSON.stringify(updatedPlayer));
+          
+          socket.emit('joinLobby', { 
+            name: playerData.name,
+            piece: playerData.piece 
+          });
+          
+          // Clear the joining flag after a short delay
+          setTimeout(() => {
+            const currentPlayer = JSON.parse(localStorage.getItem('gamePlayer') || '{}');
+            if (currentPlayer.isJoining) {
+              delete currentPlayer.isJoining;
+              localStorage.setItem('gamePlayer', JSON.stringify(currentPlayer));
+            }
+          }, 5000);
+        }
       }
     };
 
-    socket.on('connect', handleReconnect);
-    return () => socket.off('connect', handleReconnect);
-  }, []); 
+    // Only set up reconnect handler if socket is not already connected
+    if (socket && !socket.connected) {
+      socket.on('connect', handleReconnect);
+    }
+    
+    return () => {
+      if (socket) {
+        socket.off('connect', handleReconnect);
+      }
+    };
+  }, [socket]);
 
   useEffect(() => {
-    if (socket?.id && players.length > 0) {
-      const me = players.find(p => p.socketId === socket.id);
-      
-      if (me) {
-        setPlayer(prev => ({
-          ...me,
-          piece: me.piece || prev?.piece
-        }));
+    if (!socket?.id || !players.length) return;
+    
+    const me = players.find(p => p.socketId === socket.id);
+    if (!me) return;
+    
+    setPlayer(prev => {
+      // Only update if something actually changed
+      if (JSON.stringify({
+        ...me,
+        piece: me.piece || prev?.piece
+      }) === JSON.stringify(prev)) {
+        return prev;
       }
-    }
-  }, [players]); 
+      return {
+        ...me,
+        piece: me.piece || prev?.piece
+      };
+    });
+  }, [players, socket?.id]);
 
   const handleQuit = () => {
     localStorage.removeItem('gamePlayer');
