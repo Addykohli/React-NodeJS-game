@@ -84,7 +84,7 @@ const gameEvents = [];
 let activeTradeOffers = [];
 
 io.on('connection', (socket) => {
-  socket.emit('lobbyState', lobbyPlayers);
+  //socket.emit('lobbyState', lobbyPlayers);
   console.log('Sent initial lobby state to client:', lobbyPlayers);
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
     const transaction = await sequelize.transaction();
@@ -1565,6 +1565,10 @@ io.on('connection', socket => {
     socket.emit('movementDone');
   });
 
+  socket.on('getCurrentPlayerId', () => {
+    socket.emit('currentPlayerId', engine.session.players[engine.session.currentPlayerIndex].socketId);
+  });
+  
   socket.on('branchChoice', idx => {
     console.log('[branchChoice] idx:', idx);
     const fn = branchResolvers[socket.id];

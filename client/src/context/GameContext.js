@@ -97,6 +97,8 @@ export function GameProvider({ children }) {
           }));
         }
       }
+
+      socket.emit('getCurrentPlayerId');
     };
     
     const handleRpsStarted = () => setIsRpsActive(true);
@@ -124,6 +126,9 @@ export function GameProvider({ children }) {
     socket.on('rpsEnded', handleRpsEnded);
     socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
     socket.on('playerDiceRoll', handlePlayerDiceRoll);
+    socket.on('currentPlayerId', (id) => {
+      setCurrentPlayerId(id);
+    });
     
     socket.emit('requestLobbyState');
     
