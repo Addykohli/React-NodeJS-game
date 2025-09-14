@@ -790,7 +790,7 @@ io.on('connection', socket => {
   });
 
   socket.on('requestLobbyState', () => {
-    console.log('Sending lobby state to client:', lobbyPlayers);
+    //console.log('Sending lobby state to client:', lobbyPlayers);
     socket.emit('lobbyState', lobbyPlayers);
   });
 
