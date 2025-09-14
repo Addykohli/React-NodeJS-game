@@ -67,6 +67,7 @@ export function GameProvider({ children }) {
   };
   
   useEffect(() => {
+    console.log('++NEW++ useEffect 1');
     if (!socket) return;
     function handleChatMessage(message) {
       setChatMessages(prev => [...prev, message]);
@@ -79,6 +80,7 @@ export function GameProvider({ children }) {
 
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 2');
     if (!socket) {
       console.log('GameContext: Socket not available');
       return;
@@ -224,6 +226,7 @@ export function GameProvider({ children }) {
 
   
   useEffect(() => {
+    console.log('++NEW++ useEffect 3');
     if (player) {
       const playerData = {
         ...player,
@@ -236,6 +239,7 @@ export function GameProvider({ children }) {
   }, [player]);
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 4');
     if (gameState) {
       localStorage.setItem('gameState', gameState);
     } else {
@@ -244,6 +248,7 @@ export function GameProvider({ children }) {
   }, [gameState]);
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 5');
     if (sessionId) {
       localStorage.setItem('sessionId', sessionId);
     } else {
@@ -252,6 +257,7 @@ export function GameProvider({ children }) {
   }, [sessionId]);
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 6');
     if (diceRoll) {
       localStorage.setItem('gameDiceRoll', JSON.stringify(diceRoll));
     } else {
@@ -260,11 +266,13 @@ export function GameProvider({ children }) {
   }, [diceRoll]); 
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 7');
     localStorage.setItem('gameMovementDone', JSON.stringify(movementDone));
   }, [movementDone]); 
 
   
   useEffect(() => {
+    console.log('++NEW++ useEffect 8');
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
@@ -282,6 +290,7 @@ export function GameProvider({ children }) {
   }, []); 
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 9');
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
       
@@ -308,6 +317,7 @@ export function GameProvider({ children }) {
   };
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 10');
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
       if (me) {
@@ -325,6 +335,7 @@ export function GameProvider({ children }) {
   }
 
   useEffect(() => {
+    console.log('++NEW++ useEffect 11');
     socket.on('lobbyUpdate', updated => {
       setPlayers(prev => ensurePiece(updated, prev));
     });
