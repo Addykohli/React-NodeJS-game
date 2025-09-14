@@ -867,6 +867,14 @@ io.on('connection', socket => {
             disconnectedPlayer.piece = playerState.piece;
             disconnectedPlayer.tileId = playerState.tileId;
             disconnectedPlayer.prevTile = playerState.prevTile;
+
+            console.log('++NEW++ oldSocketId:', oldSocketId);
+            console.log('++NEW++ newsocket.id:', socket.id);
+            console.log('++NEW++ engine.session.players:', engine.session.players);
+
+          }
+          else {
+            console.error('++NEW++ Player not found in database');
           }
         } catch (err) {
           console.error('Error restoring player state:', err);
@@ -1013,6 +1021,7 @@ io.on('connection', socket => {
   socket.on('rollDice', async ({ testRoll }) => {
     console.log('[rollDice] for', socket.id);
     let currentPlayer = engine.getPlayer(socket.id);
+    console.log(' ++NEW++ Current player:', currentPlayer, 'socket.id:', socket.id);
     if (!currentPlayer) return;
     if (currentPlayer.hasRolled) {
       console.log('Player has already moved this turn');
