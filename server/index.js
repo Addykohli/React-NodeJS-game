@@ -1,32 +1,33 @@
-const express       = require('express');
-const http          = require('http');
-const cors          = require('cors');
-const { Server }    = require('socket.io');
-const initDatabase  = require('./models/init');
-const Player        = require('./models/Player');
-const GameSession   = require('./models/GameSession');
-const Loan          = require('./models/Loan');
-const GameEngine    = require('./game/GameEngine');
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const initDatabase = require('./models/init');
+const Player = require('./models/Player');
+const GameSession = require('./models/GameSession');
+const Loan = require('./models/Loan');
+const GameEngine = require('./game/GameEngine');
 const { calculateRentMultiplier } = require('./game/RentCalculator');
 const { Op } = require('sequelize');
-const sequelize     = require('./config/database');
+const sequelize = require('./config/database');
 require('dotenv').config();
 const { checkRedisHealth } = require('./redisHealth');
 
 const PORT = process.env.PORT || 5000;
-const app  = express();
+const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
   'https://react-nodejs-game.onrender.com',
   'https://react-nodejs-game-client.onrender.com',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  process.env.CLIENT_URL
 ];
 
 const corsOptions = {
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
@@ -73,7 +74,7 @@ app.get('/healthz', async (req, res) => {
   }
 });
 
-const engine  = new GameEngine();
+const engine = new GameEngine();
 let lobbyPlayers = [];
 let hasStarted = false;
 let currentSessionId = null;
@@ -119,27 +120,27 @@ io.on('connection', (socket) => {
         prevTile: typeof updates.prevTile !== 'undefined' ? Math.max(1, Math.min(45, Number(updates.prevTile) || 1)) : player.prevTile
       };
 
-      const propertiesUpdate = Array.isArray(updates.properties) 
-        ? updates.properties 
+      const propertiesUpdate = Array.isArray(updates.properties)
+        ? updates.properties
         : [];
-      
+
       console.log('=== Before Update ===');
       console.log('Game Engine Player:', {
         id: player.socketId,
         name: player.name,
         properties: player.properties || []
       });
-      
+
       console.log('DB Player:', {
         id: player.socketId,
         name: player.name,
         properties: player.properties || []
       });
-      
+
       console.log('Updating with properties:', {
         newProperties: propertiesUpdate
       });
-      
+
       const [updatedCount] = await Player.update(
         {
           money: updatedPlayer.money,
@@ -148,7 +149,7 @@ io.on('connection', (socket) => {
           tileId: updatedPlayer.tileId,
           prevTile: updatedPlayer.prevTile
         },
-        { 
+        {
           where: { socketId: playerId },
           transaction
         }
@@ -157,7 +158,7 @@ io.on('connection', (socket) => {
       if (updatedCount === 0) {
         throw new Error('Failed to update player in database');
       }
-      
+
       const updatedDbPlayer = await Player.findOne({ where: { socketId: playerId } });
       console.log('=== After Update ===');
       console.log('Game Engine Player:', {
@@ -165,7 +166,7 @@ io.on('connection', (socket) => {
         name: player.name,
         properties: player.properties || []
       });
-      
+
       console.log('DB Player:', {
         id: updatedDbPlayer.socketId,
         name: updatedDbPlayer.name,
@@ -180,9 +181,9 @@ io.on('connection', (socket) => {
             loan: updatedPlayer.loan,
             tileId: updatedPlayer.tileId,
             prevTile: updatedPlayer.prevTile,
-            properties: [...propertiesUpdate] 
+            properties: [...propertiesUpdate]
           };
-          
+
           return playerUpdate;
         }
         return p;
@@ -197,8 +198,8 @@ io.on('connection', (socket) => {
       await transaction.commit();
 
       const playerName = engine.session.players.find(p => p.socketId === playerId)?.name || 'Unknown';
-      
-      io.emit('playerStatsUpdated', { 
+
+      io.emit('playerStatsUpdated', {
         playerId,
         updates: {
           money: updatedPlayer.money,
@@ -208,14 +209,14 @@ io.on('connection', (socket) => {
         }
       });
 
-      const sanitizedProperties = Array.isArray(propertiesUpdate) 
+      const sanitizedProperties = Array.isArray(propertiesUpdate)
         ? propertiesUpdate.map(p => parseInt(p, 10)).filter(n => !isNaN(n))
         : [];
       io.emit('propertyUpdate', {
         socketId: playerId,
         properties: sanitizedProperties
       });
-      
+
       const eventMessage = `[System] Updated stats for ${playerName}`;
       gameEvents.push({
         message: eventMessage,
@@ -276,9 +277,9 @@ async function getPendingLoanRequests(playerId) {
 
 io.on('connection', socket => {
   console.log('🔌 Connected:', socket.id);
-  
+
   socket.emit('gameEventsHistory', gameEvents);
-  
+
   socket.on('getLoans', async () => {
     try {
       const activeLoans = await getActiveLoans(socket.id);
@@ -289,10 +290,10 @@ io.on('connection', socket => {
       socket.emit('loanError', { message: 'Failed to load loan data' });
     }
   });
-  
+
   socket.on('rejectLoan', async ({ loanId }) => {
     console.log(`=== REJECTING LOAN ${loanId} ===`);
-    
+
     try {
       const loan = await Loan.findByPk(loanId);
       if (!loan) {
@@ -300,59 +301,59 @@ io.on('connection', socket => {
         socket.emit('loanError', { message: 'Loan not found' });
         return;
       }
-      
+
       if (loan.lenderId !== socket.id) {
         console.error(`User ${socket.id} is not the lender of loan ${loanId}`);
         socket.emit('loanError', { message: 'Not authorized' });
         return;
       }
-      
+
       if (loan.status !== 'pending') {
         console.error(`Loan ${loanId} is not pending (status: ${loan.status})`);
         socket.emit('loanError', { message: 'Loan is not pending' });
         return;
       }
-      
+
       loan.status = 'rejected';
       await loan.save();
-      
+
       console.log(`Loan ${loanId} rejected`);
-      
-      io.to(loan.borrowerId).emit('loanRejected', { 
+
+      io.to(loan.borrowerId).emit('loanRejected', {
         loanId: loan.id,
         reason: 'Loan request was rejected'
       });
-      
-      socket.emit('loanRejected', { 
+
+      socket.emit('loanRejected', {
         loanId: loan.id,
         success: true
       });
-      
+
     } catch (error) {
       console.error('Error rejecting loan:', error);
-      socket.emit('loanError', { 
-        message: 'Failed to reject loan', 
-        error: error.message 
+      socket.emit('loanError', {
+        message: 'Failed to reject loan',
+        error: error.message
       });
     }
   });
-  
+
   socket.on('requestLoan', async ({ lenderId, amount, returnAmount }) => {
     console.log('=== NEW LOAN REQUEST ===');
     console.log(`Borrower ID: ${socket.id}`);
     console.log(`Lender ID: ${lenderId}`);
     console.log(`Amount: $${amount}, Return: $${returnAmount}`);
-    
+
     try {
       console.log('Looking up borrower and lender in database...');
       const [borrower, lender] = await Promise.all([
         Player.findByPk(socket.id),
         Player.findByPk(lenderId)
       ]);
-      
+
       console.log('Borrower found:', !!borrower);
       console.log('Lender found:', !!lender);
-      
+
       if (!borrower || !lender) {
         const errorMsg = !borrower ? 'Borrower not found' : 'Lender not found';
         console.log(`Error: ${errorMsg}`);
@@ -361,7 +362,7 @@ io.on('connection', socket => {
       }
 
       console.log(`Creating loan: ${borrower.name} -> ${lender.name} for $${amount}`);
-      
+
       try {
         const loan = await Loan.create({
           amount,
@@ -373,7 +374,7 @@ io.on('connection', socket => {
           status: 'pending'
         });
         console.log(`✅ Loan created with ID: ${loan.id}`);
-        
+
         const loanData = {
           id: loan.id,
           from: {
@@ -385,19 +386,19 @@ io.on('connection', socket => {
           status: 'pending',
           createdAt: loan.createdAt
         };
-        
+
         console.log('📤 Sending loanRequest to lender:', lenderId);
         console.log('Loan data being sent:', JSON.stringify(loanData, null, 2));
-        
+
         const sockets = await io.in(lenderId).fetchSockets();
         console.log(`Lender ${lenderId} has ${sockets.length} connected sockets`);
-        
+
         io.to(lenderId).emit('loanRequest', loanData);
         console.log('✅ loanRequest event emitted to lender');
-        
+
         socket.emit('loanRequestSent', { success: true });
         console.log('✅ loanRequestSent event emitted to borrower');
-        
+
       } catch (error) {
         console.error('❌ Error creating loan:', error);
         throw error;
@@ -408,50 +409,50 @@ io.on('connection', socket => {
       socket.emit('loanError', { message: 'Failed to process loan request' });
     }
   });
-  
+
   socket.on('acceptLoan', async ({ loanId }) => {
     const transaction = await sequelize.transaction();
     try {
       console.log(`[LOAN] Accepting loan ${loanId}`);
       const loan = await Loan.findByPk(loanId, { transaction });
-      
+
       if (!loan) {
         console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
-      
+
       if (loan.lenderId !== socket.id) {
         console.error(`[LOAN] Unauthorized: ${socket.id} is not the lender of loan ${loanId}`);
         throw new Error('Not authorized to accept this loan');
       }
-      
+
       if (loan.status !== 'pending') {
         console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
-      
+
       const lender = await Player.findByPk(socket.id, { transaction });
       if (lender.money < loan.amount) {
         console.error(`[LOAN] Insufficient funds: ${lender.money} < ${loan.amount}`);
         throw new Error('Insufficient funds to approve this loan');
       }
-      
+
       const borrower = await Player.findByPk(loan.borrowerId, { transaction });
       if (!borrower) {
         console.error(`[LOAN] Borrower ${loan.borrowerId} not found`);
         throw new Error('Borrower not found');
       }
-      
+
       loan.status = 'active';
       loan.acceptedAt = new Date();
       await loan.save({ transaction });
-      
+
       lender.money -= loan.amount;
       borrower.money += loan.amount;
-      
+
       const lenderEnginePlayer = engine.getPlayer(lender.socketId);
       const borrowerEnginePlayer = engine.getPlayer(borrower.socketId);
-      
+
       if (lenderEnginePlayer) {
         lenderEnginePlayer.money = lender.money;
         const lenderIndex = engine.session.players.findIndex(p => p.socketId === lender.socketId);
@@ -459,7 +460,7 @@ io.on('connection', socket => {
           engine.session.players[lenderIndex].money = lender.money;
         }
       }
-      
+
       if (borrowerEnginePlayer) {
         borrowerEnginePlayer.money = borrower.money;
         const borrowerIndex = engine.session.players.findIndex(p => p.socketId === borrower.socketId);
@@ -467,22 +468,22 @@ io.on('connection', socket => {
           engine.session.players[borrowerIndex].money = borrower.money;
         }
       }
-      
+
       await Promise.all([
         lender.save({ transaction }),
         borrower.save({ transaction })
       ]);
-      
+
       await transaction.commit();
       console.log(`[LOAN] Loan ${loanId} accepted successfully`);
-  
+
       const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
         getActiveLoans(loan.borrowerId),
         getActiveLoans(loan.lenderId),
         getPendingLoanRequests(loan.borrowerId),
         getPendingLoanRequests(loan.lenderId)
       ]);
-      
+
       const borrowerUpdate = {
         playerId: borrower.socketId,
         newMoney: borrower.money,
@@ -491,7 +492,7 @@ io.on('connection', socket => {
           pendingRequests: borrowerPending
         }
       };
-      
+
       const lenderUpdate = {
         playerId: lender.socketId,
         newMoney: lender.money,
@@ -500,7 +501,7 @@ io.on('connection', socket => {
           pendingRequests: lenderPending
         }
       };
-      
+
       const borrowerPlayerUpdate = {
         ...borrowerUpdate,
         player: {
@@ -525,39 +526,39 @@ io.on('connection', socket => {
         lenderName: lender.name,
         isBorrower: true
       });
-      
+
       socket.emit('loanAccepted', {
         loan,
         playerUpdate: lenderPlayerUpdate,
         borrowerName: borrower.name,
         isLender: true
       });
-      
+
       io.emit('playerMoneyUpdate', {
         playerId: borrower.socketId,
         newMoney: borrower.money,
         playerName: borrower.name
       });
-      
+
       io.emit('playerMoneyUpdate', {
         playerId: lender.socketId,
         newMoney: lender.money,
         playerName: lender.name
       });
-      
+
       io.to(loan.borrowerId).emit('updateLoans', {
         ...borrowerUpdate.loans,
         playerMoney: borrower.money
       });
-      
+
       socket.emit('updateLoans', {
         ...lenderUpdate.loans,
         playerMoney: lender.money
       });
-      
+
       const gameState = engine.getState();
       io.emit('gameStateUpdate', gameState);
-      
+
       console.log('[LOAN] Game state after loan acceptance:', JSON.stringify({
         borrower: {
           id: borrower.socketId,
@@ -573,7 +574,7 @@ io.on('connection', socket => {
         },
         gameState: gameState
       }, null, 2));
-      
+
     } catch (error) {
       console.error('[LOAN] Error accepting loan:', error);
       try {
@@ -584,47 +585,47 @@ io.on('connection', socket => {
       } catch (rollbackError) {
         console.error('[LOAN] Error rolling back transaction:', rollbackError);
       }
-      socket.emit('loanError', { 
+      socket.emit('loanError', {
         message: error.message || 'Failed to accept loan',
         code: error.code
       });
     }
   });
-  
+
   socket.on('rejectLoan', async ({ loanId }) => {
     console.log(`[LOAN] Rejecting loan ${loanId}`);
-    
+
     try {
       const loan = await Loan.findByPk(loanId);
-      
+
       if (!loan) {
         console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
-      
+
       if (loan.lenderId !== socket.id) {
         console.error(`[LOAN] Unauthorized: ${socket.id} is not the lender of loan ${loanId}`);
         throw new Error('Not authorized to reject this loan');
       }
-      
+
       if (loan.status !== 'pending') {
         console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
-  
+
       loan.status = 'rejected';
       loan.rejectedAt = new Date();
       await loan.save();
-      
+
       console.log(`[LOAN] Loan ${loanId} rejected successfully`);
-      
+
       const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
         getActiveLoans(loan.borrowerId),
         getActiveLoans(loan.lenderId),
         getPendingLoanRequests(loan.borrowerId),
         getPendingLoanRequests(loan.lenderId)
       ]);
-      
+
       const borrowerUpdate = {
         playerId: loan.borrowerId,
         loans: {
@@ -632,7 +633,7 @@ io.on('connection', socket => {
           pendingRequests: borrowerPending
         }
       };
-      
+
       const lenderUpdate = {
         playerId: loan.lenderId,
         loans: {
@@ -640,93 +641,93 @@ io.on('connection', socket => {
           pendingRequests: lenderPending
         }
       };
-      
+
       io.to(loan.borrowerId).emit('loanRejected', {
         loan,
         playerUpdate: borrowerUpdate,
         lenderName: loan.lenderName
       });
-      
+
       socket.emit('loanRejected', {
         loan,
         playerUpdate: lenderUpdate,
         borrowerName: loan.borrowerName
       });
-      
+
       io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
       socket.emit('updateLoans', lenderUpdate.loans);
-      
+
     } catch (error) {
       console.error('[LOAN] Error rejecting loan:', error);
-      socket.emit('loanError', { 
+      socket.emit('loanError', {
         message: error.message || 'Failed to reject loan',
         code: error.code
       });
     }
   });
-  
+
   socket.on('repayLoan', async ({ loanId }) => {
     console.log(`[LOAN] Repaying loan ${loanId}`);
     const transaction = await sequelize.transaction();
-    
+
     try {
       const loan = await Loan.findByPk(loanId, { transaction });
-      
+
       if (!loan) {
         console.error(`[LOAN] Loan ${loanId} not found`);
         throw new Error('Loan not found');
       }
-      
+
       if (loan.borrowerId !== socket.id) {
         console.error(`[LOAN] Unauthorized: ${socket.id} is not the borrower of loan ${loanId}`);
         throw new Error('Not authorized to repay this loan');
       }
-      
+
       if (loan.status !== 'active') {
         console.error(`[LOAN] Invalid status ${loan.status} for loan ${loanId}`);
         throw new Error('Invalid loan status');
       }
-      
+
       const borrower = await Player.findByPk(socket.id, { transaction });
       if (borrower.money < loan.returnAmount) {
         console.error(`[LOAN] Insufficient funds: ${borrower.money} < ${loan.returnAmount}`);
         throw new Error('Insufficient funds to repay the loan');
       }
-      
+
       const lender = await Player.findByPk(loan.lenderId, { transaction });
       if (!lender) {
         console.error(`[LOAN] Lender ${loan.lenderId} not found`);
         throw new Error('Lender not found');
       }
-      
+
       const borrowerEnginePlayer = engine.getPlayer(borrower.socketId);
       const lenderEnginePlayer = engine.getPlayer(lender.socketId);
-      
+
       borrower.money -= loan.returnAmount;
       lender.money += loan.returnAmount;
-      
+
       if (borrowerEnginePlayer) borrowerEnginePlayer.money = borrower.money;
       if (lenderEnginePlayer) lenderEnginePlayer.money = lender.money;
-      
+
       loan.status = 'completed';
       loan.completedAt = new Date();
-      
+
       await Promise.all([
         borrower.save({ transaction }),
         lender.save({ transaction }),
         loan.save({ transaction })
       ]);
-      
+
       await transaction.commit();
       console.log(`[LOAN] Loan ${loanId} repaid successfully`);
-      
+
       const [borrowerLoans, lenderLoans, borrowerPending, lenderPending] = await Promise.all([
         getActiveLoans(loan.borrowerId),
         getActiveLoans(loan.lenderId),
         getPendingLoanRequests(loan.borrowerId),
         getPendingLoanRequests(loan.lenderId)
       ]);
-      
+
       const borrowerUpdate = {
         playerId: borrower.socketId,
         newMoney: borrower.money,
@@ -735,7 +736,7 @@ io.on('connection', socket => {
           pendingRequests: borrowerPending
         }
       };
-      
+
       const lenderUpdate = {
         playerId: lender.socketId,
         newMoney: lender.money,
@@ -744,34 +745,34 @@ io.on('connection', socket => {
           pendingRequests: lenderPending
         }
       };
-      
+
       io.to(loan.lenderId).emit('loanRepaid', {
         loan,
         playerUpdate: lenderUpdate,
         borrowerName: loan.borrowerName
       });
-      
+
       socket.emit('loanRepaid', {
         loan,
         playerUpdate: borrowerUpdate,
         lenderName: loan.lenderName
       });
-      
+
       io.emit('playerMoneyUpdate', {
         playerId: borrower.socketId,
         newMoney: borrower.money
       });
-      
+
       io.emit('playerMoneyUpdate', {
         playerId: lender.socketId,
         newMoney: lender.money
       });
-      
+
       io.to(loan.borrowerId).emit('updateLoans', borrowerUpdate.loans);
       io.to(loan.lenderId).emit('updateLoans', lenderUpdate.loans);
-      
+
       io.emit('gameStateUpdate', engine.getState());
-      
+
     } catch (error) {
       console.error('[LOAN] Error repaying loan:', error);
       try {
@@ -782,7 +783,7 @@ io.on('connection', socket => {
       } catch (rollbackError) {
         console.error('[LOAN] Error rolling back transaction:', rollbackError);
       }
-      socket.emit('loanError', { 
+      socket.emit('loanError', {
         message: error.message || 'Failed to repay loan',
         code: error.code
       });
@@ -796,20 +797,20 @@ io.on('connection', socket => {
 
   socket.on('joinLobby', async ({ name }) => {
     console.log('[joinLobby] name:', name);
-    
-    const isNameTaken = lobbyPlayers.some(p => 
-      p.name.toLowerCase() === name.toLowerCase() && 
+
+    const isNameTaken = lobbyPlayers.some(p =>
+      p.name.toLowerCase() === name.toLowerCase() &&
       p.socketId !== socket.id &&
       !disconnectedPlayers.has(name)
     );
-    
+
     if (isNameTaken) {
-      socket.emit('joinError', { 
-        message: 'This name is already taken. Please choose another name.' 
+      socket.emit('joinError', {
+        message: 'This name is already taken. Please choose another name.'
       });
       return;
     }
-    
+
     if (hasStarted) {
       console.log('=== PLAYER STATES ===');
       const allPlayers = await Player.findAll();
@@ -836,10 +837,10 @@ io.on('connection', socket => {
           const playerState = await Player.findOne({
             where: { socketId: oldSocketId }
           });
-          
+
           if (playerState) {
             await Player.update(
-              { 
+              {
                 socketId: socket.id,
               },
               { where: { socketId: oldSocketId } }
@@ -847,14 +848,14 @@ io.on('connection', socket => {
 
             engine.session.players = engine.session.players.map(p =>
               p.socketId === oldSocketId ? {
-                ...playerState.get(),  
+                ...playerState.get(),
                 socketId: socket.id,
               } : p
             );
-            
+
             lobbyPlayers = lobbyPlayers.map(p =>
               p.socketId === oldSocketId ? {
-                ...playerState.get(),  
+                ...playerState.get(),
                 socketId: socket.id,
               } : p
             );
@@ -875,7 +876,7 @@ io.on('connection', socket => {
         disconnectedPlayers.delete(name);
 
         const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
-        
+
         socket.emit('gameStart', {
           players: engine.session.players,
           sessionId: currentSessionId,
@@ -883,15 +884,15 @@ io.on('connection', socket => {
         });
 
         io.emit('lobbyUpdate', lobbyPlayers);
-        
+
         const currentPlayer = engine.getPlayer(socket.id);
         if (currentPlayer) {
           socket.emit('playerMoved', {
             playerId: socket.id,
             tileId: currentPlayer.tileId,
-            hasMoved: currentPlayer.hasMoved 
+            hasMoved: currentPlayer.hasMoved
           });
-          
+
           if (!isCurrentPlayer || currentPlayer.hasMoved) {
             socket.emit('movementDone');
           }
@@ -937,7 +938,7 @@ io.on('connection', socket => {
     console.log('[playerReady] socket:', socket.id, { die1, die2, total });
     const p = lobbyPlayers.find(x => x.socketId === socket.id);
     if (!p || p.ready) return;
-    
+
     p.ready = true;
     p.die1 = die1;
     p.die2 = die2;
@@ -949,18 +950,18 @@ io.on('connection', socket => {
     if (!hasStarted && allReady) {
       console.log('All players ready, starting game');
       hasStarted = true;
-      
+
       const sortedPlayers = [...lobbyPlayers].sort((a, b) => {
         if (b.rollTotal === a.rollTotal) {
           return a.readyAt - b.readyAt;
         }
         return b.rollTotal - a.rollTotal;
       });
-      
-      console.log('Player turn order (highest roll first):', 
+
+      console.log('Player turn order (highest roll first):',
         sortedPlayers.map(p => `${p.name}: ${p.rollTotal}`)
       );
-      
+
       lobbyPlayers = sortedPlayers;
       engine.session.players = sortedPlayers;
       engine.session.currentPlayerIndex = 0;
@@ -969,7 +970,7 @@ io.on('connection', socket => {
         const allPlayers = await Player.findAll();
         const lobbyPlayerIds = lobbyPlayers.map(p => p.socketId);
         const playersToRemove = allPlayers.filter(p => !lobbyPlayerIds.includes(p.socketId));
-        
+
         if (playersToRemove.length > 0) {
           console.log(`Cleaning up ${playersToRemove.length} players not in the current lobby:`);
           for (const player of playersToRemove) {
@@ -984,13 +985,13 @@ io.on('connection', socket => {
       const s = new GameSession({
         players: sortedPlayers.map(pl => ({
           socketId: pl.socketId,
-          name:     pl.name,
-          piece:    pl.piece,
-          money:    pl.money,
+          name: pl.name,
+          piece: pl.piece,
+          money: pl.money,
           properties: pl.properties,
-          tileId:   pl.tileId,
+          tileId: pl.tileId,
           prevTile: pl.prevTile,
-          ready:    pl.ready
+          ready: pl.ready
         })),
         currentPlayerIndex: 0,
         history: []
@@ -998,14 +999,14 @@ io.on('connection', socket => {
       await s.save();
       currentSessionId = s._id;
 
-      const playerOrderMessage = 'Game starting! Turn order: ' + 
+      const playerOrderMessage = 'Game starting! Turn order: ' +
         sortedPlayers.map((p, index) => `${index + 1}. ${p.name} (rolled ${p.rollTotal})`).join(', ');
       broadcastGameEvent(playerOrderMessage);
-      
-      io.emit('gameStart', { 
-        players: sortedPlayers, 
-        sessionId: currentSessionId, 
-        currentPlayerId: sortedPlayers[0].socketId 
+
+      io.emit('gameStart', {
+        players: sortedPlayers,
+        sessionId: currentSessionId,
+        currentPlayerId: sortedPlayers[0].socketId
       });
     }
   });
@@ -1021,7 +1022,7 @@ io.on('connection', socket => {
 
     let roll;
     if (testRoll) {
-      roll = { die1: Math.ceil(testRoll/2), die2: Math.floor(testRoll/2), total: testRoll };
+      roll = { die1: Math.ceil(testRoll / 2), die2: Math.floor(testRoll / 2), total: testRoll };
     } else {
       roll = engine.rollDice(socket.id);
     }
@@ -1044,7 +1045,7 @@ io.on('connection', socket => {
         );
       }
       await transaction.commit();
-      
+
     } catch (err) {
       console.error('Error updating hasRolled state:', err);
     }
@@ -1096,13 +1097,13 @@ io.on('connection', socket => {
             bonusAmount,
             currentLoan: currentPlayer.loan
           });
-          
+
           const transaction = await sequelize.transaction();
 
           try {
             currentPlayer.money += bonusAmount;
-            passedStart = true; 
-            
+            passedStart = true;
+
             await Player.update(
               { money: currentPlayer.money },
               { where: { socketId: socket.id }, transaction }
@@ -1120,20 +1121,20 @@ io.on('connection', socket => {
 
             engine.session.players = engine.session.players.map(p => {
               if (p.socketId === currentPlayer.socketId) {
-                return { 
-                  ...p, 
-                  money: currentPlayer.money 
+                return {
+                  ...p,
+                  money: currentPlayer.money
                 };
               }
               return p;
             });
-            
+
             if (currentSessionId) {
               await GameSession.update(
                 { players: engine.session.players },
-                { 
+                {
                   where: { id: currentSessionId },
-                  transaction 
+                  transaction
                 }
               );
             }
@@ -1164,7 +1165,7 @@ io.on('connection', socket => {
           });
           currentPlayer.money += bonusAmount;
           passedStart = true;
-          
+
           try {
             const transaction = await sequelize.transaction();
             try {
@@ -1172,7 +1173,7 @@ io.on('connection', socket => {
                 { money: currentPlayer.money },
                 { where: { socketId: socket.id }, transaction }
               );
-              
+
               if (currentSessionId) {
                 await GameSession.update(
                   { players: engine.session.players },
@@ -1182,16 +1183,16 @@ io.on('connection', socket => {
 
               engine.session.players = engine.session.players.map(p => {
                 if (p.socketId === currentPlayer.socketId) {
-                  return { 
-                    ...p, 
-                    money: currentPlayer.money 
+                  return {
+                    ...p,
+                    money: currentPlayer.money
                   };
                 }
                 return p;
               });
 
               await transaction.commit();
-              
+
               io.emit('startBonus', {
                 playerSocketId: socket.id,
                 newMoney: currentPlayer.money,
@@ -1209,14 +1210,14 @@ io.on('connection', socket => {
 
         currentPlayer.pickedRoadCash = false;
         console.log("pickedRoadCash:", currentPlayer.pickedRoadCash);
-        
+
 
         io.emit('playerMoved', { playerId: socket.id, tileId: currentPlayer.tileId, hasMoved: currentPlayer.hasMoved });
       }
 
       if (currentSessionId) {
         const from = engine.getPlayer(socket.id).prevTile;
-        const to   = engine.getPlayer(socket.id).tileId;
+        const to = engine.getPlayer(socket.id).tileId;
         await GameSession.findByIdAndUpdate(currentSessionId, {
           $push: { moves: { playerSocketId: socket.id, die1: roll.die1, die2: roll.die2, fromTile: from, toTile: to } }
         });
@@ -1229,15 +1230,15 @@ io.on('connection', socket => {
     const finalPlayer = engine.getPlayer(socket.id);
     const finalTileId = finalPlayer.tileId;
 
-    if (finalTileId !== 7) {  
-      const playersOnTile = engine.session.players.filter(p => 
-        p.tileId === finalTileId && 
-        p.socketId !== socket.id  
+    if (finalTileId !== 7) {
+      const playersOnTile = engine.session.players.filter(p =>
+        p.tileId === finalTileId &&
+        p.socketId !== socket.id
       );
 
       if (playersOnTile.length > 0) {
         const tile = tiles.find(t => t.id === finalTileId);
-        const tileOwner = engine.session.players.find(p => 
+        const tileOwner = engine.session.players.find(p =>
           p.properties && p.properties.includes(finalTileId)
         );
 
@@ -1249,84 +1250,84 @@ io.on('connection', socket => {
 
           const stompAmount = 2000;
           let transaction;
-          
+
           try {
             transaction = await sequelize.transaction();
             const amountPaid = Math.min(targetPlayer.money, stompAmount);
             const loanIncrease = Math.max(0, stompAmount - amountPaid);
-            
+
             targetPlayer.money -= amountPaid;
             if (loanIncrease > 0) {
               targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
             }
-            
+
             finalPlayer.money += stompAmount;
-            
-            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` + 
-                       (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
-            
+
+            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${finalPlayer.name}` +
+              (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
+
             await Player.update(
-              { 
+              {
                 money: targetPlayer.money,
                 loan: targetPlayer.loan || 0
               },
-              { 
+              {
                 where: { socketId: targetPlayer.socketId },
-                transaction 
+                transaction
               }
             );
-            
+
             await Player.update(
               { money: finalPlayer.money },
-              { 
+              {
                 where: { socketId: finalPlayer.socketId },
-                transaction 
+                transaction
               }
             );
-            
+
             engine.session.players = engine.session.players.map(p => {
               if (p.socketId === targetPlayer.socketId) {
-                return { 
-                  ...p, 
-                  money: targetPlayer.money, 
-                  loan: targetPlayer.loan || 0 
+                return {
+                  ...p,
+                  money: targetPlayer.money,
+                  loan: targetPlayer.loan || 0
                 };
               }
               if (p.socketId === finalPlayer.socketId) {
-                return { 
-                  ...p, 
-                  money: finalPlayer.money 
+                return {
+                  ...p,
+                  money: finalPlayer.money
                 };
               }
               return p;
             });
-            
+
             if (currentSessionId) {
               await GameSession.update(
                 { players: engine.session.players },
-                { 
+                {
                   where: { id: currentSessionId },
-                  transaction 
+                  transaction
                 }
               );
             }
-            
+
             await transaction.commit();
-            
+
             io.emit('playerMoneyUpdate', {
               playerId: targetPlayer.socketId,
               newBalance: targetPlayer.money,
               loan: targetPlayer.loan || 0
             });
-            
+
             io.emit('playerMoneyUpdate', {
               playerId: finalPlayer.socketId,
               newBalance: finalPlayer.money
             });
-            
+
             let message = `${finalPlayer.name} stomped on ${targetPlayer.name} and collected $2000!`;
             broadcastGameEvent(message);
-            
+
           } catch (err) {
             if (transaction && !transaction.finished) {
               await transaction.rollback();
@@ -1341,18 +1342,18 @@ io.on('connection', socket => {
 
     if (finalTileId <= 30) {
       finalPlayer.prevTile = finalTileId === 1 ? 30 : finalTileId - 1;
-      
+
       try {
         const transaction = await sequelize.transaction();
         await Player.update(
           { prevTile: finalPlayer.prevTile },
-          { 
+          {
             where: { socketId: socket.id },
             transaction
           }
         );
 
-        
+
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
@@ -1366,8 +1367,8 @@ io.on('connection', socket => {
       }
     }
     const finalTile = tiles.find(t => t.id === finalTileId);
-    
-    console.log('Final position for rent check:', { 
+
+    console.log('Final position for rent check:', {
       playerId: socket.id,
       tileId: finalTileId,
       tileName: finalTile?.name,
@@ -1375,27 +1376,27 @@ io.on('connection', socket => {
     });
 
     if (finalTile?.id === 16) {
-      io.emit('setCasino', {casino: true});
+      io.emit('setCasino', { casino: true });
     }
 
     if (finalTile?.name === 'RPS') {
       console.log('\nLanded on RPS! Finding shortest paths to other players...');
       const pathInfo = engine.findShortestPathsToPlayers(finalTileId);
-      
-      
+
+
       if (pathInfo.closestPlayers.length > 0) {
         const gameId = Date.now();
         const closestPlayers = pathInfo.closestPlayers.map(playerName => {
           return engine.session.players.find(p => p.name === playerName);
         }).filter(Boolean);
-        
+
         activeRPSGames[gameId] = {
           landingPlayer: currentPlayer,
           closestPlayers: closestPlayers,
-          choices: {}, 
-          winners: [], 
-          ties: [], 
-          losers: [] 
+          choices: {},
+          winners: [],
+          ties: [],
+          losers: []
         };
 
         io.emit('stonePaperScissorsStart', {
@@ -1409,9 +1410,9 @@ io.on('connection', socket => {
     if (finalTile?.type === 'property') {
       const currentPlayerProperties = (currentPlayer.properties || []).map(String);
       const isOwnedByCurrentPlayer = currentPlayerProperties.includes(String(finalTile.id));
-      
-      const propertyOwner = engine.session.players.find(p => 
-        p.socketId !== socket.id && 
+
+      const propertyOwner = engine.session.players.find(p =>
+        p.socketId !== socket.id &&
         (p.properties || []).map(String).includes(String(finalTile.id))
       );
 
@@ -1434,8 +1435,8 @@ io.on('connection', socket => {
         const transaction = await sequelize.transaction();
 
         try {
-        currentPlayer.money -= finalRent;
-        propertyOwner.money += finalRent;
+          currentPlayer.money -= finalRent;
+          propertyOwner.money += finalRent;
 
           if (currentPlayer.money < 0) {
             const loanIncrease = Math.abs(currentPlayer.money);
@@ -1574,7 +1575,7 @@ io.on('connection', socket => {
   socket.on('endTurn', async () => {
     console.log('[endTurn] for', socket.id);
     const endingPlayer = engine.getPlayer(socket.id);
-    endingPlayer.hasRolled = false; 
+    endingPlayer.hasRolled = false;
 
     try {
       const transaction = await sequelize.transaction();
@@ -1592,14 +1593,14 @@ io.on('connection', socket => {
         );
       }
       await transaction.commit();
-      
+
     } catch (err) {
       console.error('Error updating hasRolled state:', err);
     }
 
     if (endingPlayer) {
       endingPlayer.hasMoved = false;
-      endingPlayer.pickedRoadCash = true; 
+      endingPlayer.pickedRoadCash = true;
       console.log("pickedRoadCash:", endingPlayer.pickedRoadCash);
     }
     else {
@@ -1615,7 +1616,7 @@ io.on('connection', socket => {
 
   socket.on('buyProperty', async () => {
     console.log('[buyProperty] received from', socket.id);
-    
+
     try {
       const playerObj = engine.getPlayer(socket.id);
       if (!playerObj) {
@@ -1753,7 +1754,7 @@ io.on('connection', socket => {
   });
 
   socket.on('casinoRoll', async ({ betAmount, betType }) => {
-    
+
     const player = engine.getPlayer(socket.id);
     if (!player) return;
     const transaction = await sequelize.transaction();
@@ -1778,11 +1779,11 @@ io.on('connection', socket => {
       }
 
       await Player.update(
-        { 
+        {
           money: player.money,
           loan: player.loan
         },
-        { 
+        {
           where: { socketId: socket.id },
           transaction
         }
@@ -1794,7 +1795,7 @@ io.on('connection', socket => {
       if (currentSessionId) {
         await GameSession.update(
           { players: engine.session.players },
-          { 
+          {
             where: { id: currentSessionId },
             transaction
           }
@@ -1813,7 +1814,7 @@ io.on('connection', socket => {
         playerName: player.name
       });
 
-      const resultMessage = won 
+      const resultMessage = won
         ? `${player.name} won $${Math.abs(moneyChange)} at the casino!`
         : `${player.name} lost $${Math.abs(moneyChange)} at the casino!`;
       broadcastGameEvent(resultMessage);
@@ -1843,7 +1844,7 @@ io.on('connection', socket => {
 
         await Player.update(
           { hasMoved: false },
-          { 
+          {
             where: { socketId: socket.id },
             transaction
           }
@@ -1852,7 +1853,7 @@ io.on('connection', socket => {
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { 
+            {
               where: { id: currentSessionId },
               transaction
             }
@@ -1887,7 +1888,7 @@ io.on('connection', socket => {
   });
 
   socket.on('roadCashSelected', async ({ amount }) => {
-    
+
     const player = engine.getPlayer(socket.id);
     if (!player) return;
 
@@ -1902,11 +1903,11 @@ io.on('connection', socket => {
         };
 
         await Player.update(
-          { 
+          {
             money: updatedPlayerState.money,
             hasMoved: true
           },
-          { 
+          {
             where: { socketId: socket.id },
             transaction
           }
@@ -1921,7 +1922,7 @@ io.on('connection', socket => {
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { 
+            {
               where: { id: currentSessionId },
               transaction
             }
@@ -1961,18 +1962,18 @@ io.on('connection', socket => {
 
   socket.on('disconnect', async () => {
     console.log('[disconnect]', socket.id);
-    
+
     const disconnectingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
-    
+
     if (disconnectingPlayer && hasStarted) {
       if (!disconnectingPlayer.hasQuit) {
         console.log(`Storing disconnected player: ${disconnectingPlayer.name}`);
-        
+
         try {
           const currentPlayer = engine.getPlayer(socket.id);
           if (currentPlayer) {
             const transaction = await sequelize.transaction();
-            
+
             try {
               await Player.update(
                 {
@@ -1984,7 +1985,7 @@ io.on('connection', socket => {
                   hasMoved: currentPlayer.hasMoved,
                   piece: currentPlayer.piece
                 },
-                { 
+                {
                   where: { socketId: socket.id },
                   transaction
                 }
@@ -1993,7 +1994,7 @@ io.on('connection', socket => {
               if (currentSessionId) {
                 await GameSession.update(
                   { players: engine.session.players },
-                  { 
+                  {
                     where: { id: currentSessionId },
                     transaction
                   }
@@ -2009,9 +2010,9 @@ io.on('connection', socket => {
         } catch (err) {
           console.error('Error in disconnect handler:', err);
         }
-        
+
         disconnectedPlayers.set(disconnectingPlayer.name, disconnectingPlayer);
-        
+
       }
     } else if (!hasStarted) {
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
@@ -2022,7 +2023,7 @@ io.on('connection', socket => {
 
   socket.on('updateProperty', async ({ playerId, propertyId, action, refundAmount }) => {
     console.log('[updateProperty]', { playerId, propertyId, action, refundAmount });
-    
+
     const player = engine.getPlayer(playerId);
     if (!player) return;
 
@@ -2042,11 +2043,11 @@ io.on('connection', socket => {
 
       try {
         const [updatedRows] = await Player.update(
-          { 
+          {
             properties: player.properties,
             money: player.money
           },
-          { 
+          {
             where: { socketId: playerId },
             transaction
           }
@@ -2059,7 +2060,7 @@ io.on('connection', socket => {
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { 
+            {
               where: { id: currentSessionId },
               transaction
             }
@@ -2093,7 +2094,7 @@ io.on('connection', socket => {
 
   socket.on('teleport', async ({ toTile, prevTile }) => {
     console.log('[teleport] request:', { playerId: socket.id, toTile, prevTile });
-    
+
     const currentPlayer = engine.getPlayer(socket.id);
     if (!currentPlayer) return;
 
@@ -2106,12 +2107,12 @@ io.on('connection', socket => {
         currentPlayer.hasMoved = true;
 
         await Player.update(
-          { 
+          {
             prevTile: prevTile,
             tileId: toTile,
             hasMoved: true
           },
-          { 
+          {
             where: { socketId: socket.id },
             transaction
           }
@@ -2119,16 +2120,16 @@ io.on('connection', socket => {
 
         if (currentSessionId) {
           await GameSession.update(
-            { 
+            {
               players: engine.session.players,
               moves: [
                 ...engine.session.moves || [],
                 { playerSocketId: socket.id, type: 'teleport', fromTile: prevTile, toTile }
               ]
             },
-            { 
+            {
               where: { id: currentSessionId },
-              transaction 
+              transaction
             }
           );
         }
@@ -2147,16 +2148,16 @@ io.on('connection', socket => {
       console.error('Error starting teleport transaction:', err);
     }
 
-    if (currentPlayer.tileId !== 7) {  
+    if (currentPlayer.tileId !== 7) {
       const { tiles } = require('./data/tiles.cjs');
-      const playersOnTile = engine.session.players.filter(p => 
-        p.tileId === currentPlayer.tileId && 
-        p.socketId !== socket.id  
+      const playersOnTile = engine.session.players.filter(p =>
+        p.tileId === currentPlayer.tileId &&
+        p.socketId !== socket.id
       );
 
       if (playersOnTile.length > 0) {
         const tile = tiles.find(t => t.id === currentPlayer.tileId);
-        const tileOwner = engine.session.players.find(p => 
+        const tileOwner = engine.session.players.find(p =>
           p.properties && p.properties.includes(currentPlayer.tileId)
         );
 
@@ -2168,84 +2169,84 @@ io.on('connection', socket => {
 
           const stompAmount = 2000;
           let transaction;
-          
+
           try {
             transaction = await sequelize.transaction();
             const amountPaid = Math.min(targetPlayer.money, stompAmount);
             const loanIncrease = Math.max(0, stompAmount - amountPaid);
-            
+
             targetPlayer.money -= amountPaid;
             if (loanIncrease > 0) {
               targetPlayer.loan = (targetPlayer.loan || 0) + loanIncrease;
             }
-            
+
             currentPlayer.money += stompAmount;
-            
-            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${currentPlayer.name}` + 
-                       (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
-            
+
+            console.log(`Stomp: $${amountPaid} transferred from ${targetPlayer.name} to ${currentPlayer.name}` +
+              (loanIncrease > 0 ? ` and $${loanIncrease} added to ${targetPlayer.name}'s loan` : ''));
+
             await Player.update(
-              { 
+              {
                 money: targetPlayer.money,
                 loan: targetPlayer.loan || 0
               },
-              { 
+              {
                 where: { socketId: targetPlayer.socketId },
-                transaction 
+                transaction
               }
             );
-            
+
             await Player.update(
               { money: currentPlayer.money },
-              { 
+              {
                 where: { socketId: currentPlayer.socketId },
-                transaction 
+                transaction
               }
             );
-            
+
             engine.session.players = engine.session.players.map(p => {
               if (p.socketId === targetPlayer.socketId) {
-                return { 
-                  ...p, 
-                  money: targetPlayer.money, 
-                  loan: targetPlayer.loan || 0 
+                return {
+                  ...p,
+                  money: targetPlayer.money,
+                  loan: targetPlayer.loan || 0
                 };
               }
               if (p.socketId === currentPlayer.socketId) {
-                return { 
-                  ...p, 
-                  money: currentPlayer.money 
+                return {
+                  ...p,
+                  money: currentPlayer.money
                 };
               }
               return p;
             });
-            
+
             if (currentSessionId) {
               await GameSession.update(
                 { players: engine.session.players },
-                { 
+                {
                   where: { id: currentSessionId },
-                  transaction 
+                  transaction
                 }
               );
             }
-            
+
             await transaction.commit();
-            
+
             io.emit('playerMoneyUpdate', {
               playerId: targetPlayer.socketId,
               newBalance: targetPlayer.money,
               loan: targetPlayer.loan || 0
             });
-            
+
             io.emit('playerMoneyUpdate', {
               playerId: currentPlayer.socketId,
               newBalance: currentPlayer.money
             });
-            
+
             let message = `${currentPlayer.name} stomped on ${targetPlayer.name} and collected $2000!`;
             broadcastGameEvent(message);
-            
+
           } catch (err) {
             if (transaction && !transaction.finished) {
               await transaction.rollback();
@@ -2261,7 +2262,7 @@ io.on('connection', socket => {
 
   socket.on('stonePaperScissorsChoice', async ({ choice, gameId }) => {
     console.log('[stonePaperScissorsChoice]', { choice, gameId });
-    
+
     const currentGame = activeRPSGames[gameId];
     if (!currentGame) {
       console.log('Game not found:', gameId);
@@ -2282,23 +2283,23 @@ io.on('connection', socket => {
 
     console.log('Updated game state:', currentGame);
 
-    const allChoicesMade = currentGame.choices.landingPlayer && 
+    const allChoicesMade = currentGame.choices.landingPlayer &&
       currentGame.closestPlayers.every(p => currentGame.choices[p.socketId]);
 
     if (allChoicesMade) {
       console.log('All players have chosen. Determining winners and ties...');
-      
+
       currentGame.closestPlayers.forEach(player => {
-      const result = determineRPSWinner(
+        const result = determineRPSWinner(
           currentGame.choices.landingPlayer,
           currentGame.choices[player.socketId]
-      );
+        );
 
-      if (result === 'tie') {
+        if (result === 'tie') {
           currentGame.ties.push(player);
         } else if (result === 'landingPlayer') {
           currentGame.winners.push(player);
-      } else {
+        } else {
           currentGame.losers.push(player);
         }
       });
@@ -2321,7 +2322,7 @@ io.on('connection', socket => {
           try {
             await Player.update(
               { money: currentGame.landingPlayer.money },
-              { 
+              {
                 where: { socketId: currentGame.landingPlayer.socketId },
                 transaction
               }
@@ -2329,10 +2330,10 @@ io.on('connection', socket => {
 
             for (const player of currentGame.winners) {
               await Player.update(
-                { 
+                {
                   money: player.money,
-                  loan: player.money < 0 ? 
-                    (player.loan || 0) + Math.abs(player.money) : 
+                  loan: player.money < 0 ?
+                    (player.loan || 0) + Math.abs(player.money) :
                     (player.loan || 0)
                 },
                 {
@@ -2379,12 +2380,12 @@ io.on('connection', socket => {
           });
         });
       } else {
-          io.emit('stonePaperScissorsResult', {
-            landingPlayer: {
-              ...currentGame.landingPlayer,
+        io.emit('stonePaperScissorsResult', {
+          landingPlayer: {
+            ...currentGame.landingPlayer,
             choice: currentGame.choices.landingPlayer,
-              money: currentGame.landingPlayer.money
-            },
+            money: currentGame.landingPlayer.money
+          },
           winners: currentGame.winners.map(p => ({
             ...p,
             choice: currentGame.choices[p.socketId],
@@ -2398,14 +2399,14 @@ io.on('connection', socket => {
           ties: []
         });
 
-          delete activeRPSGames[gameId];
+        delete activeRPSGames[gameId];
       }
     }
   });
 
   socket.on('stonePaperScissorsTieAmount', async ({ gameId, amount, tiedPlayerId }) => {
     console.log('[stonePaperScissorsTieAmount]', { gameId, amount, tiedPlayerId });
-    
+
     const currentGame = activeRPSGames[gameId];
     if (!currentGame) {
       console.log('Game not found:', gameId);
@@ -2429,22 +2430,22 @@ io.on('connection', socket => {
         tiedPlayer.hasMoved = true;
 
         await Player.update(
-          { 
+          {
             money: landingPlayer.money,
             hasMoved: true
           },
-          { 
+          {
             where: { socketId: landingPlayer.socketId },
             transaction
           }
         );
 
         await Player.update(
-          { 
+          {
             money: tiedPlayer.money,
             hasMoved: true
           },
-          { 
+          {
             where: { socketId: tiedPlayer.socketId },
             transaction
           }
@@ -2462,7 +2463,7 @@ io.on('connection', socket => {
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { 
+            {
               where: { id: currentSessionId },
               transaction
             }
@@ -2508,9 +2509,9 @@ io.on('connection', socket => {
     const player = engine.getPlayer(socket.id);
     if (!player) {
       console.log('[borrowMoney] Error: Player not found');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'Player not found' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'Player not found'
       });
       return;
     }
@@ -2522,9 +2523,9 @@ io.on('connection', socket => {
     });
     if (!amount || amount < 500) {
       console.log('[borrowMoney] Error: Invalid amount');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'Minimum borrowing amount is $500' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'Minimum borrowing amount is $500'
       });
       return;
     }
@@ -2550,14 +2551,14 @@ io.on('connection', socket => {
       loanAmount: player.loan
     });
 
-    socket.emit('borrowResponse', { 
-      success: true 
+    socket.emit('borrowResponse', {
+      success: true
     });
     if (currentSessionId) {
       GameSession.findByIdAndUpdate(
         currentSessionId,
         { $set: { 'players.$[player].money': player.money, 'players.$[player].loan': player.loan } },
-        { 
+        {
           arrayFilters: [{ 'player.socketId': socket.id }],
           new: true
         }
@@ -2578,9 +2579,9 @@ io.on('connection', socket => {
     const player = engine.getPlayer(socket.id);
     if (!player) {
       console.log('[payoffLoan] Error: Player not found');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'Player not found' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'Player not found'
       });
       return;
     }
@@ -2593,27 +2594,27 @@ io.on('connection', socket => {
 
     if (!amount || amount < 500) {
       console.log('[payoffLoan] Error: Invalid amount');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'Minimum payment amount is $500' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'Minimum payment amount is $500'
       });
       return;
     }
 
     if (player.money < amount) {
       console.log('[payoffLoan] Error: Insufficient funds');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'Insufficient funds' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'Insufficient funds'
       });
       return;
     }
 
     if (!player.loan) {
       console.log('[payoffLoan] Error: No loan to pay off');
-      socket.emit('borrowResponse', { 
-        success: false, 
-        error: 'No loan to pay off' 
+      socket.emit('borrowResponse', {
+        success: false,
+        error: 'No loan to pay off'
       });
       return;
     }
@@ -2623,13 +2624,13 @@ io.on('connection', socket => {
       const paymentAmount = Math.min(amount, player.loan);
       const newLoanAmount = player.loan - paymentAmount;
       const newMoneyAmount = player.money - paymentAmount;
-      
+
       await Player.update(
-        { 
-          loan: newLoanAmount, 
-          money: newMoneyAmount 
+        {
+          loan: newLoanAmount,
+          money: newMoneyAmount
         },
-        { 
+        {
           where: { socketId: socket.id },
           transaction
         }
@@ -2648,16 +2649,16 @@ io.on('connection', socket => {
       if (currentSessionId) {
         const session = await GameSession.findByPk(currentSessionId, { transaction });
         if (session) {
-          const updatedPlayers = session.players.map(p => 
-            p.socketId === socket.id 
+          const updatedPlayers = session.players.map(p =>
+            p.socketId === socket.id
               ? { ...p, money: newMoneyAmount, loan: newLoanAmount }
               : p
           );
-          
+
           await session.update({
             players: updatedPlayers
           }, { transaction });
-          
+
           console.log('[payoffLoan] Game session updated successfully');
         }
       }
@@ -2670,28 +2671,28 @@ io.on('connection', socket => {
         loanAmount: player.loan
       });
 
-      socket.emit('borrowResponse', { 
-        success: true 
+      socket.emit('borrowResponse', {
+        success: true
       });
-      
+
     } catch (error) {
       if (transaction && !transaction.finished) {
         await transaction.rollback();
       }
-      
+
       console.error('[payoffLoan] Error processing loan payoff:', error);
       socket.emit('borrowResponse', {
         success: false,
         error: 'An error occurred while processing your payment. Please try again.'
       });
-      
+
       throw error;
     }
   });
 
   socket.on('stonePaperScissorsStart', (game) => {
     console.log('[RPS] Game started:', game);
-    
+
     const landingPlayer = game.landingPlayer;
     if (landingPlayer.loan) {
       landingPlayer.money -= landingPlayer.loan;
@@ -2724,63 +2725,63 @@ io.on('connection', socket => {
   socket.on('stonePaperScissorsResult', async (result) => {
     console.log('[RPS] Result received:', result);
     setRpsResult(result);
-    
+
     const updatedPlayers = players.map(p => {
-      const didWin = result.results?.some(r => 
-        r.winner === 'landingPlayer' || 
+      const didWin = result.results?.some(r =>
+        r.winner === 'landingPlayer' ||
         (r.winner === 'tie' && r.landingPlayerChoice && r.closestPlayerChoice)
       );
-      
+
       if (p.socketId === result.landingPlayer.socketId && didWin) {
         let newMoney = result.landingPlayer.money;
         let newLoan = result.landingPlayer.loan || 0;
-        
+
         if (newMoney < 0) {
           newLoan += Math.abs(newMoney);
           newMoney = 0;
         }
-        
+
         return { ...p, money: newMoney, loan: newLoan };
       }
-      
+
       const winner = result.winners.find(w => w.socketId === p.socketId);
       if (winner) {
         let newMoney = winner.money;
         let newLoan = winner.loan || 0;
-        
+
         if (newMoney < 0) {
           newLoan += Math.abs(newMoney);
           newMoney = 0;
         }
-        
+
         return { ...p, money: newMoney, loan: newLoan };
       }
-      
+
       const loser = result.losers.find(l => l.socketId === p.socketId);
       if (loser) {
         let newMoney = loser.money;
         let newLoan = loser.loan || 0;
-        
+
         if (newMoney < 0) {
           newLoan += Math.abs(newMoney);
           newMoney = 0;
         }
-        
+
         return { ...p, money: newMoney, loan: newLoan };
       }
-      
+
       return p;
     });
-    
+
     try {
       const transaction = await sequelize.transaction();
 
       try {
         await Player.update(
-          { 
+          {
             money: result.landingPlayer.money < 0 ? 0 : result.landingPlayer.money,
-            loan: result.landingPlayer.money < 0 ? 
-              (result.landingPlayer.loan || 0) + Math.abs(result.landingPlayer.money) : 
+            loan: result.landingPlayer.money < 0 ?
+              (result.landingPlayer.loan || 0) + Math.abs(result.landingPlayer.money) :
               (result.landingPlayer.loan || 0)
           },
           {
@@ -2791,10 +2792,10 @@ io.on('connection', socket => {
 
         for (const winner of result.winners) {
           await Player.update(
-            { 
+            {
               money: winner.money < 0 ? 0 : winner.money,
-              loan: winner.money < 0 ? 
-                (winner.loan || 0) + Math.abs(winner.money) : 
+              loan: winner.money < 0 ?
+                (winner.loan || 0) + Math.abs(winner.money) :
                 (winner.loan || 0)
             },
             {
@@ -2806,10 +2807,10 @@ io.on('connection', socket => {
 
         for (const loser of result.losers) {
           await Player.update(
-            { 
+            {
               money: loser.money < 0 ? 0 : loser.money,
-              loan: loser.money < 0 ? 
-                (loser.loan || 0) + Math.abs(loser.money) : 
+              loan: loser.money < 0 ?
+                (loser.loan || 0) + Math.abs(loser.money) :
                 (loser.loan || 0)
             },
             {
@@ -2822,9 +2823,9 @@ io.on('connection', socket => {
         if (currentSessionId) {
           await GameSession.update(
             { players: engine.session.players },
-            { 
+            {
               where: { id: currentSessionId },
-              transaction 
+              transaction
             }
           );
         }
@@ -2848,20 +2849,20 @@ io.on('connection', socket => {
 
   socket.on('tradeRequest', (request) => {
     console.log('[tradeRequest]', request);
-    
+
     const fromPlayer = engine.getPlayer(request.from);
     const toPlayer = engine.getPlayer(request.to);
     if (!fromPlayer || !toPlayer) return;
 
-    const fromPlayerHasProperties = request.offer.properties.every(propId => 
+    const fromPlayerHasProperties = request.offer.properties.every(propId =>
       fromPlayer.properties.includes(propId)
     );
-    const toPlayerHasProperties = request.ask.properties.every(propId => 
+    const toPlayerHasProperties = request.ask.properties.every(propId =>
       toPlayer.properties.includes(propId)
     );
 
     if (!fromPlayerHasProperties || !toPlayerHasProperties) {
-      socket.emit('tradeRejected', { 
+      socket.emit('tradeRejected', {
         offerId: request.id,
         reason: 'invalidProperties',
         message: 'One or more properties in the trade are no longer available.'
@@ -2877,7 +2878,7 @@ io.on('connection', socket => {
       const property = tiles.find(t => t.id === propId);
       return property ? property.name : 'Unknown';
     }).join(', ');
-    
+
     const askProperties = request.ask.properties.map(propId => {
       const { tiles } = require('./data/tiles.cjs');
       const property = tiles.find(t => t.id === propId);
@@ -2885,14 +2886,14 @@ io.on('connection', socket => {
     }).join(', ');
 
     let message = `${fromPlayer.name} offered ${toPlayer.name} a trade: `;
-    
+
     const offerParts = [];
     if (request.offer.money > 0) offerParts.push(`$${request.offer.money}`);
     if (offerProperties) offerParts.push(offerProperties);
     message += offerParts.join(' and ');
-    
+
     message += ' for ';
-    
+
     const askParts = [];
     if (request.ask.money > 0) askParts.push(`$${request.ask.money}`);
     if (askProperties) askParts.push(askProperties);
@@ -2903,7 +2904,7 @@ io.on('connection', socket => {
 
   socket.on('tradeResponse', async ({ offerId, accepted }) => {
     console.log('[tradeResponse]', { offerId, accepted });
-    
+
     const offer = activeTradeOffers.find(o => o.id === offerId);
     if (!offer) return;
 
@@ -2914,15 +2915,15 @@ io.on('connection', socket => {
     if (accepted) {
       const fromPlayerCanAfford = fromPlayer.money >= offer.offer.money;
       const toPlayerCanAfford = toPlayer.money >= offer.ask.money;
-      const fromPlayerHasProperties = offer.offer.properties.every(propId => 
+      const fromPlayerHasProperties = offer.offer.properties.every(propId =>
         fromPlayer.properties.includes(propId)
       );
-      const toPlayerHasProperties = offer.ask.properties.every(propId => 
+      const toPlayerHasProperties = offer.ask.properties.every(propId =>
         toPlayer.properties.includes(propId)
       );
 
       if (!fromPlayerCanAfford || !toPlayerCanAfford) {
-        socket.emit('tradeRejected', { 
+        socket.emit('tradeRejected', {
           offerId,
           reason: 'insufficientFunds',
           message: 'One or more players do not have enough money for this trade.',
@@ -2933,12 +2934,12 @@ io.on('connection', socket => {
       }
 
       if (!fromPlayerHasProperties || !toPlayerHasProperties) {
-        socket.emit('tradeRejected', { 
+        socket.emit('tradeRejected', {
           offerId,
           reason: 'invalidProperties',
           message: 'One or more properties in the trade are no longer available.'
         });
-        socket.broadcast.emit('tradeRejected', { 
+        socket.broadcast.emit('tradeRejected', {
           offerId,
           reason: 'invalidProperties',
           keepOffer: false
@@ -2963,22 +2964,22 @@ io.on('connection', socket => {
           toPlayer.properties.push(...offer.offer.properties);
 
           const [fromPlayerUpdated] = await Player.update(
-            { 
-              money: fromPlayer.money, 
-              properties: fromPlayer.properties 
+            {
+              money: fromPlayer.money,
+              properties: fromPlayer.properties
             },
-            { 
+            {
               where: { socketId: fromPlayer.socketId },
               transaction
             }
           );
 
           const [toPlayerUpdated] = await Player.update(
-            { 
-              money: toPlayer.money, 
-              properties: toPlayer.properties 
+            {
+              money: toPlayer.money,
+              properties: toPlayer.properties
             },
-            { 
+            {
               where: { socketId: toPlayer.socketId },
               transaction
             }
@@ -2991,7 +2992,7 @@ io.on('connection', socket => {
           if (currentSessionId) {
             await GameSession.update(
               { players: engine.session.players },
-              { 
+              {
                 where: { id: currentSessionId },
                 transaction
               }
@@ -3035,7 +3036,7 @@ io.on('connection', socket => {
               });
             });
 
-            activeTradeOffers = activeTradeOffers.filter(o => 
+            activeTradeOffers = activeTradeOffers.filter(o =>
               !invalidOffers.some(invalid => invalid.id === o.id)
             );
           }
@@ -3062,7 +3063,7 @@ io.on('connection', socket => {
             const property = tiles.find(t => t.id === propId);
             return property ? property.name : 'Unknown';
           }).join(', ');
-          
+
           const askProperties = offer.ask.properties.map(propId => {
             const { tiles } = require('./data/tiles.cjs');
             const property = tiles.find(t => t.id === propId);
@@ -3070,14 +3071,14 @@ io.on('connection', socket => {
           }).join(', ');
 
           let message = `Trade completed: ${fromPlayer.name} gave ${toPlayer.name} `;
-          
+
           const offeredParts = [];
           if (offer.offer.money > 0) offeredParts.push(`$${offer.offer.money}`);
           if (offeredProps) offeredParts.push(offerProps);
           message += offeredParts.join(' and ');
-          
+
           message += ' in exchange for ';
-          
+
           const askedParts = [];
           if (offer.ask.money > 0) askedParts.push(`$${offer.ask.money}`);
           if (askProperties) askedParts.push(askProperties);
@@ -3096,11 +3097,11 @@ io.on('connection', socket => {
         broadcastGameEvent(`Trade between ${fromPlayer.name} and ${toPlayer.name} failed due to an error.`);
       }
     } else {
-      socket.broadcast.emit('tradeRejected', { 
+      socket.broadcast.emit('tradeRejected', {
         offerId,
         reason: 'rejected'
       });
-      socket.emit('tradeRejected', { 
+      socket.emit('tradeRejected', {
         offerId,
         reason: 'rejected',
         message: 'You rejected the trade.'
@@ -3120,33 +3121,33 @@ io.on('connection', socket => {
 
   socket.on('quitGame', () => {
     console.log('[Player quit game]', socket.id);
-    
+
     const quittingPlayer = lobbyPlayers.find(p => p.socketId === socket.id);
-    
+
     if (quittingPlayer && hasStarted) {
       console.log(`Player ${quittingPlayer.name} quit the game`);
-      
+
       quittingPlayer.hasQuit = true;
-      
+
       disconnectedPlayers.delete(quittingPlayer.name);
-      
+
       const isCurrentPlayer = engine.session.players[engine.session.currentPlayerIndex].socketId === socket.id;
       if (isCurrentPlayer) {
         console.log(`Current player ${quittingPlayer.name} quit during their turn`);
-        
+
         const currentPlayer = engine.getPlayer(socket.id);
         if (currentPlayer && currentPlayer.hasMoved) {
           console.log(`Auto-ending turn for quit player ${quittingPlayer.name}`);
         }
-        
+
         const nextPlayerIndex = (engine.session.currentPlayerIndex + 1) % engine.session.players.length;
         engine.session.currentPlayerIndex = nextPlayerIndex;
         const nextPlayerId = engine.session.players[nextPlayerIndex].socketId;
         io.emit('turnEnded', { nextPlayerId });
-        
+
         if (currentSessionId) {
-          GameSession.findByIdAndUpdate(currentSessionId, { 
-            currentPlayerIndex: nextPlayerId 
+          GameSession.findByIdAndUpdate(currentSessionId, {
+            currentPlayerIndex: nextPlayerId
           }).catch(err => {
             console.error('Error updating game session after quit:', err);
           });
@@ -3156,8 +3157,8 @@ io.on('connection', socket => {
         if (quitPlayerIndex !== -1 && quitPlayerIndex < engine.session.currentPlayerIndex) {
           engine.session.currentPlayerIndex--;
           if (currentSessionId) {
-            GameSession.findByIdAndUpdate(currentSessionId, { 
-              currentPlayerIndex: engine.session.currentPlayerIndex 
+            GameSession.findByIdAndUpdate(currentSessionId, {
+              currentPlayerIndex: engine.session.currentPlayerIndex
             }).catch(err => {
               console.error('Error updating game session after quit:', err);
             });
@@ -3167,12 +3168,12 @@ io.on('connection', socket => {
 
       engine.removePlayer(socket.id);
       lobbyPlayers = lobbyPlayers.filter(p => p.socketId !== socket.id);
-      
+
       io.emit('playerQuit', {
         playerName: quittingPlayer.name,
         temporary: false
       });
-      
+
       if (engine.session.players.length === 1) {
         const winner = engine.session.players[0];
         io.emit('gameOver', {
@@ -3192,15 +3193,15 @@ io.on('connection', socket => {
 
   socket.on("log", (VarName, value) => {
     console.log(`[Log] ${VarName}:`, value);
-});
+  });
 
-socket.on('clientPing', () => {
+  socket.on('clientPing', () => {
   });
 });
 
 function determineRPSWinner(choice1, choice2) {
   if (choice1 === choice2) return 'tie';
-   
+
   if (
     (choice1 === 'rock' && choice2 === 'scissors') ||
     (choice1 === 'paper' && choice2 === 'rock') ||
@@ -3208,7 +3209,7 @@ function determineRPSWinner(choice1, choice2) {
   ) {
     return 'landingPlayer';
   }
-  
+
   return 'closestPlayer';
 }
 

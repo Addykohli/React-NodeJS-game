@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+*/.env
+
+# Build outputs
+build/
+dist/
+*/build/
+*/dist/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Deployment
+DEPLOY_AWS.md

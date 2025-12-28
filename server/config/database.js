@@ -38,7 +38,7 @@ try {
 const sequelize = new Sequelize(dbUrl, {
   dialect: 'postgres',
   dialectOptions: {
-    ssl: {
+    ssl: process.env.DB_SSL === 'false' ? undefined : {
       require: true,
       rejectUnauthorized: false
     }
