@@ -4,14 +4,26 @@ import socket from '../socket';
 export const GameContext = createContext();
 
 export function GameProvider({ children }) {
-  
+
   const [isRpsActive, setIsRpsActive] = useState(false);
-  
+
+  // Refs to access latest state in socket listeners without re-binding
+  const playerRef = React.useRef(null);
+  const playersRef = React.useRef([]);
+
+  useEffect(() => {
+    playerRef.current = player;
+  }, [player]);
+
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
   const [chatMessages, setChatMessages] = useState(() => {
     const savedChat = localStorage.getItem('gameChatMessages');
     return savedChat ? JSON.parse(savedChat) : [];
   });
-  
+
   const [player, setPlayer] = useState(() => {
     const savedPlayer = localStorage.getItem('gamePlayer');
     return savedPlayer ? JSON.parse(savedPlayer) : null;
@@ -34,41 +46,41 @@ export function GameProvider({ children }) {
     const savedMovementDone = localStorage.getItem('gameMovementDone');
     return savedMovementDone ? JSON.parse(savedMovementDone) : false;
   });
-  
+
   const [done, setDone] = useState(() => {
     const savedDone = localStorage.getItem('gameDoneState');
     return savedDone ? JSON.parse(savedDone) : false;
   });
   const [insufficientFunds, setInsufficientFunds] = useState(false);
-  
+
   const [activeLoans, setActiveLoans] = useState([]);
   const [loanRequests, setLoanRequests] = useState([]);
-  
+
   const fetchLoans = () => {
     if (socket) {
       socket.emit('getActiveLoans');
       socket.emit('getPendingLoanRequests');
     }
   };
-  
+
   const requestLoan = (lenderId, amount, returnAmount) => {
     if (socket) {
       socket.emit('requestLoan', { lenderId, amount, returnAmount });
     }
   };
-  
+
   const respondToLoan = (loanId, accepted) => {
     if (socket) {
       socket.emit(accepted ? 'acceptLoan' : 'rejectLoan', { loanId });
     }
   };
-  
+
   const repayLoan = (loanId) => {
     if (socket) {
       socket.emit('repayLoan', { loanId });
     }
   };
-  
+
   useEffect(() => {
     if (!socket) return;
     function handleChatMessage(message) {
@@ -78,7 +90,7 @@ export function GameProvider({ children }) {
     return () => {
       socket.off('chatMessage', handleChatMessage);
     };
-  }, []); 
+  }, []);
 
 
   useEffect(() => {
@@ -86,13 +98,14 @@ export function GameProvider({ children }) {
       console.log('GameContext: Socket not available');
       return;
     }
-    
+
     const handleLobbyState = (players) => {
       console.log('Received lobby state update:', players);
       setPlayers(players || []);
-      
-      if (player) {
-        const updatedPlayer = players?.find(p => p.socketId === player.socketId);
+
+      const currentPlayer = playerRef.current;
+      if (currentPlayer) {
+        const updatedPlayer = players?.find(p => p.socketId === currentPlayer.socketId);
         if (updatedPlayer) {
           setPlayer(prev => ({
             ...prev,
@@ -101,10 +114,10 @@ export function GameProvider({ children }) {
         }
       }
     };
-    
+
     const handleRpsStarted = () => setIsRpsActive(true);
     const handleRpsEnded = () => setIsRpsActive(false);
-    
+
     const handlePlayerDiceRoll = (data) => {
       console.log('GameContext: Received playerDiceRoll event:', data);
       console.log('GameContext: Current socket ID:', socket.id);
@@ -127,17 +140,17 @@ export function GameProvider({ children }) {
     socket.on('rpsEnded', handleRpsEnded);
     socket.on('playerMoneyUpdate', handlePlayerMoneyUpdate);
     socket.on('playerDiceRoll', handlePlayerDiceRoll);
-    
+
     socket.emit('requestLobbyState');
-    
+
     socket.on('activeLoans', (loans) => {
       setActiveLoans(loans || []);
     });
-    
+
     socket.on('pendingLoanRequests', (requests) => {
       setLoanRequests(requests || []);
     });
-    
+
     socket.on('loanRequest', (request) => {
       setLoanRequests(prev => {
         if (prev.some(req => req.id === request.id)) return prev;
@@ -147,7 +160,7 @@ export function GameProvider({ children }) {
 
     socket.on('loanAccepted', ({ loan, borrowerUpdate, lenderUpdate }) => {
       console.log('Loan accepted:', loan);
-      
+
       setActiveLoans(prev => {
         const updatedLoans = prev.filter(l => l.id !== loan.id);
         if (!updatedLoans.some(l => l.id === loan.id)) {
@@ -170,7 +183,7 @@ export function GameProvider({ children }) {
         }));
       }
 
-      setPlayers(prev => 
+      setPlayers(prev =>
         prev.map(p => {
           if (p.socketId === borrowerUpdate.playerId) {
             return { ...p, money: borrowerUpdate.newMoney };
@@ -182,16 +195,16 @@ export function GameProvider({ children }) {
         })
       );
     });
-    
+
     socket.on('loanRejected', ({ loanId, reason }) => {
       console.log(`Loan ${loanId} rejected:`, reason);
-      
+
       setLoanRequests(prev => prev.filter(req => req.id !== loanId));
     });
 
     socket.on('loanRepaid', ({ loan, playerUpdate }) => {
       console.log('Loan repaid:', loan);
-      
+
       setActiveLoans(prev => prev.filter(l => l.id !== loan.id));
 
       if (socket.id === playerUpdate.playerId) {
@@ -201,7 +214,7 @@ export function GameProvider({ children }) {
         }));
       }
 
-      setPlayers(prev => 
+      setPlayers(prev =>
         prev.map(p => {
           if (p.socketId === playerUpdate.playerId) {
             return { ...p, money: playerUpdate.newMoney };
@@ -210,7 +223,7 @@ export function GameProvider({ children }) {
         })
       );
     });
-    
+
     fetchLoans();
 
     return () => {
@@ -225,12 +238,12 @@ export function GameProvider({ children }) {
     };
   }, []);
 
-  
+
   useEffect(() => {
     if (player) {
       const playerData = {
         ...player,
-        piece: player.piece || null 
+        piece: player.piece || null
       };
       localStorage.setItem('gamePlayer', JSON.stringify(playerData));
     } else {
@@ -260,34 +273,34 @@ export function GameProvider({ children }) {
     } else {
       localStorage.removeItem('gameDiceRoll');
     }
-  }, [diceRoll]); 
+  }, [diceRoll]);
 
   useEffect(() => {
     localStorage.setItem('gameMovementDone', JSON.stringify(movementDone));
-  }, [movementDone]); 
+  }, [movementDone]);
 
-  
+
   useEffect(() => {
     const handleReconnect = () => {
       const savedPlayer = localStorage.getItem('gamePlayer');
       if (savedPlayer) {
         const playerData = JSON.parse(savedPlayer);
-        
-        socket.emit('joinLobby', { 
+
+        socket.emit('joinLobby', {
           name: playerData.name,
-          piece: playerData.piece 
+          piece: playerData.piece
         });
       }
     };
 
     socket.on('connect', handleReconnect);
     return () => socket.off('connect', handleReconnect);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (socket?.id && players.length > 0) {
       const me = players.find(p => p.socketId === socket.id);
-      
+
       if (me) {
         setPlayer(prev => ({
           ...me,
@@ -295,7 +308,7 @@ export function GameProvider({ children }) {
         }));
       }
     }
-  }, [players]); 
+  }, [players]);
 
   const handleQuit = () => {
     localStorage.removeItem('gamePlayer');
@@ -310,14 +323,7 @@ export function GameProvider({ children }) {
     setMovementDone(false);
   };
 
-  useEffect(() => {
-    if (socket?.id && players.length > 0) {
-      const me = players.find(p => p.socketId === socket.id);
-      if (me) {
-        setPlayer(me);
-      }
-    }
-  }, [players]); 
+
 
   function ensurePiece(players, prevPlayers = []) {
     return players.map(p => {
@@ -335,7 +341,7 @@ export function GameProvider({ children }) {
       setPlayers(prev => ensurePiece(ps, prev));
       setSessionId(sid);
       setGameState('playing');
-      
+
       // Add turn order message to chat
       if (turnOrder && turnOrder.length > 0) {
         const turnOrderMessage = {
@@ -370,7 +376,7 @@ export function GameProvider({ children }) {
     socket.on('playerQuit', ({ playerName, temporary }) => {
       if (!temporary) {
         setPlayers(prev => prev.filter(p => p.name !== playerName));
-        if (player?.name === playerName) {
+        if (playerRef.current?.name === playerName) {
           localStorage.removeItem('gamePlayer');
           localStorage.removeItem('gameState');
           localStorage.removeItem('sessionId');
@@ -390,7 +396,7 @@ export function GameProvider({ children }) {
       setDiceRoll(null);
       setMovementDone(false);
       setInsufficientFunds(false);
-      
+
       localStorage.removeItem('gameDiceRoll');
       localStorage.removeItem('gameMovementDone');
 
@@ -407,14 +413,14 @@ export function GameProvider({ children }) {
     });
     socket.on('playerMoved', ({ playerId, tileId }) => {
       setPlayers(prev =>
-        prev.map(p => 
-          p.socketId === playerId 
-            ? { ...p, tileId, piece: p.piece ?? null } 
+        prev.map(p =>
+          p.socketId === playerId
+            ? { ...p, tileId, piece: p.piece ?? null }
             : p
         )
       );
-      
-      if (player?.socketId === playerId) {
+
+      if (playerRef.current?.socketId === playerId) {
         setPlayer(prev => ({ ...prev, tileId, piece: prev?.piece ?? null }));
       }
     });
@@ -430,15 +436,15 @@ export function GameProvider({ children }) {
       } else if (socket.id === ownerSocketId) {
         setPlayer(prev => ({ ...prev, money: ownerMoney }));
       }
-      
+
       if (socket.id === payerSocketId) {
         setPlayer(prev => ({ ...prev, money: payerMoney, loan: payerLoan }));
       } else if (socket.id === ownerSocketId) {
         setPlayer(prev => ({ ...prev, money: ownerMoney }));
       }
 
-      
-      setPlayers(prevPlayers => 
+
+      setPlayers(prevPlayers =>
         prevPlayers.map(p => {
           if (p.socketId === payerSocketId) {
             return { ...p, money: payerMoney, loan: payerLoan };
@@ -454,16 +460,15 @@ export function GameProvider({ children }) {
       if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
-      
+
       setPlayers(prev => prev.map(p =>
         p.socketId === playerSocketId ? { ...p, money: newMoney } : p
       ));
     });
 
     socket.on('propertyUpdated', ({ playerId, propertyId, action, newMoney }) => {
-      
-      
-      if (player?.socketId === playerId) {
+
+      if (playerRef.current?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
           money: newMoney,
@@ -473,13 +478,13 @@ export function GameProvider({ children }) {
         }));
       }
 
-      
+
       setPlayers(prev => prev.map(p => {
         if (p.socketId === playerId) {
           return {
             ...p,
             money: newMoney,
-            properties: action === 'add' 
+            properties: action === 'add'
               ? [...(p.properties || []), propertyId]
               : (p.properties || []).filter(id => id !== propertyId)
           };
@@ -489,14 +494,14 @@ export function GameProvider({ children }) {
     });
 
     socket.on('startBonus', ({ playerSocketId, newMoney, amount }) => {
-      
+
       if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
 
-      
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
+
+      setPlayers(prevPlayers =>
+        prevPlayers.map(p =>
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
         )
       );
@@ -506,15 +511,15 @@ export function GameProvider({ children }) {
       if (socket.id === playerId) {
         setPlayer(prev => ({ ...prev, money: playerMoney }));
       }
-      
-      
+
+
       if (socket.id === playerId) {
         setPlayer(prev => ({ ...prev, money: playerMoney }));
       }
 
-      
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
+
+      setPlayers(prevPlayers =>
+        prevPlayers.map(p =>
           p.socketId === playerId ? { ...p, money: playerMoney } : p
         )
       );
@@ -525,17 +530,17 @@ export function GameProvider({ children }) {
       if (socket.id === playerSocketId) {
         setPlayer(prev => ({ ...prev, money: newMoney }));
       }
-    
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
+
+      setPlayers(prevPlayers =>
+        prevPlayers.map(p =>
           p.socketId === playerSocketId ? { ...p, money: newMoney } : p
         )
       );
     });
 
     socket.on('loanUpdated', ({ playerId, newMoney, loanAmount }) => {
-      
-      if (player?.socketId === playerId) {
+
+      if (playerRef.current?.socketId === playerId) {
         setPlayer(prev => ({
           ...prev,
           money: newMoney,
@@ -556,36 +561,36 @@ export function GameProvider({ children }) {
     });
 
     socket.on('tradeAccepted', ({ fromPlayer, toPlayer }) => {
-      
+
       if (socket.id === fromPlayer.socketId) {
-        setPlayer(prev => ({ 
-          ...prev, 
-          money: fromPlayer.money, 
-          properties: fromPlayer.properties 
+        setPlayer(prev => ({
+          ...prev,
+          money: fromPlayer.money,
+          properties: fromPlayer.properties
         }));
       } else if (socket.id === toPlayer.socketId) {
-        setPlayer(prev => ({ 
-          ...prev, 
-          money: toPlayer.money, 
-          properties: toPlayer.properties 
+        setPlayer(prev => ({
+          ...prev,
+          money: toPlayer.money,
+          properties: toPlayer.properties
         }));
       }
 
-      
-      setPlayers(prevPlayers => 
+
+      setPlayers(prevPlayers =>
         prevPlayers.map(p => {
           if (p.socketId === fromPlayer.socketId) {
-            return { 
-              ...p, 
-              money: fromPlayer.money, 
-              properties: fromPlayer.properties 
+            return {
+              ...p,
+              money: fromPlayer.money,
+              properties: fromPlayer.properties
             };
           }
           if (p.socketId === toPlayer.socketId) {
-            return { 
-              ...p, 
-              money: toPlayer.money, 
-              properties: toPlayer.properties 
+            return {
+              ...p,
+              money: toPlayer.money,
+              properties: toPlayer.properties
             };
           }
           return p;
@@ -595,7 +600,7 @@ export function GameProvider({ children }) {
 
     socket.on('playersStateUpdate', ({ players }) => {
       setPlayers(players);
-      
+
       const updatedPlayer = players.find(p => p.socketId === socket.id);
       if (updatedPlayer) {
         setPlayer(updatedPlayer);
@@ -604,15 +609,15 @@ export function GameProvider({ children }) {
 
     socket.on('playerMoneyUpdate', ({ playerId, newMoney, playerName }) => {
       console.log(`Updating money for player ${playerName || playerId} to ${newMoney}`);
-      
-      setPlayers(prevPlayers => 
-        prevPlayers.map(p => 
-          p.socketId === playerId 
+
+      setPlayers(prevPlayers =>
+        prevPlayers.map(p =>
+          p.socketId === playerId
             ? { ...p, money: newMoney }
             : p
         )
       );
-      
+
       if (playerId === socket.id) {
         setPlayer(prev => ({
           ...prev,
@@ -642,7 +647,7 @@ export function GameProvider({ children }) {
       socket.off('playersStateUpdate');
       socket.off('playerMoneyUpdate');
     };
-  }, [player, players]);
+  }, []);
 
   return (
     <GameContext.Provider

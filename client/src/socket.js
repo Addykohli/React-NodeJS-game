@@ -9,12 +9,12 @@ const socket = io(SOCKET_SERVER_URL, {
         credentials: true
     },
     withCredentials: true,
-    transports: ['websocket', 'polling'], 
-    reconnection: true,                  
-    reconnectionAttempts: Infinity,      
-    reconnectionDelay: 1000,             
-    reconnectionDelayMax: 5000,         
-    timeout: 20000,                      
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 20000,
     autoConnect: true,
     forceNew: false
 });
@@ -25,11 +25,6 @@ socket.on('connect', () => {
 
 socket.on('disconnect', (reason) => {
     console.warn('Disconnected from server:', reason);
-    if (reason === 'io server disconnect' || reason === 'transport close' || reason === 'ping timeout') {
-        if (!socket.connected) {
-            socket.connect();
-        }
-    }
 });
 
 socket.on('reconnect_attempt', (attempt) => {
