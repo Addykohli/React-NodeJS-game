@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gamedb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+
+  server:
+    build: ./server
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/gamedb
+      - REDIS_URL=redis://redis:6379
+      - DB_SSL=false
+      - PORT=5000
+      - CLIENT_URL=http://3.137.155.134:5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  client:
+    build:
+      context: ./client
+      args:
+        # IMPORTANT: Change this to your EC2 Public IP or Domain when deploying!
+        # Example: http://1.2.3.4:5000
+        - REACT_APP_SERVER_URL=http://3.137.155.134:5000
+    ports:
+      - "80:3000"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:

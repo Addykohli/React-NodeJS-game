@@ -38,7 +38,7 @@ try {
 const sequelize = new Sequelize(dbUrl, {
   dialect: 'postgres',
   dialectOptions: {
-    ssl: {
+    ssl: process.env.DB_SSL === 'false' ? undefined : {
       require: true,
       rejectUnauthorized: false
     }
@@ -86,7 +86,7 @@ const initializeDatabase = async () => {
       username: sequelize.config.username,
       ssl: sequelize.options.dialectOptions.ssl
     });
-    
+
     if (err.original?.code === '3D000') {
       console.log('Attempting to create database...');
       try {
@@ -98,7 +98,7 @@ const initializeDatabase = async () => {
         await tmpSequelize.query(`CREATE DATABASE "${sequelize.config.database}";`);
         await tmpSequelize.close();
         console.log('✅ Database created successfully.');
-        
+
         await sequelize.authenticate();
         console.log('✅ Connected to newly created database.');
       } catch (createErr) {
