@@ -21,21 +21,22 @@ const Lobby = () => {
     setPlayers,
     setGameState,
     socket,
-    handleQuit
+    handleQuit,
+    isGameActive
   } = useContext(GameContext);
-  
+
   const diceImages = {};
   for (let i = 1; i <= 6; i++) {
     diceImages[i] = require(`../assets/dice/dice${i}.png`);
   }
 
   const [name, setName] = useState(() => {
-    
+
     const savedPlayer = localStorage.getItem('gamePlayer');
     return savedPlayer ? JSON.parse(savedPlayer).name : '';
   });
   const [hasJoined, setHasJoined] = useState(() => {
-    
+
     return !!localStorage.getItem('gamePlayer');
   });
   const [selectedPiece, setSelectedPiece] = useState('');
@@ -44,9 +45,9 @@ const Lobby = () => {
   useEffect(() => {
     const handleLobby = updatedPlayers => {
       setPlayers(updatedPlayers || []);
-      
+
       const me = updatedPlayers.find(p => p.socketId === socket.id)
-                || (name && updatedPlayers.find(p => p.name === name));
+        || (name && updatedPlayers.find(p => p.name === name));
       if (me) {
         setPlayer(me);
         if (me.piece) setSelectedPiece(me.piece);
@@ -65,7 +66,7 @@ const Lobby = () => {
     socket.on('lobbyUpdate', handleLobby);
     socket.on('gameStart', handleStart);
     socket.on('joinError', handleJoinError);
-    
+
     return () => {
       socket.off('lobbyUpdate', handleLobby);
       socket.off('gameStart', handleStart);
@@ -75,8 +76,8 @@ const Lobby = () => {
 
   const joinLobby = () => {
     if (!name.trim()) return;
-    
-    
+
+
     const isDuplicateName = players.some(p => p.name.toLowerCase() === name.toLowerCase());
     if (isDuplicateName) {
       setError('This name is already taken. Please choose another name.');
@@ -105,14 +106,14 @@ const Lobby = () => {
   const usedPieces = players.map(p => p.piece).filter(Boolean);
   const availablePieces = allPieces.filter(p => !usedPieces.includes(p));
 
-  
+
   const thisPlayer = player?.socketId
     ? players.find(p => p.socketId === player.socketId)
     : players.find(p => p.name === player?.name);
 
   const showReadyButton = !!selectedPiece && thisPlayer && !thisPlayer.ready;
 
-  
+
   if (hasJoined && selectedPiece && !thisPlayer) {
     return (
       <div style={{
@@ -140,7 +141,7 @@ const Lobby = () => {
     );
   }
 
-  
+
   if (!players) {
     return null;
   }
@@ -156,7 +157,7 @@ const Lobby = () => {
       color: 'white'
     }}>
       {/* Main content area */}
-      <div 
+      <div
         className="lobby-container"
         style={{
           flex: 1,
@@ -168,7 +169,7 @@ const Lobby = () => {
         }}
       >
         {/* Left Box - Join and Setup */}
-        <div 
+        <div
           className="lobby-box"
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -178,8 +179,8 @@ const Lobby = () => {
             alignSelf: 'flex-start'
           }}
         >
-          <h1 style={{ 
-            textAlign: 'center', 
+          <h1 style={{
+            textAlign: 'center',
             marginBottom: '3rem',
             fontSize: '3em'
           }}>Game Lobby</h1>
@@ -224,15 +225,15 @@ const Lobby = () => {
               )}
               <button
                 onClick={joinLobby}
-                disabled={!name.trim()}
+                disabled={!name.trim() || (isGameActive && !(name && localStorage.getItem('gamePlayer') && JSON.parse(localStorage.getItem('gamePlayer')).name === name))}
                 style={{
                   padding: '20px 40px',
                   fontSize: '1.5rem',
-                  backgroundColor: name.trim() ? 'rgba(76, 175, 80, 0.8)' : 'rgba(204, 204, 204, 0.3)',
+                  backgroundColor: name.trim() && (!isGameActive || (name && localStorage.getItem('gamePlayer') && JSON.parse(localStorage.getItem('gamePlayer')).name === name)) ? 'rgba(76, 175, 80, 0.8)' : 'rgba(204, 204, 204, 0.3)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
-                  cursor: name.trim() ? 'pointer' : 'not-allowed',
+                  cursor: name.trim() && (!isGameActive || (name && localStorage.getItem('gamePlayer') && JSON.parse(localStorage.getItem('gamePlayer')).name === name)) ? 'pointer' : 'not-allowed',
                   transition: 'background-color 0.3s',
                   width: '100%',
                   maxWidth: '400px'
@@ -240,6 +241,17 @@ const Lobby = () => {
               >
                 Join Game
               </button>
+              {isGameActive && !(name && localStorage.getItem('gamePlayer') && JSON.parse(localStorage.getItem('gamePlayer')).name === name) && (
+                <p style={{
+                  color: '#ff6b6b',
+                  fontSize: '1.4rem',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  marginTop: '15px'
+                }}>
+                  Please wait for the previous game to end
+                </p>
+              )}
               <p style={{
                 color: 'rgba(255, 255, 255, 0.7)',
                 fontSize: '1.2rem',
@@ -310,7 +322,7 @@ const Lobby = () => {
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '12px'
                 }}>
-                  <p style={{ 
+                  <p style={{
                     marginBottom: '20px',
                     fontSize: '1.6rem'
                   }}>
@@ -346,7 +358,7 @@ const Lobby = () => {
         </div>
 
         {/* Right Box - Players List */}
-        <div 
+        <div
           className="lobby-box"
           style={{
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -357,8 +369,8 @@ const Lobby = () => {
             minHeight: '200px'
           }}
         >
-          <h2 style={{ 
-            textAlign: 'center', 
+          <h2 style={{
+            textAlign: 'center',
             marginBottom: '2rem',
             fontSize: '2.6rem'
           }}>Players in Lobby</h2>
@@ -394,15 +406,15 @@ const Lobby = () => {
                   />
                 )}
                 {p.ready && (
-                  <div style={{ display: 'flex', gap: '5px' , marginLeft: 'auto'}}>
-                    <img 
-                      src={diceImages[p.die1]} 
-                      alt={`Die ${p.die1}`} 
+                  <div style={{ display: 'flex', gap: '5px', marginLeft: 'auto' }}>
+                    <img
+                      src={diceImages[p.die1]}
+                      alt={`Die ${p.die1}`}
                       style={{ width: '50px', height: '50px' }}
                     />
-                    <img 
-                      src={diceImages[p.die2]} 
-                      alt={`Die ${p.die2}`} 
+                    <img
+                      src={diceImages[p.die2]}
+                      alt={`Die ${p.die2}`}
                       style={{ width: '50px', height: '50px' }}
                     />
                   </div>

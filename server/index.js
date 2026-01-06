@@ -86,6 +86,7 @@ let activeTradeOffers = [];
 
 io.on('connection', (socket) => {
   socket.emit('lobbyState', lobbyPlayers);
+  socket.emit('gameStatus', { hasStarted });
   console.log('Sent initial lobby state to client:', lobbyPlayers);
   socket.on('updatePlayerStats', async ({ playerId, updates }) => {
     const transaction = await sequelize.transaction();
@@ -899,6 +900,7 @@ io.on('connection', socket => {
         }
         return;
       }
+      socket.emit('joinError', { message: 'The game has already started. Please wait for the next game.' });
       return;
     }
 
@@ -950,6 +952,7 @@ io.on('connection', socket => {
     if (!hasStarted && allReady) {
       console.log('All players ready, starting game');
       hasStarted = true;
+      io.emit('gameStatus', { hasStarted: true });
 
       const sortedPlayers = [...lobbyPlayers].sort((a, b) => {
         if (b.rollTotal === a.rollTotal) {

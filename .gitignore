@@ -18,3 +18,9 @@ Thumbs.db
 
 # Deployment
 DEPLOY_AWS.md
+
+# Security keys
+*.pem
+
+# Local configuration
+nginx_config
